@@ -9,6 +9,8 @@
  * - 能源：电塔和电线把电从能源街区送到数据中心、算力、云（黄色电流）；网络街区向下游发数据光流
  * - 天空：潮信飞艇、海鸥、云朵；灯塔上的小更来回送信；绕岛货船
  * 场景只建一次（getTown），首页背景（initHeroIsland）和导览区（initIsland）各用一个相机渲染同一个场景。
+ * 细节：大道三个路口有红绿灯（车辆停车等灯、行人等绿灯过斑马线）；街区屋顶广告牌轮播当天最热公司；
+ *       港口入口有市场大屏和滚动字幕；夜晚模式：白天 → 黄昏 → 夜晚，路灯、车灯、窗户亮起，星星和月亮出现。
  * 全部为示例数据。
  */
 window.ISLAND = (async () => {
@@ -140,7 +142,7 @@ function getTown() {
   const scene = new THREE.Scene();
   const FOG = '#e6f2ff';
   scene.fog = new THREE.Fog(FOG, 5200, 11000);
-  scene.add(new THREE.HemisphereLight('#ffffff', '#cfe6ff', .95));
+  const hemi = new THREE.HemisphereLight('#ffffff', '#cfe6ff', .95); scene.add(hemi);
   const sun = new THREE.DirectionalLight('#fffaf2', 1.7); sun.position.set(-1100, 1900, 1000);
   sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096);
   Object.assign(sun.shadow.camera, { left: -2300, right: 2300, top: 1500, bottom: -1500, near: 100, far: 5200 }); sun.shadow.bias = -.0005; sun.shadow.radius = 4;
@@ -206,6 +208,9 @@ function getTown() {
     // 仓库（门朝大道），烟囱
     const wh = T_.buildWarehouse(L.color); wh.scale.setScalar(.85); wh.rotation.y = back ? 0 : Math.PI; at(wh, cx + side * 175, G + 5, cz); S.add(wh);
     const ch = wh.userData.chimney.clone().multiplyScalar(.85).applyAxisAngle(new THREE.Vector3(0, 1, 0), wh.rotation.y).add(wh.position);
+    // 屋顶广告牌：这一环节今天成交最热的公司（广告牌有贴图，不参与合并）
+    const hot = L.members.slice().sort((a, b) => b.vx[6] - a.vx[6])[0];
+    const bb = T_.buildBillboard(T_.hotStockTexture(hot, L), 150, 75, 30); at(bb, cx + side * 175, G + 55, cz + 6); scene.add(bb);
     chimneys.push({ p: ch, puffs: Array.from({ length: 5 }, (_, k) => { const m = sph(10, M('#ffffff', { roughness: 1, transparent: true, opacity: .8 }), 10); scene.add(m); return { m, ph: k / 5 }; }) });
     // 货堆（大道边）与叉车
     const pileZ = cz + toAve * 200, fx = cx + side * 175;
@@ -233,7 +238,34 @@ function getTown() {
     const t = T_.buildTreeSmall(i); t.scale.setScalar(2 + (i % 3) * .4); at(t, x, G, z); S.add(t); big.push(t);
   }
   // 路灯
-  for (let x = -1080; x <= 1080; x += 180) [-1, 1].forEach(s => { const l = T_.buildStreetLight(); l.rotation.y = s > 0 ? Math.PI / 2 : -Math.PI / 2; at(l, x, G + 5, AVE.z + s * 66); S.add(l); });
+  const lampSpots = [];
+  for (let x = -1080; x <= 1080; x += 180) [-1, 1].forEach(s => { const l = T_.buildStreetLight(); l.rotation.y = s > 0 ? Math.PI / 2 : -Math.PI / 2; at(l, x, G + 5, AVE.z + s * 66); S.add(l); lampSpots.push([x, AVE.z + s * 53]); });
+  // 路灯光晕（夜里才显示）：合成一个网格，保留 uv
+  scene.add(new THREE.Mesh(mergeGeometries(lampSpots.map(([x, z]) => new THREE.PlaneGeometry(120, 120).rotateX(-Math.PI / 2).translate(x, G + 5.4, z))), T_.NIGHT.pool));
+
+  // ---------- 红绿灯（大道上的三个路口）：东西向与南北向轮流放行 ----------
+  const SIGNALS = CROSS.map(ix => {
+    const heads = [];
+    // [角落 x, 角落 z, 朝向（弧度）, 管的是东西向还是南北向]
+    [[-50, 70, Math.PI, 'ew'], [50, -70, 0, 'ew'], [-50, -70, Math.PI / 2, 'ns'], [50, 70, -Math.PI / 2, 'ns']].forEach(([dx, dz, ry, axis]) => {
+      const t = T_.buildTrafficLight(); t.group.rotation.y = ry; at(t.group, ix + dx, G + 5, AVE.z + dz); scene.add(t.group); heads.push({ lamps: t.lamps, axis });
+    });
+    return { ix, iz: AVE.z, heads };
+  });
+  const CYCLE = 26, PH = [[0, 11, 'ew', 'g'], [11, 13, 'ew', 'y'], [13, 24, 'ns', 'g'], [24, 26, 'ns', 'y']];
+  const sig = { ew: 'r', ns: 'r', idx: -1, nsStart: false };
+  function signalPhase(T) {
+    const k = T % CYCLE; let idx = 0; for (let i = 0; i < PH.length; i++) if (k >= PH[i][0] && k < PH[i][1]) idx = i;
+    sig.ew = PH[idx][2] === 'ew' ? PH[idx][3] : 'r'; sig.ns = PH[idx][2] === 'ns' ? PH[idx][3] : 'r';
+    sig.nsStart = idx === 2 && sig.idx !== 2;
+    if (idx !== sig.idx) { sig.idx = idx; SIGNALS.forEach(S_ => S_.heads.forEach(h => { const st = sig[h.axis]; h.lamps[0].material = T_.SIG[st === 'r' ? 'ron' : 'roff']; h.lamps[1].material = T_.SIG[st === 'y' ? 'yon' : 'yoff']; h.lamps[2].material = T_.SIG[st === 'g' ? 'gon' : 'goff']; })); }
+  }
+  // 过马路的行人：在斑马线等南北向绿灯
+  const crossers = [];
+  CROSS.forEach((ix, i) => [-1, 1].forEach((sd, k) => {
+    const p = T_.buildPerson(40 + i * 2 + k); scene.add(p.group);
+    crossers.push({ o: p, x: ix + sd * 34, dir: sd, p: k ? 1 : 0, moving: false });
+  }));
 
   // ---------- 跨海大桥（西） ----------
   const deckM = M('#ffffff'), pierM = M('#d9d4fb');
@@ -296,6 +328,8 @@ function getTown() {
     const v = k === 'bus' ? T_.buildBus() : k === 'truck' ? T_.buildTruck(CL.layers[(ri + j * 3) % 8].color) : k === 'van' ? T_.buildVan(col) : k === 'flat' ? T_.buildFlatbed(0) : T_.buildCar(col);
     scene.add(v.group);
     const cruise = k === 'bus' || k === 'truck' ? 62 : k === 'flat' ? 66 : 80;
+    const beam = new THREE.Mesh(new THREE.PlaneGeometry(110, 64), T_.NIGHT.beam); beam.rotation.x = -Math.PI / 2;
+    const vlen = k === 'bus' ? 70 : k === 'truck' ? 66 : 44; beam.position.set(vlen / 2 + 52, 2.2, 0); v.group.add(beam);
     vehicles.push({ id: vid++, v, R, s: R.path.len * j / R.kinds.length + (R.open ? 0 : ri * 37), sp: cruise * .5, cruise, kind: k, len: k === 'bus' ? 70 : k === 'truck' ? 66 : 44, pos: new THREE.Vector3(), dir: new THREE.Vector3(1, 0, 0), wait: 0 });
   }));
   const nearestBlock = p => { let bi = 0, bd = 1e12; BLOCKS.forEach((b, i) => { const d = (b.cx - p.x) ** 2 + (b.cz - p.z) ** 2; if (d < bd) { bd = d; bi = i; } }); return bi; };
@@ -310,6 +344,20 @@ function getTown() {
     if (bi % 2 === 0) { const d = T_.buildDeliveryBot(bi); scene.add(d.group); walkers.push({ o: d, path: paths[bi % 4 === 0 ? 0 : 1], s: paths[0].len * .3, sp: 24, wheels: true }); }
   });
 
+  // ---------- 港口入口的市场大屏 + 滚动字幕 ----------
+  const board = T_.buildBillboard(T_.marketBoardTexture(), 230, 115, 70, { dark: true }); at(board, 1290, G + 5, -150); scene.add(board);
+  const tickerTex = T_.tickerTexture(CL.companies.slice().sort((a, b) => b.vx[6] - a.vx[6]).slice(0, 14).map(c => [c.t, c.chg[6]]));
+  const ticker = new THREE.Mesh(new THREE.BoxGeometry(236, 18, 4), [M('#2b2d45'), M('#2b2d45'), M('#2b2d45'), M('#2b2d45'), new THREE.MeshBasicMaterial({ map: tickerTex, toneMapped: false }), M('#2b2d45')]);
+  at(ticker, 1290, G + 5 + 58, -149); scene.add(ticker);
+
+  // ---------- 夜空：星星与月亮（白天透明） ----------
+  const starGeo = new THREE.BufferGeometry(), starPos = [];
+  for (let i = 0; i < 700; i++) { const a = Math.random() * Math.PI * 2, e = .15 + Math.random() * 1.3, r = 7000; starPos.push(Math.cos(a) * Math.cos(e) * r, Math.sin(e) * r, Math.sin(a) * Math.cos(e) * r); }
+  starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+  const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: '#ffffff', size: 44, transparent: true, opacity: 0, fog: false, sizeAttenuation: true })); scene.add(stars);
+  const moon = new THREE.Mesh(new THREE.SphereGeometry(150, 24, 18), new THREE.MeshBasicMaterial({ color: '#fff4d6', transparent: true, opacity: 0, fog: false, toneMapped: false })); at(moon, 2300, 1750, -3300); scene.add(moon);
+  const halo = new THREE.Mesh(new THREE.SphereGeometry(230, 24, 18), new THREE.MeshBasicMaterial({ color: '#8fa0ff', transparent: true, opacity: 0, fog: false, toneMapped: false, depthWrite: false })); at(halo, 2300, 1750, -3300); scene.add(halo);
+
   // ---------- 灯塔、小更、货船、飞艇、海鸥、云 ----------
   const light = buildLighthouse(); at(light.group, 1560, WATER_Y + 30, -600); light.group.scale.setScalar(1.15); scene.add(light.group);
   light.group.traverse(o => { if (o.isMesh && o.material.type !== 'MeshBasicMaterial') o.castShadow = true; });
@@ -321,6 +369,9 @@ function getTown() {
   const clouds = Array.from({ length: 7 }, (_, i) => { const c = T_.buildCloud(i); c.scale.setScalar(1.3 + (i % 3) * .35); at(c, -3200 + i * 950, 480 + (i % 3) * 110, -1750 - (i % 3) * 420); scene.add(c); return c; }); // 云在岛的远处，不挡镇子
 
   bake(S, scene);
+  // 注意：用 scene.environment 时，three.js r170 不读材质的 envMapIntensity，环境光强度要靠 scene.environmentIntensity 控制
+  const ENV_DAY = .62;
+  scene.environmentIntensity = ENV_DAY;
 
   // ---------- 小更送信 ----------
   const trip = { phase: 'rest', t: 0, target: 0, restT: 1.2 };
@@ -380,16 +431,24 @@ function getTown() {
     vehicles.forEach(a => {
       let tgt = a.cruise;
       const grace = a.wait < 0;   // 等太久后有一小段"放行期"：不再给横向来车让行
+      // 红绿灯：快到停止线且不是绿灯就减速停下；已经进入路口的继续走
+      const ew = Math.abs(a.dir.x) > .7, ns = Math.abs(a.dir.z) > .7;
+      if (ew || ns) for (const S_ of SIGNALS) {
+        if (ew && Math.abs(a.pos.z - S_.iz) > 70) continue; if (ns && Math.abs(a.pos.x - S_.ix) > 50) continue;
+        const ahead = ew ? (S_.ix - a.pos.x) * Math.sign(a.dir.x) : (S_.iz - a.pos.z) * Math.sign(a.dir.z);
+        const gap = ahead - (ew ? 56 : 72) - a.len / 2, st = sig[ew ? 'ew' : 'ns'];
+        if (gap > -4 && gap < 170 && st !== 'g' && !(st === 'y' && gap < 18)) tgt = Math.min(tgt, Math.max(0, gap * 2.2));
+      }
       for (const b of vehicles) {
         if (b === a) continue;
         tmp.subVectors(b.pos, a.pos); tmp.y = 0; const d = tmp.length(); if (d > 130) continue;
         const ahead = tmp.x * a.dir.x + tmp.z * a.dir.z, lat = Math.abs(tmp.x * a.dir.z - tmp.z * a.dir.x), dd = a.dir.x * b.dir.x + a.dir.z * b.dir.z;
         if (ahead <= 0) continue;
         if (lat < 14 && dd > .3) tgt = Math.min(tgt, Math.max(0, (ahead - (a.len + b.len) / 2 - 12) * 2));                       // 跟车
-        else if (!grace && d < 90 && lat < 46 && Math.abs(dd) < .6 && b.id < a.id) tgt = Math.min(tgt, Math.max(0, (ahead - 60) * 1.5)); // 路口让行
+        else if (!grace && d < 90 && lat < 46 && Math.abs(dd) < .6 && b.id < a.id && b.sp > 6) tgt = Math.min(tgt, Math.max(0, (ahead - 60) * 1.5)); // 路口让行（只让给在动的车）
       }
       if (a.wait < 0) a.wait = Math.min(a.wait + dt, 0); else a.wait = tgt < 4 ? a.wait + dt : 0;
-      if (a.wait > 2.4) a.wait = -1.4;
+      if (a.wait > 7) a.wait = -1.4;  // 等红灯是正常的，等很久才放行
       a.sp += (tgt - a.sp) * Math.min(dt * (tgt < a.sp ? 6 : 1.4), 1);
       a.s += a.sp * dt;
       if (a.R.open && a.s >= a.R.path.len) a.s = 0;
@@ -398,8 +457,22 @@ function getTown() {
       a.v.tick(T, dt, a.sp);
       if (a.kind === 'flat') a.v.setCargo(nearestBlock(a.pos));
     });
+    // 红绿灯与过马路的行人
+    signalPhase(T);
+    crossers.forEach(c => {
+      if (sig.nsStart && !c.moving) c.moving = true;
+      if (c.moving) { c.p += c.dir * dt * 18 / 150; if (c.p >= 1 || c.p <= 0) { c.p = c.p >= 1 ? 1 : 0; c.dir = -c.dir; c.moving = false; } }
+      c.o.group.position.set(c.x, G + 5, AVE.z - 75 + c.p * 150); c.o.group.rotation.y = c.dir > 0 ? -Math.PI / 2 : Math.PI / 2;
+      c.o.tick(T, dt, 18, c.moving ? 'walk' : 'idle');
+    });
+    tickerTex.offset.x += dt * .045;
     // 行人
     walkers.forEach(w => { w.s += w.sp * dt; place(w.o.group, w.path, w.s, tmp, tmp2); w.o.tick(T, dt, w.sp); });
+    // 夜晚模式：白天 → 黄昏 → 夜晚 平滑过渡
+    if (town.night !== town.nightTarget) {
+      town.night += Math.sign(town.nightTarget - town.night) * Math.min(dt / 2.6, Math.abs(town.nightTarget - town.night));
+      applyNight(town.night);
+    }
     // 电流、数据流
     sparks.forEach(sp => { sp.t = (sp.t + dt * .28) % 1; const seg = Math.min(Math.floor(sp.t * sp.n), sp.n - 1), k = sp.t * sp.n - seg; sp.d.position.copy(spans[seg].getPoint(k)); });
     flows.forEach(f => f.dots.forEach(o => { o.t = (o.t + dt * f.speed) % 1; o.d.position.copy(f.cv.getPoint(o.t)); }));
@@ -426,6 +499,28 @@ function getTown() {
       if (k >= 1) { if (trip.phase === 'out') { trip.phase = 'back'; trip.t = 0; } else { trip.phase = 'rest'; trip.restT = 2.5; robin.envelope.visible = true; } }
     }
   };
+  // ---------- 夜晚模式 ----------
+  const C3 = (a, b, c) => [new THREE.Color(a), new THREE.Color(b), new THREE.Color(c)];
+  const lerp3 = (cols, n, out) => n < .5 ? out.copy(cols[0]).lerp(cols[1], n * 2) : out.copy(cols[1]).lerp(cols[2], (n - .5) * 2);
+  const NC = { fog: C3(FOG, '#f6c9a8', '#0d1230'), sky: C3('#eaf6ff', '#ffd9b0', '#1a2250'), hemiSky: C3('#ffffff', '#ffd6b0', '#2a3360'), hemiGnd: C3('#cfe6ff', '#8a6f8f', '#141a33'),
+    sun: C3('#fffaf2', '#ffb070', '#8fa0ff'), shallow: C3('#a6ecef', '#f0c8a8', '#1e5a7a'), mid: C3('#8fd2f6', '#d79a8c', '#163f66'), deep: C3('#78b4ef', '#8a6a9a', '#0f2a4d'), foam: C3('#ffffff', '#fff0e0', '#9fb8d8') };
+  const dusk = n => Math.sin(n * Math.PI); // 黄昏在中间最强
+  function applyNight(n) {
+    lerp3(NC.fog, n, scene.fog.color); lerp3(NC.fog, n, uni.uFog.value); lerp3(NC.sky, n, uni.uSky.value);
+    lerp3(NC.hemiSky, n, hemi.color); lerp3(NC.hemiGnd, n, hemi.groundColor); hemi.intensity = .95 - n * .72;
+    lerp3(NC.sun, n, sun.color); sun.intensity = 1.7 - n * 1.42 + dusk(n) * .2;
+    lerp3(NC.shallow, n, uni.uShallow.value); lerp3(NC.mid, n, uni.uMid.value); lerp3(NC.deep, n, uni.uDeep.value); lerp3(NC.foam, n, uni.uFoam.value);
+    const lit = Math.max(0, (n - .3) / .7); // 灯从黄昏开始亮
+    T_.NIGHT.lamp.emissiveIntensity = .5 + lit * 2.2; T_.NIGHT.win.emissive.set('#ffd98a'); T_.NIGHT.win.emissiveIntensity = lit * .9;
+    T_.NIGHT.head.emissiveIntensity = .4 + lit * 2.4; T_.NIGHT.tail.emissiveIntensity = .25 + lit * 1.6;
+    T_.NIGHT.pool.opacity = lit * .55; T_.NIGHT.beam.opacity = lit * .6;
+    stars.material.opacity = Math.max(0, (n - .55) / .45) * .95; moon.material.opacity = Math.max(0, (n - .5) / .5); halo.material.opacity = moon.material.opacity * .18;
+    light.night = lit;
+    // RoomEnvironment 本身很亮，夜里几乎关掉，只留路灯和月光
+    scene.environmentIntensity = ENV_DAY * (1 - n * .97);
+  }
+  town.night = 0; town.nightTarget = 0;
+  town.setNight = (v, immediate) => { town.nightTarget = Math.max(0, Math.min(1, v)); if (immediate) { town.night = town.nightTarget; applyNight(town.night); } };
   town.faceCoins = cam => stations.forEach(s => s.coins.forEach(c => c.lookAt(cam.position)));
   town.vehicles = vehicles; town.walkers = walkers;
   TOWN_SINGLETON = town;
@@ -536,7 +631,7 @@ function initIsland(canvas, ui) {
     });
   };
   view.resize();
-  return { go, setDay: town.setDay, get focus() { return town.focus; } };
+  return { go, setDay: town.setDay, town, get focus() { return town.focus; } };
 }
 return { initIsland, initHeroIsland, getTown };
 })();

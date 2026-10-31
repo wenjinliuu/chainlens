@@ -236,7 +236,7 @@ function buildLighthouse() {
   const cap = new THREE.Mesh(new THREE.ConeGeometry(18, 22, 24), mat('#5b4cff')); cap.position.y = 284; g.add(cap);
   const beam = new THREE.Mesh(new THREE.ConeGeometry(60, 520, 32, 1, true), new THREE.MeshBasicMaterial({ color: '#fff3c4', transparent: true, opacity: .16, side: THREE.DoubleSide, depthWrite: false }));
   beam.geometry.translate(0, -260, 0); beam.rotation.z = Math.PI / 2; const pivot = new THREE.Group(); pivot.position.y = 260; pivot.add(beam); g.add(pivot);
-  return { group: g, top: new THREE.Vector3(0, 300, 0), tick(t) { pivot.rotation.y = t * .9; lamp.material.emissiveIntensity = 1 + Math.sin(t * 3) * .25; } };
+  return { group: g, top: new THREE.Vector3(0, 300, 0), beam, lamp, night: 0, tick(t) { pivot.rotation.y = t * .9; lamp.material.emissiveIntensity = (1 + Math.sin(t * 3) * .25) * (1 + this.night * 1.6); beam.material.opacity = .16 + this.night * .38; } };
 }
 function buildShip() {
   const g = new THREE.Group();

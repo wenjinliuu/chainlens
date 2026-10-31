@@ -41,6 +41,10 @@ function wheels(g, xs, z, r, y) {
   }));
   return list;
 }
+// 车灯材质全车共用：夜晚模式统一调亮
+const HEAD = M('#fff6cf', { emissive: '#ffe9a0', emissiveIntensity: .4 }), TAIL = M('#ffb3b8', { emissive: '#ff3b4a', emissiveIntensity: .25 });
+const GLASS = M('#dfeefe', { roughness: .2 });
+function lamps(g, fx, bx, y, z) { [-1, 1].forEach(s => { g.add(at(box(2, 3, 4, HEAD, 0), fx, y, s * z)); g.add(at(box(2, 2.4, 3.6, TAIL, 0), bx, y, s * z)); }); }
 function vehicle(g, ws, extra) {
   shadow(g);
   return { group: g, tick(t, dt, v) { ws.forEach(w => { w.rotation.z -= v * dt / 5; }); extra && extra(t, dt, v); } };
@@ -50,7 +54,7 @@ function buildCar(color) {
   g.add(at(box(34, 10, 17, M(color)), 0, 9, 0));
   g.add(at(box(19, 9, 15, M('#dfeefe', { roughness: .2 })), -2, 18, 0));
   g.add(at(box(17, 2, 15.4, M(color)), -2, 22.5, 0));
-  [-1, 1].forEach(s => g.add(at(box(2, 3, 4, M('#fff6cf', { emissive: '#ffe9a0', emissiveIntensity: .4 }), 0), 17, 10, s * 5)));
+  lamps(g, 17.5, -17.5, 10, 5);
   return vehicle(g, wheels(g, [-10, 10], 8.5, 4.6));
 }
 function buildVan(color) {
@@ -58,6 +62,7 @@ function buildVan(color) {
   g.add(at(box(40, 20, 19, M(W)), 0, 15, 0));
   g.add(at(box(12, 9, 18, M('#dfeefe', { roughness: .2 })), 15, 19, 0));
   g.add(at(box(40.4, 4, 19.4, M(color)), 0, 11, 0));
+  lamps(g, 20.5, -20.5, 12, 6);
   return vehicle(g, wheels(g, [-12, 12], 9, 4.8));
 }
 function buildTruck(color) { // 集装箱卡车
@@ -68,6 +73,7 @@ function buildTruck(color) { // 集装箱卡车
   const ctn = new THREE.Group(); at(ctn, -10, 19, 0); g.add(ctn);
   ctn.add(box(42, 20, 19, M(mix(color, W, .18)), .08));
   for (let k = -3; k <= 3; k++) ctn.add(at(box(1.4, 18, 19.6, M(mix(color, INK, .1)), 0), k * 5.6, 0, 0));
+  lamps(g, 32, -31.5, 12, 6.5);
   return vehicle(g, wheels(g, [-26, -16, 24], 8.5, 4.8));
 }
 function buildFlatbed(layerIdx) { // 平板车：车斗上的货物随所在站点变形
@@ -76,6 +82,7 @@ function buildFlatbed(layerIdx) { // 平板车：车斗上的货物随所在站�
   g.add(at(box(6, 8, 17, M('#dfeefe', { roughness: .2 })), 27, 19, 0));
   g.add(at(box(40, 4, 19, M('#c9c3ff')), -6, 9, 0));
   const slot = new THREE.Group(); at(slot, -6, 11, 0); g.add(slot);
+  lamps(g, 29.5, -26.5, 12, 6.5);
   let cur = -1, item = null, pop = 1;
   const v = vehicle(g, wheels(g, [-16, 20], 9, 4.8), (t, dt) => {
     pop += (1 - pop) * Math.min(dt * 9, 1);
@@ -92,6 +99,7 @@ function buildBus() { // 潮信巴士
   g.add(at(box(66.4, 4, 22.4, M('#5b4cff')), 0, 9, 0));
   const tex = textTexture([['潮信', '900 30px "Noto Sans SC", sans-serif', '#5b4cff', 18, 34], ['早潮看消息 · 晚潮看信号', '700 15px "Noto Sans SC", sans-serif', '#1296f0', 96, 32]], 300, 48, '#ffffff');
   [-1, 1].forEach(s => { const p = new THREE.Mesh(new THREE.PlaneGeometry(56, 9), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false })); at(p, 0, 13.5, s * 11.3); if (s < 0) p.rotation.y = Math.PI; g.add(p); });
+  lamps(g, 33.5, -33.5, 12, 7);
   return vehicle(g, wheels(g, [-20, 22], 10, 5.2));
 }
 function buildForklift() {
@@ -160,13 +168,14 @@ function buildDeliveryBot(i) { // 六轮小快递车
 }
 
 // ================= 建筑与机械 =================
+const WIN = M('#dfeefe', { roughness: .2, metalness: .01 }); // 仓库窗（夜里亮灯）
 function buildWarehouse(color) {
   const g = new THREE.Group(), wall = M(mix(color, W, .8)), roof = M(mix(color, W, .45)), trim = M(mix(color, W, .6));
   g.add(at(box(110, 46, 80, wall, .06), 0, 23, 0));
   for (let k = 0; k < 4; k++) { const r = box(28, 14, 82, roof, .1); r.rotation.z = .5; at(r, -40 + k * 27, 50, 0); g.add(r); }
   const door = box(36, 30, 2, M('#e9ebf3'), 0); at(door, 10, 15, 41); g.add(door);
   for (let k = 0; k < 6; k++) g.add(at(box(36, .8, 2.4, trim, 0), 10, 3 + k * 5, 41.2));
-  for (let k = 0; k < 3; k++) g.add(at(box(12, 8, 2, M('#dfeefe', { roughness: .2 }), 0), -38 + k * 16, 34, 41));
+  for (let k = 0; k < 3; k++) g.add(at(box(12, 8, 2, WIN, 0), -38 + k * 16, 34, 41));
   const stack = cyl(6, 7.5, 54, trim); at(stack, -40, 70, -24); g.add(stack);
   g.add(at(cyl(7, 7, 4, M(color)), -40, 95, -24));
   g.userData.chimney = new THREE.Vector3(-40, 100, -24);
@@ -255,6 +264,97 @@ function buildContainerStack(rows, cols, levels, colors) {
   return g;
 }
 
+// ================= 红绿灯 =================
+const SIG = { ron: M('#ff5a5a', { emissive: '#ff2d2d', emissiveIntensity: 1.6 }), roff: M('#5a2a2e'), yon: M('#ffd24a', { emissive: '#ffb800', emissiveIntensity: 1.6 }), yoff: M('#5a4a24'), gon: M('#5cf08a', { emissive: '#1ad65c', emissiveIntensity: 1.6 }), goff: M('#24503a') };
+function buildTrafficLight() { // 默认朝 +x（灯面对着从 +x 方向驶来的车）
+  const g = new THREE.Group(), pole = M('#3a3c52'), head = M('#2b2d45');
+  g.add(at(cyl(1.6, 2.2, 60, pole, 8), 0, 30, 0));
+  g.add(at(box(7, 22, 8, head, .15), 0, 66, 0));
+  g.add(at(box(2, 24, 10, head, .1), 3.5, 66, 0));
+  const lamps = ['r', 'y', 'g'].map((k, i) => { const m = sph(2.6, SIG[k + 'off'], 10); at(m, 4.2, 73 - i * 7, 0); g.add(m); return m; });
+  return { group: g, lamps };
+}
+
+// ================= 广告牌 =================
+const rr = (g, x, y, w, h, r) => { g.beginPath(); g.roundRect(x, y, w, h, r); };
+function canvasTex(w, h, draw) {
+  const cv = document.createElement('canvas'); cv.width = w * 2; cv.height = h * 2;
+  const g = cv.getContext('2d'), tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+  const run = () => { g.setTransform(2, 0, 0, 2, 0, 0); g.clearRect(0, 0, w, h); draw(g); tex.needsUpdate = true; };
+  run(); document.fonts && document.fonts.ready.then(run);
+  tex.redraw = run; return tex;
+}
+const NUMF = '"Plus Jakarta Sans", "Noto Sans SC", sans-serif', CNF = '"Noto Sans SC", "PingFang SC", sans-serif';
+function hotStockTexture(c, L) { // 街区屋顶广告牌：这一环节今天成交最热的公司
+  let logo = null;
+  const chg = c.chg[6], up = chg >= 0, col = up ? '#0c9465' : '#be2c3d';
+  const tex = canvasTex(360, 180, g => {
+    g.fillStyle = '#ffffff'; rr(g, 0, 0, 360, 180, 22); g.fill();
+    g.fillStyle = mix(L.color, W, .9); rr(g, 0, 0, 360, 44, [22, 22, 0, 0]); g.fill();
+    g.fillStyle = mix(L.color, '#000000', .18); g.font = `800 17px ${CNF}`; g.textAlign = 'left'; g.fillText(`晚潮 · ${L.name} · 今日最热`, 18, 29);
+    g.fillStyle = '#8e91a7'; g.font = `700 14px ${NUMF}`; g.textAlign = 'right'; g.fillText(`量 ${c.vx[6].toFixed(1)}x`, 342, 29);
+    g.save(); g.beginPath(); g.arc(58, 112, 36, 0, Math.PI * 2); g.fillStyle = mix(L.color, W, .5); g.fill(); g.beginPath(); g.arc(58, 112, 31, 0, Math.PI * 2); g.fillStyle = '#fff'; g.fill(); g.clip();
+    if (logo) g.drawImage(logo, 27, 81, 62, 62); else { g.fillStyle = mix(L.color, '#000', .18); g.font = `800 30px ${NUMF}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(c.t[0], 58, 114); g.textBaseline = 'alphabetic'; }
+    g.restore();
+    g.textAlign = 'left'; g.fillStyle = '#16172a'; g.font = `800 46px ${NUMF}`; g.fillText(c.t, 108, 118);
+    g.fillStyle = '#8e91a7'; g.font = `600 16px ${CNF}`; g.fillText(c.name, 110, 148);
+    const txt = `${up ? '+' : '−'}${Math.abs(chg).toFixed(2)}%`; g.font = `800 22px ${NUMF}`; const tw = g.measureText(txt).width + 26;
+    g.fillStyle = up ? '#e2f6ef' : '#fce7e9'; rr(g, 342 - tw, 92, tw, 38, 19); g.fill(); g.fillStyle = col; g.fillText(txt, 355 - tw, 119);
+  });
+  if (c.logo) { const img = new Image(); img.crossOrigin = 'anonymous'; img.onload = () => { logo = img; tex.redraw(); }; img.src = c.logo; }
+  return tex;
+}
+function marketBoardTexture() { // 港口入口的大屏：今日市场
+  return canvasTex(440, 220, g => {
+    g.fillStyle = '#16172a'; rr(g, 0, 0, 440, 220, 24); g.fill();
+    g.fillStyle = '#a59cff'; g.font = `900 24px ${CNF}`; g.textAlign = 'left'; g.fillText('潮信 · 今日市场', 24, 42);
+    g.fillStyle = '#8e91a7'; g.font = `700 14px ${NUMF}`; g.textAlign = 'right'; g.fillText('2026-10-30 · 美股收盘', 416, 42);
+    g.textAlign = 'left'; g.fillStyle = '#8e91a7'; g.font = `700 16px ${CNF}`; g.fillText('全市场 CP', 24, 84); g.fillText('最热 AI 环节', 250, 84);
+    g.fillStyle = '#ffffff'; g.font = `800 64px ${NUMF}`; g.fillText('0.90', 24, 146);
+    g.fillStyle = '#34d399'; g.font = `800 20px ${CNF}`; g.fillText('偏乐观', 150, 118); g.font = `700 16px ${NUMF}`; g.fillText('+15% vs 常态', 150, 142);
+    g.fillStyle = '#5bd8ff'; g.font = `800 40px ${NUMF}`; g.fillText('2.3x', 250, 134); g.fillStyle = '#ffffff'; g.font = `800 20px ${CNF}`; g.fillText('光模块', 345, 134);
+    g.fillStyle = '#8e91a7'; g.font = `600 14px ${CNF}`; g.fillText('在榜 3 只：LITE · COHR · CIEN', 250, 160);
+    g.fillStyle = '#444760'; g.fillRect(24, 178, 392, 1.5);
+    g.fillStyle = '#8e91a7'; g.font = `600 13px ${CNF}`; g.fillText('期权数据面倾向 · 不构成投资建议', 24, 202);
+  });
+}
+function tickerTexture(items) { // 滚动字幕：公司代码 + 涨跌
+  const tex = canvasTex(1600, 40, g => {
+    g.fillStyle = '#0d0f1c'; g.fillRect(0, 0, 1600, 40);
+    let x = 20; g.textBaseline = 'middle';
+    items.forEach(([t, v]) => {
+      g.font = `800 20px ${NUMF}`; g.fillStyle = '#ffffff'; g.fillText(t, x, 21); x += g.measureText(t).width + 8;
+      const s = `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(2)}%`; g.fillStyle = v >= 0 ? '#34d399' : '#ff6b7a'; g.font = `700 18px ${NUMF}`; g.fillText(s, x, 21); x += g.measureText(s).width + 14;
+      g.fillStyle = '#444760'; g.fillText('·', x, 21); x += 18;
+    });
+  });
+  tex.wrapS = THREE.RepeatWrapping; tex.repeat.x = .32;
+  return tex;
+}
+function buildBillboard(tex, w, h, postH, opts) { // 面朝 +z
+  opts = opts || {};
+  const g = new THREE.Group(), post = M(opts.dark ? '#3a3c52' : '#b8bccd'), frame = M(opts.dark ? '#2b2d45' : '#ffffff');
+  [-w * .32, w * .32].forEach(x => g.add(at(cyl(2.2, 2.6, postH, post, 8), x, postH / 2, -2)));
+  const side = frame, face = new THREE.MeshBasicMaterial({ map: tex, toneMapped: false });
+  const panel = new THREE.Mesh(new THREE.BoxGeometry(w, h, 4), [side, side, side, side, face, frame]); at(panel, 0, postH + h / 2, 0); g.add(panel);
+  g.add(at(box(w + 6, h + 6, 2.4, frame, 0), 0, postH + h / 2, -1.5));
+  shadow(g);
+  return g;
+}
+
+// ================= 夜晚：灯光贴图 =================
+function gradientTex(cone) {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d');
+  if (cone) { g.beginPath(); g.moveTo(0, 54); g.lineTo(128, 6); g.lineTo(128, 122); g.lineTo(0, 74); g.closePath(); g.clip(); const gr = g.createRadialGradient(0, 64, 0, 0, 64, 128); gr.addColorStop(0, 'rgba(255,240,190,.95)'); gr.addColorStop(.5, 'rgba(255,240,190,.45)'); gr.addColorStop(1, 'rgba(255,240,190,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); }
+  else { const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, 'rgba(255,236,170,.95)'); gr.addColorStop(.45, 'rgba(255,236,170,.4)'); gr.addColorStop(1, 'rgba(255,236,170,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); }
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const NIGHT = {
+  lamp: M('#fff7d6', { emissive: '#ffe7a3', emissiveIntensity: .5 }), win: WIN, head: HEAD, tail: TAIL,
+  pool: new THREE.MeshBasicMaterial({ map: gradientTex(false), transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }),
+  beam: new THREE.MeshBasicMaterial({ map: gradientTex(true), transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }),
+};
+
 // ================= 天空 =================
 function buildBlimp() {
   const g = new THREE.Group();
@@ -285,6 +385,6 @@ function buildCloud(i) {
   return g;
 }
 
-return { M, box, cyl, sph, at, buildCar, buildVan, buildTruck, buildFlatbed, buildBus, buildForklift, buildPerson, buildWalkerBot, buildDeliveryBot,
+return { M, box, cyl, sph, at, buildTrafficLight, SIG, hotStockTexture, marketBoardTexture, tickerTexture, buildBillboard, NIGHT, buildCar, buildVan, buildTruck, buildFlatbed, buildBus, buildForklift, buildPerson, buildWalkerBot, buildDeliveryBot,
   buildWarehouse, buildRobotArm, buildGantry, buildPylon, buildStreetLight, buildTreeSmall, buildBench, buildCrates, buildContainerStack, buildBlimp, buildGull, buildCloud, SHIRT };
 })();

@@ -18,6 +18,17 @@
   let pcI = 0;
   setInterval(() => { const el = pcs[pcI++ % pcs.length]; el.classList.remove('out'); setTimeout(() => el.classList.add('out'), 900); }, 5200);
 
+  // ---------- 夜晚模式：3D 场景 + 首屏与导览区的底色一起切换 ----------
+  let night = false;
+  LP.setNight = on => {
+    night = !!on;
+    $('#hero').classList.toggle('night', night); const isle = $('.isle'); isle && isle.classList.toggle('night', night);
+    const b1 = $('#nightBtn'); if (b1) b1.innerHTML = night ? '<i>☀️</i><b>白天模式</b>' : '<i>🌙</i><b>夜晚模式</b>';
+    const b2 = $('#nightBtn2'); if (b2) b2.textContent = night ? '☀️ 白天' : '🌙 夜晚';
+    LP.town && LP.town.setNight(night ? 1 : 0, !!window.__nightNow);
+  };
+  document.querySelectorAll('#nightBtn, #nightBtn2').forEach(b => b.addEventListener('click', () => LP.setNight(!night)));
+
   // ---------- 栏目 ----------
   const COLS = [
     { id: 'eve', name: '晚潮', sub: '期权日报', color: '#5b4cff', when: '每个交易日 15:40', status: '每日送达', art: 'moon',
@@ -81,6 +92,7 @@
         <div class="ip-more">点 logo 打开公司档案 →</div>`;
     }
     const isl = initIsland($('#isleCanvas'), { labels: [...document.querySelectorAll('.isle-label')], select: render });
+    LP.town = isl.town;
     document.querySelectorAll('.isle-label, .isle-chip').forEach(b => b.onclick = () => isl.go(+b.dataset.i));
     $('#islePrev').onclick = () => isl.go(isl.focus <= 0 ? L.length - 1 : isl.focus - 1);
     $('#isleNext').onclick = () => isl.go(isl.focus >= L.length - 1 ? 0 : isl.focus + 1);

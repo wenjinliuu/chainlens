@@ -472,3 +472,21 @@
   .pc { width: 168px; } .pc .pc-s, .pc .pc-dev, .pc .pc-bars { display: none; }
   .pc:nth-of-type(n+4) { display: none; }
 }
+
+/* ================= 夜晚模式 ================= */
+.night-btn { position: absolute; right: 28px; bottom: 58px; z-index: 3; display: flex; align-items: center; gap: 8px; height: 42px; padding: 0 16px 0 10px; border-radius: 999px; cursor: pointer;
+  background: rgba(255,255,255,.88); border: 1.5px solid var(--line); backdrop-filter: blur(10px); font-size: 13.5px; font-weight: 800; color: var(--ink2); box-shadow: 0 14px 30px -18px rgba(60,50,160,.4); transition: transform .3s var(--spring), background .4s, color .4s; }
+.night-btn i { font-style: normal; font-size: 17px; } .night-btn:hover { transform: translateY(-3px); }
+.hero-bg, .hero-fade, .isle, .hero-town .h-brand, .hero-town .h-t3, .hero-town .kicker, .hero-town .assure { transition: background .9s var(--ease), color .9s var(--ease), border-color .9s; }
+.hero-town.night .hero-bg { background: linear-gradient(180deg, #0b1030, #101640); }
+.hero-town.night .hero-fade { background: linear-gradient(90deg, rgba(10,13,38,.94) 0%, rgba(10,13,38,.82) 26%, rgba(10,13,38,.35) 44%, rgba(10,13,38,0) 58%),
+  linear-gradient(180deg, rgba(10,13,38,.5) 0%, rgba(10,13,38,0) 18%, rgba(10,13,38,0) 82%, var(--bg) 100%); }
+.hero-town.night .h-brand { color: #ffffff; } .hero-town.night .h-t2 { color: #a59cff; }
+.hero-town.night .h-t3 { color: #c3c6dd; } .hero-town.night .h-t3 b { color: #ffffff; }
+.hero-town.night .kicker { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.18); color: #e6e8f5; }
+.hero-town.night .assure { color: #9a9eb8; }
+.hero-town.night .night-btn { background: #ffd27a; color: #16172a; border-color: #ffd27a; }
+.hero-town.night .cp-chip { background: rgba(255,255,255,.92); }
+.isle.night { background: radial-gradient(1200px 500px at 50% 110%, #1a2a5e, transparent 70%), linear-gradient(180deg, #0b1030, #0f1a3f); }
+.isle.night .isle-bar .night-btn2 { background: #ffd27a; color: #16172a; border-color: #ffd27a; }
+@media (max-width: 1100px) { .night-btn { right: 14px; bottom: 20px; height: 36px; padding: 0 12px 0 8px; } .night-btn b { display: none; } }
