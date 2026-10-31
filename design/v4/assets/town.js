@@ -264,6 +264,40 @@ function buildContainerStack(rows, cols, levels, colors) {
   return g;
 }
 
+// ================= 公司楼 =================
+// 每家公司一栋小楼：高度 ≈ 市值，楼顶一块带 logo 的招牌；窗户夜里亮灯
+function logoSignTexture(c, color) {
+  let logo = null;
+  const tex = canvasTex(200, 120, g => {
+    g.fillStyle = '#ffffff'; rr(g, 0, 0, 200, 120, 18); g.fill();
+    g.fillStyle = mix(color, W, .9); rr(g, 0, 0, 200, 120, 18); g.fill();
+    g.save(); g.beginPath(); g.arc(44, 60, 30, 0, Math.PI * 2); g.fillStyle = mix(color, W, .5); g.fill(); g.beginPath(); g.arc(44, 60, 26, 0, Math.PI * 2); g.fillStyle = '#fff'; g.fill(); g.clip();
+    if (logo) g.drawImage(logo, 18, 34, 52, 52); else { g.fillStyle = mix(color, '#000', .18); g.font = `800 26px ${NUMF}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(c.t[0], 44, 61); g.textBaseline = 'alphabetic'; }
+    g.restore();
+    g.textAlign = 'left'; g.fillStyle = '#16172a'; g.font = `800 34px ${NUMF}`; g.fillText(c.t, 84, 58);
+    g.fillStyle = '#8e91a7'; g.font = `600 15px ${CNF}`; g.fillText(c.name.length > 7 ? c.name.slice(0, 7) + '…' : c.name, 86, 84);
+  });
+  if (c.logo) { const img = new Image(); img.crossOrigin = 'anonymous'; img.onload = () => { logo = img; tex.redraw(); }; img.src = c.logo; }
+  return tex;
+}
+function buildTower(c, color, h) {
+  const g = new THREE.Group(), w = 44, d = 40;
+  const wall = M(mix(color, W, .72)), band = M(mix(color, W, .5));
+  g.add(at(box(w, h, d, wall, .06), 0, h / 2, 0));
+  g.add(at(box(w + 4, 3, d + 4, band, 0), 0, 1.5, 0));
+  // 窗户：每层四扇，前后两面
+  const floors = Math.max(1, Math.floor((h - 10) / 14));
+  for (let f = 0; f < floors; f++) [-1, 1].forEach(sd => { for (let k = 0; k < 3; k++) g.add(at(box(8, 7, 1.2, WIN, 0), -12 + k * 12, 10 + f * 14, sd * (d / 2 + .4))); });
+  g.add(at(box(w - 6, 2.5, d - 6, band, 0), 0, h + 1.2, 0));
+  // 楼顶招牌（面朝 +z 与 -z）
+  const tex = logoSignTexture(c, color);
+  const sign = new THREE.Mesh(new THREE.BoxGeometry(40, 24, 2), [M(W), M(W), M(W), M(W), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false })]);
+  at(sign, 0, h + 16, 0); g.add(sign);
+  g.add(at(box(2, 6, 2, M('#b8bccd'), 0), -14, h + 4, 0)); g.add(at(box(2, 6, 2, M('#b8bccd'), 0), 14, h + 4, 0));
+  shadow(g);
+  return g;
+}
+
 // ================= 红绿灯 =================
 const SIG = { ron: M('#ff5a5a', { emissive: '#ff2d2d', emissiveIntensity: 1.6 }), roff: M('#5a2a2e'), yon: M('#ffd24a', { emissive: '#ffb800', emissiveIntensity: 1.6 }), yoff: M('#5a4a24'), gon: M('#5cf08a', { emissive: '#1ad65c', emissiveIntensity: 1.6 }), goff: M('#24503a') };
 function buildTrafficLight() { // 默认朝 +x（灯面对着从 +x 方向驶来的车）
@@ -385,6 +419,6 @@ function buildCloud(i) {
   return g;
 }
 
-return { M, box, cyl, sph, at, buildTrafficLight, SIG, hotStockTexture, marketBoardTexture, tickerTexture, buildBillboard, NIGHT, buildCar, buildVan, buildTruck, buildFlatbed, buildBus, buildForklift, buildPerson, buildWalkerBot, buildDeliveryBot,
+return { M, box, cyl, sph, at, buildTower, logoSignTexture, buildTrafficLight, SIG, hotStockTexture, marketBoardTexture, tickerTexture, buildBillboard, NIGHT, buildCar, buildVan, buildTruck, buildFlatbed, buildBus, buildForklift, buildPerson, buildWalkerBot, buildDeliveryBot,
   buildWarehouse, buildRobotArm, buildGantry, buildPylon, buildStreetLight, buildTreeSmall, buildBench, buildCrates, buildContainerStack, buildBlimp, buildGull, buildCloud, SHIRT };
 })();

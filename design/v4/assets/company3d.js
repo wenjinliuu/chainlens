@@ -195,5 +195,56 @@ function initLine(canvas, ui) {
   });
   return { load };
 }
-return { initStar, initLine };
+// ================= 街区小景：这家公司在镇上的位置 =================
+// 这家公司所在街区的一角：站点模型 + 同街区的公司楼（本公司那栋高亮），镜头慢慢摆动
+async function initBlock(canvas, ui) {
+  const T_ = await window.TOWN;
+  const { renderer, scene, camera, controls } = base(canvas);
+  camera.position.set(-260, 300, 560); controls.target.set(0, 60, 0);
+  controls.enableRotate = false;
+  const plate = new THREE.Mesh(new RoundedBoxGeometry(620, 14, 360, 4, 8), mat('#f4f5fa', { roughness: .8 })); plate.position.y = -7; scene.add(plate);
+  const root = new THREE.Group(); scene.add(root);
+  let D = null, st = null, mine = null, hits = [];
+  function load(data) {
+    D = data; clear(root); hits = []; st = null; mine = null;
+    const L = D.L;
+    // 站点模型放后排
+    st = C.STATIONS[L.id](L.color); st.group.traverse(o => { if (o.isMesh) o.castShadow = true; });
+    const sz = new THREE.Box3().setFromObject(st.group).getSize(new THREE.Vector3());
+    st.group.scale.multiplyScalar(Math.min(150 / Math.max(sz.x, sz.z, 1), 1)); st.group.position.set(-150, 0, -90); root.add(st.group);
+    const pod = new THREE.Mesh(new RoundedBoxGeometry(190, 14, 190, 3, 10), mat(mix(L.color, W, .8))); pod.position.set(-150, 7, -90); root.add(pod); st.group.position.y = 14;
+    // 公司楼：本公司放中间最前，其余同街区公司排两侧
+    const members = L.members.slice().sort((a, b) => b.cap - a.cap).slice(0, 5);
+    const order = [D.c, ...members.filter(m => m.t !== D.c.t)].slice(0, 5);
+    order.forEach((c, k) => {
+      const h = 24 + Math.min(Math.sqrt(c.cap) * 2.2, 92), me = c.t === D.c.t;
+      const tw = T_.buildTower(c, L.color, h);
+      const x = me ? 60 : 60 + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 92, z = me ? 60 : 0 - (k > 2 ? 70 : 0);
+      tw.position.set(x, 0, z); tw.scale.setScalar(me ? 1.15 : .9); root.add(tw);
+      tw.userData = { tip: `<b>${c.t}</b> ${c.name}${me ? '（当前）' : ' · 点击查看'}`, go: me ? null : c.t }; hits.push(tw);
+      if (me) { mine = tw; const ring = new THREE.Mesh(new THREE.TorusGeometry(44, 2.5, 10, 48), mat(L.color, { emissive: L.color, emissiveIntensity: .5 })); ring.rotation.x = Math.PI / 2; ring.position.set(x, 2, z); root.add(ring); }
+    });
+    // 一点街景
+    for (let k = 0; k < 5; k++) { const t = T_.buildTreeSmall(k + D.c.li); t.position.set(-280 + k * 140, 0, 150); t.scale.setScalar(1.1); root.add(t); }
+    const road = new THREE.Mesh(new THREE.BoxGeometry(620, 1.2, 40), mat('#dcdfeb')); road.position.set(0, .6, 120); root.add(road);
+    ui.caption && ui.caption(`${L.name}街区 · 第 ${D.c.li + 1} 站`);
+  }
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  const pick = e => { const r = canvas.getBoundingClientRect(); ndc.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); ray.setFromCamera(ndc, camera);
+    const h = ray.intersectObjects(hits, true)[0]; if (!h) return null; let o = h.object; while (o && !hits.includes(o)) o = o.parent; return o; };
+  canvas.addEventListener('pointermove', e => { const o = pick(e); canvas.style.cursor = o && o.userData.go ? 'pointer' : 'default'; ui.tip(o ? o.userData.tip : null, e.clientX, e.clientY); });
+  canvas.addEventListener('pointerleave', () => ui.tip(null));
+  canvas.addEventListener('click', e => { const o = pick(e); if (o && o.userData.go) ui.go(o.userData.go); });
+  function resize() { const w = canvas.clientWidth, h = canvas.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+  resize(); addEventListener('resize', resize);
+  visLoop(canvas, (T, dt) => {
+    if (!D) return;
+    st && st.tick(T, dt);
+    const a = Math.sin(T * .25) * .22; camera.position.set(Math.sin(a - .45) * 620, 300, Math.cos(a - .45) * 620); camera.lookAt(0, 60, 0);
+    if (mine) mine.position.y = Math.sin(T * 1.6) * 2;
+    renderer.render(scene, camera);
+  });
+  return { load };
+}
+return { initStar, initLine, initBlock };
 })();

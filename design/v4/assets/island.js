@@ -226,8 +226,18 @@ function getTown() {
       pickables.push({ obj: p.group, info: () => ({ kind: 'worker', title: `${L.name}街区的工人`, sub: `今天这个环节期权热度 ${L.heat[6].toFixed(1)}x，${L.heat[6] >= 1.5 ? '开足马力' : '正常开工'}`, L }) });
     });
     if ([2, 4, 5].includes(i)) { const a = T_.buildRobotArm(L.color); at(a.group, cx - side * 160, G + 5, cz - toAve * 160); a.group.scale.setScalar(1.2); scene.add(a.group); arms.push(a); pickables.push({ obj: a.group, info: () => ({ kind: 'arm', title: `${L.name}街区的机械臂`, sub: '自动化产线，24 小时不停', L }) }); }
+    // 公司楼：沿街区远离大道的那条边排一排，高度 ≈ 市值；点楼进公司档案
+    const members = L.members.slice().sort((a, b) => b.cap - a.cap).slice(0, 5);
+    const towerZ = cz - toAve * (BD / 2 - 40), span = BW - 110;
+    members.forEach((c, k) => {
+      const h = 24 + Math.min(Math.sqrt(c.cap) * 2.2, 92);
+      const tw = T_.buildTower(c, L.color, h); tw.rotation.y = back ? 0 : Math.PI;
+      at(tw, cx - span / 2 + (members.length === 1 ? span / 2 : k * span / (members.length - 1)), G + 5, towerZ); scene.add(tw);
+      c.towerPos = tw.position.clone();
+      pickables.push({ obj: tw, info: () => ({ kind: 'tower', title: `${c.t} ${c.name}`, sub: `${L.name} · ${c.seg} · 今日 ${c.chg[6] >= 0 ? '+' : '−'}${Math.abs(c.chg[6]).toFixed(2)}%${c.signals.length ? ' · 今日有' + c.signals.map(x => ({ o: '期权信号', r: '研报调整', n: '新闻' })[x]).join('、') : ''}`, go: c.t, L }) });
+    });
     // 行道树、长椅
-    for (let k = 0; k < 5; k++) { const t = T_.buildTreeSmall(i + k); at(t, cx - BW / 2 + 40 + k * ((BW - 80) / 4), G + 5, cz + toAve * (BD / 2 - 14)); t.scale.setScalar(1.3); S.add(t); }
+    for (let k = 0; k < 5; k++) { const t = T_.buildTreeSmall(i + k); at(t, cx - BW / 2 + 40 + k * ((BW - 80) / 4), G + 5, cz + toAve * (BD / 2 - 14)); t.scale.setScalar(1.3); S.add(t); } // 大道这一侧的行道树
     for (let k = 0; k < 3; k++) { const t = T_.buildTreeSmall(i + k + 2); at(t, cx - side * (BW / 2 - 16), G + 5, cz - 120 + k * 120); t.scale.setScalar(1.2); S.add(t); }
     const bench = T_.buildBench(); at(bench, cx, G + 5, cz + toAve * (BD / 2 - 32)); bench.rotation.y = back ? Math.PI : 0; S.add(bench);
   });

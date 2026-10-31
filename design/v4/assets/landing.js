@@ -93,7 +93,7 @@
     }
     // 点镇里的东西：气泡跟着它走
     const bub = $('#isleBubble'); let followed = null;
-    const KIND_ICON = { truck: '🚚', flat: '🛻', bus: '🚌', car: '🚗', fork: '🏗️', worker: '👷', arm: '🦾', person: '🚶', bot: '🤖', board: '📢', port: '⚓', light: '🗼', robin: '🐦', blimp: '🎈' };
+    const KIND_ICON = { tower: '🏢', truck: '🚚', flat: '🛻', bus: '🚌', car: '🚗', fork: '🏗️', worker: '👷', arm: '🦾', person: '🚶', bot: '🤖', board: '📢', port: '⚓', light: '🗼', robin: '🐦', blimp: '🎈' };
     const thing = (info, x, y, th) => {
       if (!info) { followed = null; bub.classList.remove('show'); return; }
       followed = th;

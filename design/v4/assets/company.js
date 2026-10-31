@@ -148,14 +148,14 @@
       ${D.events.slice().reverse().slice(0, 8).map(e => `<div class="seen" data-di="${e.di}"><span class="seen-k" style="--k:${SIG[e.k][0]}">${SIG[e.k][1]}</span><span class="num">${e.d}</span><b>${e.title}</b><small>${e.sub}</small></div>`).join('')}`;
   }
 
-  let star = null, line = null;
+  let star = null, line = null, block = null;
   function go(t) {
     cur = t; const D = build(t);
     renderList($('#coSearch').value); render(D);
-    star && star.load(D); line && line.load(D);
+    star && star.load(D); line && line.load(D); block && block.load(D);
     scrollTo({ top: 0, behavior: 'smooth' });
   }
-  window.CO.start = (initStar, initLine) => {
+  window.CO.start = async (initStar, initLine, initBlock) => {
     const tip = $('#coTip');
     const ui = {
       tip(html, x, y) { if (!html) { tip.classList.remove('show'); return; } tip.innerHTML = html; tip.style.left = x + 14 + 'px'; tip.style.top = y - 12 + 'px'; tip.classList.add('show'); },
@@ -164,6 +164,7 @@
     };
     star = initStar($('#starCanvas'), ui, $('#starLabels'));
     line = initLine($('#lineCanvas'), ui);
+    block = initBlock ? await initBlock($('#blockCanvas'), Object.assign({ caption: t => { $('#blockCap').textContent = t; } }, ui)) : null;
     go(cur);
   };
   renderList('');

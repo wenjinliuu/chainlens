@@ -28,6 +28,7 @@
 
   <main class="co-main">
     <section class="card co-head" id="coHead"></section>
+    <section class="card co-block"><canvas id="blockCanvas"></canvas><div class="cb-cap"><b id="blockCap">街区</b>这家公司在产业镇上的位置 · 点旁边的楼可以串门 · <a href="index.html#island">去镇上看 →</a></div></section>
 
     <section class="co-3d">
       <div class="card star"><canvas id="starCanvas"></canvas><div class="st-labels" id="starLabels"></div>
@@ -59,9 +60,10 @@
 <script src="../v3/assets/data.js"></script>
 <script src="assets/company.js"></script>
 <script src="assets/clay.js"></script>
+<script src="assets/town.js"></script>
 <script src="assets/company3d.js"></script>
 <script>
-(async () => { const { initStar, initLine } = await COMPANY3D; CO.start(initStar, initLine); })();
+(async () => { const { initStar, initLine, initBlock } = await COMPANY3D; CO.start(initStar, initLine, initBlock); })();
 </script>
 </body>
 </html>
