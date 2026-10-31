@@ -18,7 +18,7 @@
 
 ## M1 · 静态骨架
 - [ ] Astro 项目初始化，设计 token（颜色 / 圆角 / 阴影 / 字体）
-- [ ] `data/samples/` 示例 JSON
+- [x] `data/samples/` 示例 JSON（`node scripts/export-samples.mjs` 从设计稿数据导出，契约见 `docs/m1-plan.md` 第 4 节）
 - [ ] 驾驶舱、个股页用示例数据跑通（含 Lightweight Charts K 线 + 事件标记）
 - [ ] 部署到 Cloudflare（免费）
 

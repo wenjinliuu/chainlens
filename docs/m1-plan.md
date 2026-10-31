@@ -57,7 +57,7 @@ chainlens/
 │   ├── fetch-reports.mjs         读研报卡片（ima-knowledge-mcp）
 │   ├── build-json.mjs            归一化 → web/public/data；生成 search-index、daily/index
 │   ├── render-posters.mjs        Playwright 渲染海报 PNG
-│   └── samples/                  虚构示例（现 archive.js 生成的 30 天，导出成 JSON 后存这里）
+│   └── samples/                  虚构示例（现已由 scripts/export-samples.mjs 导出到 data/samples/，M1 时搬过来）
 ├── worker/                      Cloudflare Worker：静态资源 + 订阅 API（M4）
 ├── scripts/
 │   ├── compliance-scan.mjs       文案合规扫描（见第 9 节）
@@ -213,7 +213,7 @@ D1 表：`subscribers(id, email, status, token, cols, watch, deliver_at, format,
 - 首屏：手机端 LCP < 2.5 s（3D 延后起、字体 `font-display: swap`）；three 分包 gzip < 200 KB；`quality.js` 分级与自动降档保留。
 - 兼容：Chrome / Safari / 微信内置浏览器各看一遍 3D（WebGL2 不可用时显示静态海报背景）。
 - 布局：390 宽无横向溢出；键盘可用（⌘K、归档 ← →、Esc）。
-- 合规：`scripts/compliance-scan.mjs` 扫所有页面模板、JSON 文案与邮件模板，命中以下词即失败（免责声明里的"投资建议""不荐股"除外）：
+- 合规：`scripts/compliance-scan.mjs`（已写好，`node scripts/compliance-scan.mjs`）扫所有页面模板、JSON 文案与邮件模板，命中以下词即失败（免责声明里的"投资建议""不荐股"除外）：
   `推荐|买入|卖出|看涨|看跌|机会|抄底|稳赚|翻倍|目标位|超买|超卖|建议|荐股`
 - 数字一致性：构建时校验海报 HTML 里出现的每个数字都能在当天 JSON 找到来源（同 kzg 的 `/verify` 思路，但只查数字）。
 - 测试：`poster.ts` 渲染快照、周报汇总规则、`compliance-scan`、搜索索引生成。
