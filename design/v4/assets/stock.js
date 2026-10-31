@@ -24,7 +24,7 @@
   // 指标线用分类色（避开涨跌红绿）
   const COL = { ma5: '#f5a314', ma10: '#00a8c6', ma20: '#d23fd8', ma60: '#2b6cf2', boll: '#a04cf5', tgt: '#1296f0', cp: '#5b4cff', vma: '#8e91a7', k: '#f5a314', d: '#00a8c6', j: '#d23fd8' };
   // 事件：期权 = 期权日报靛紫，研报 = 研报天蓝，新闻 = 珊瑚橙
-  const EV = { o: { c: '#5b4cff', n: '期权', l: '期' }, r: { c: '#1296f0', n: '研报', l: '研' }, n: { c: '#ff6b2c', n: '新闻', l: '闻' } };
+  const EV = { o: { c: '#5b4cff', n: '期权', l: '期' }, r: { c: '#1296f0', n: '研报', l: '研' }, n: { c: '#ff6b2c', n: '新闻', l: '闻' }, e: { c: '#f5a314', n: '财报', l: '财' } };
 
   const fmt = (v, d = 2) => v == null || !isFinite(v) ? '—' : v.toFixed(d);
   const sgn = v => v > 0 ? '+' : v < 0 ? '−' : '';
@@ -161,7 +161,25 @@
       return { i, date: daily[i].time, tm: `${hh}:${mm}`, title, kind, src: kind === '公告' ? '公司公告' : '示例媒体' };
     });
 
-    const S = { t, co, L, daily, idx, opt, reports, tgt, news };
+    // ---- 财报日（虚构）：每季一次，日期按代码固定；最近 4 次 + 下一次 ----
+    const fq = seed % 3; // 财季截止月偏移：0 = 1/4/7/10 月，1 = 2/5/8/11，2 = 3/6/9/12
+    const earn = [];
+    for (let m = -14; m <= 3; m++) {
+      const d = new Date(Date.UTC(2026, 10 + m, 1)); if (((d.getUTCMonth() + 12 - fq) % 3) !== 0) continue;
+      d.setUTCDate(18 + (seed % 9)); const wd = d.getUTCDay(); if (wd === 6) d.setUTCDate(d.getUTCDate() + 2); if (wd === 0) d.setUTCDate(d.getUTCDate() + 1);
+      earn.push(d.toISOString().slice(0, 10));
+    }
+    const lastDay = daily[n - 1].time;
+    const earnPast = earn.filter(x => x <= lastDay).map(x => { let i = idx[x]; if (i == null) { i = daily.findIndex(b => b.time >= x); if (i < 0) i = n - 1; } return { i, date: daily[i].time, bmo: seed % 2 === 0 }; }).slice(-4);
+    const earnNext = earn.find(x => x > lastDay) || null;
+    // 最热合约（虚构）：每日成交最多的一张合约，格式同期权日报（Call/Put 行权价 · 到期）
+    const hot = daily.map((b, i) => {
+      const o = raw[i], call = Math.exp(o.lnCP) >= 1, k = Math.round(b.close * (call ? 1.02 + r() * .08 : .9 + r() * .08) / 5) * 5;
+      const dte = r() < .35 ? 1 + (r() * 6 | 0) : r() < .6 ? 8 + (r() * 22 | 0) : 31 + (r() * 160 | 0);
+      const exp = new Date(b.time + 'T00:00:00Z'); exp.setUTCDate(exp.getUTCDate() + dte);
+      return { call, k, dte, exp: exp.toISOString().slice(5, 10).replace('-', '/'), share: .06 + r() * .1 };
+    });
+    const S = { t, co, L, daily, idx, opt, reports, tgt, news, earnPast, earnNext, hot };
     S.od = optStats(daily, S, 'D');
 
     // ---- 事件：期权异动按期权日报规则（|标准分| ≥ 2.5 且偏离至少 ±20%）由代码判定 ----
@@ -169,6 +187,7 @@
     S.od.forEach((o, i) => { if (isSig(o)) events.push({ i, k: 'o', title: `期权异动 · CP 比 ${fmt(o.cp)}`, detail: `常态 ${fmt(o.norm)}，${sgn(o.z)}${Math.abs(o.z).toFixed(1)}σ` }); });
     reports.forEach(x => events.push({ i: x.i, k: 'r', title: `${x.inst} ${x.action}`, detail: `目标价 ${x.from ? x.from + ' → ' : ''}${x.tp}` }));
     news.forEach(x => events.push({ i: x.i, k: 'n', title: x.title, detail: x.src }));
+    earnPast.forEach(x => events.push({ i: x.i, k: 'e', title: `财报发布 · ${x.bmo ? '盘前' : '盘后'}`, detail: `季度业绩${x.bmo ? '盘前' : '盘后'}公布，当日期权成交 ${fmt(S.od[x.i].vx, 1)}x` }));
     S.events = events.sort((a, b) => a.i - b.i);
     return (stockCache[t] = S);
   }
@@ -222,6 +241,23 @@
 
   // ---------------------------------------------------------------- 色带插件（Lightweight Charts v5 series primitive）
   // 在两条价格之间填色：研报目标价区间（阶梯）、BOLL 通道、CP 常态 ±1σ；画在 K 线和折线下面
+  // 竖线图元：财报日（虚线 + 顶部小标签）
+  class VLines {
+    constructor(items, o) { this.items = items; this.o = o; const self = this; this.views = [{ zOrder: () => 'bottom', renderer: () => ({ draw: t => self.draw(t) }) }]; }
+    attached(p) { this.chart = p.chart; } detached() { this.chart = null; } paneViews() { return this.views; }
+    draw(target) {
+      if (!this.chart) return; const ts = this.chart.timeScale(), o = this.o;
+      target.useMediaCoordinateSpace(({ context: ctx, mediaSize }) => {
+        this.items.forEach(it => {
+          const x = ts.logicalToCoordinate(it.i); if (x == null || x < 0 || x > mediaSize.width) return;
+          ctx.strokeStyle = o.color; ctx.lineWidth = 1; ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, mediaSize.height); ctx.stroke(); ctx.setLineDash([]);
+          const w = ctx.measureText(it.label).width + 10; ctx.font = '700 10px "Plus Jakarta Sans", "Noto Sans SC", sans-serif';
+          ctx.fillStyle = o.color; ctx.beginPath(); ctx.roundRect(x - w / 2, 4, w, 16, 5); ctx.fill();
+          ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(it.label, x, 12);
+        });
+      });
+    }
+  }
   class Band {
     constructor(pts, o) {
       this.pts = pts; this.o = o;
@@ -271,7 +307,7 @@
   }
 
   // ---------------------------------------------------------------- 状态
-  const state = { period: 'D', main: new Set(['MA', 'TGT']), sub: ['VOL', 'MACD', 'CP'], ev: new Set(['o', 'r', 'n']) };
+  const state = { period: 'D', main: new Set(['MA', 'TGT', 'EARN']), sub: ['VOL', 'MACD', 'CP'], ev: new Set(['o', 'r', 'n', 'e']) };
   const SUBS = ['VOL', 'MACD', 'KDJ', 'RSI', 'CP'];
   let S = null, chart = null, isMobile = innerWidth < 640, lastPx = null;
 
@@ -320,6 +356,15 @@
     $('#dlBtn').onclick = () => download($('#dlBtn'));
   }
 
+  // 最热合约（期权日报格式）：近 60 日里期权成交最大的 6 天
+  function renderHot() {
+    const n = S.daily.length, days = S.daily.map((b, i) => ({ i, v: S.opt[i].v })).slice(n - 60).sort((a, b) => b.v - a.v).slice(0, 6).sort((a, b) => a.i - b.i);
+    const el = $('#hotStrip'); if (!el) return;
+    el.innerHTML = `<div class="hs-h"><b>最热合约</b><span>近 60 日期权成交最大的 6 天 · 当天成交最多的那张合约 · 示例</span></div><div class="hs-row">` + days.map(({ i, v }) => {
+      const h = S.hot[i], tier = h.dte <= 7 ? ['短线', 'flat'] : h.dte <= 30 ? [h.call ? 'Call' : 'Put', h.call ? 'bull' : 'bear'] : [(h.call ? 'Call' : 'Put') + ' · 远月', h.call ? 'bull' : 'bear'];
+      return `<div class="hs-c"><span class="d num">${md(S.daily[i].time)}</span><b class="num">${h.call ? 'Call' : 'Put'} ${h.k}</b><span class="x">${h.exp} 到期 · ${h.dte} 天</span><span class="pill ${tier[1]}">${tier[0]}</span><span class="s">成交 ${big(v)} 张 · 占 ${(h.share * 100).toFixed(0)}%</span></div>`;
+    }).join('') + `</div>`;
+  }
   function renderQuote() {
     const { co, L, daily } = S, n = daily.length, a = daily[n - 1], b = daily[n - 2];
     const ch = a.close - b.close, chp = ch / b.close * 100;
@@ -341,6 +386,7 @@
         <div><span>成交量</span><b>${big(a.volume)}</b></div><div><span>成交额</span><b>${big(a.volume * a.close)}</b></div>
         <div><span>市值（量级）</span><b>${big(co.cap * 1e9)}</b></div><div><span>量比</span><b>${vr.toFixed(2)}</b></div>
         <div><span>期权成交</span><b>${big(ov)}张</b></div>
+        <div class="c-earn"><span>下次财报</span><b>${S.earnNext ? md(S.earnNext) + ' <small>· ' + Math.max(0, Math.round((Date.parse(S.earnNext) - Date.parse(a.time)) / 864e5)) + ' 天后</small>' : '—'}</b></div>
       </div>
       <div class="q-52"><span>52 周区间</span>
         <div class="rbar"><i class="fill" data-w="${(pos * 100).toFixed(1)}"></i><i class="cur" data-l="${(pos * 100).toFixed(1)}"></i></div>
@@ -438,10 +484,16 @@
     // ---- 主图 ----
     const candle = chart.addSeries(LC.CandlestickSeries, { upColor: UP, downColor: DN, wickUpColor: UP, wickDownColor: DN, borderVisible: false, priceLineStyle: LC.LineStyle.Dashed }, 0);
     candle.setData(bars.map(b => ({ time: b.time, open: b.open, high: b.high, low: b.low, close: b.close })));
+    const map0 = new Array(S.daily.length);
+    for (let i = 0, k = 0; i < S.daily.length; i++) { while (k < bars.length - 1 && bars[k].time < S.daily[i].time) k++; map0[i] = k; }
     const tg = bars.map(b => S.tgt[S.idx[b.time]]);
     if (state.main.has('TGT')) {
       candle.attachPrimitive(new Band(tg.map(x => x && { lo: x.lo, hi: x.hi }), { fill: rgba(COL.tgt, .07), edge: rgba(COL.tgt, .55), dash: [4, 3], step: true, autoscale: true }));
       line(0, COL.tgt, tg.map(x => x && x.avg), { lineWidth: 1.5, lineType: LC.LineType.WithSteps, lineStyle: LC.LineStyle.LargeDashed, lastValueVisible: !m, title: m ? '' : '研报均值' });
+    }
+    if (state.main.has('EARN')) {
+      const items = S.earnPast.map(x => ({ i: map0[x.i], label: '财报' }));
+      candle.attachPrimitive(new VLines(items, { color: '#ff6b2c' }));
     }
     if (state.main.has('BOLL')) {
       candle.attachPrimitive(new Band(X.boll.map(x => x && { lo: x.dn, hi: x.up }), { fill: rgba(COL.boll, .06) }));
@@ -458,7 +510,7 @@
     S.events.filter(e => state.ev.has(e.k)).forEach(e => { const k = map[e.i]; (evAt[k] = evAt[k] || []).push(e); });
     const marks = [];
     Object.keys(evAt).map(Number).sort((a, b) => a - b).forEach(k => {
-      ['r', 'n', 'o'].forEach(kind => { if (evAt[k].some(e => e.k === kind)) marks.push({ time: T[k], position: kind === 'o' ? 'belowBar' : 'aboveBar', color: EV[kind].c, shape: 'circle', text: EV[kind].l, size: { D: 1, W: .7, M: .4 }[P] }); });
+      ['r', 'n', 'o', 'e'].forEach(kind => { if (evAt[k].some(e => e.k === kind) && EV[kind]) marks.push({ time: T[k], position: kind === 'o' ? 'belowBar' : 'aboveBar', color: EV[kind].c, shape: kind === 'e' ? 'square' : 'circle', text: EV[kind].l, size: { D: 1, W: .7, M: .4 }[P] }); });
     });
     LC.createSeriesMarkers(candle, marks);
 
@@ -659,7 +711,7 @@
     S = stockData(t);
     document.title = `${t} ${S.co.name} · 看盘 · 潮信`;
     if (push) { try { history.pushState({ t }, '', '?t=' + t); } catch (e) { /* file:// 下个别浏览器不允许改地址，忽略 */ } }
-    renderCrumb(); renderQuote(); renderKpis(); build(false); renderTA(); renderEve(); renderReports(); renderNews(); renderChain(); markWatch();
+    renderCrumb(); renderQuote(); renderHot(); renderKpis(); build(false); renderTA(); renderEve(); renderReports(); renderNews(); renderChain(); markWatch();
     document.body.classList.remove('wl-open');
     if (!calm) $$('#quote, #kpis, .chart-card, .rail > *, .sk-bottom > *').forEach(el => { el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); });
   }
