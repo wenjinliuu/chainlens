@@ -117,7 +117,7 @@
       bub.classList.add('show'); moveThing(x, y, true);
     };
     const moveThing = (x, y, vis) => { bub.style.left = x + 'px'; bub.style.top = y + 'px'; bub.style.opacity = vis ? 1 : 0; };
-    const isl = initIsland($('#isleCanvas'), { labels: [...document.querySelectorAll('.isle-label')], select: i => { thing(null); render(i); }, thing, followThing: () => followed, moveThing });
+    const isl = initIsland($('#isleCanvas'), { labels: [...document.querySelectorAll('.isle-label')], select: i => { thing(null); render(i); if (location.hash.startsWith('#island')) history.replaceState(null, '', i >= 0 ? `#island?station=${L[i].id}` : '#island'); }, thing, followThing: () => followed, moveThing });
     LP.town = isl.town;
     document.querySelectorAll('.isle-label, .isle-chip').forEach(b => b.onclick = () => isl.go(+b.dataset.i));
     $('#islePrev').onclick = () => isl.go(isl.focus <= 0 ? L.length - 1 : isl.focus - 1);
@@ -125,6 +125,9 @@
     $('#isleHome').onclick = () => isl.go(-1);
     render(-1);
     LP.isl = isl;
+    // 深链接：#island?station=chip → 滚到产业镇并聚焦那个街区（⌘K 搜索和分享链接都用它）
+    const fromHash = first => { const m = location.hash.match(/^#island\?station=([a-z]+)/); if (!m) return; const i = L.findIndex(l => l.id === m[1]); if (i >= 0) { isl.go(i); $('#island').scrollIntoView({ behavior: first === true ? 'instant' : 'smooth', block: 'start' }); } };
+    addEventListener('hashchange', () => fromHash(false)); fromHash(true);
   };
 
   // ---------- 手机里自动滚动的日报 ----------
