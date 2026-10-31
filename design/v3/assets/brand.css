@@ -1,0 +1,134 @@
+/*
+ * ChainLens v3 · 品牌基础（雾彩·清透）
+ * 与 KZG 期权 Pro 日报同源：wenjinliuu/poster-kit 的 style.md / palette.md
+ * - 浅色为主，[data-theme="dark"] 为可选深色
+ * - 强调色靛紫；8 个分类色避开涨跌红绿；绿 = 涨 / 偏多，红 = 跌 / 偏空
+ * - 卡片：白底、圆角 30、1.5px 浅灰描边、无阴影
+ * - 中文 Noto Sans SC（标题 900），数字与代码 Plus Jakarta Sans 800
+ */
+@import url("https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5/600.css");
+@import url("https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5/700.css");
+@import url("https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5/800.css");
+@import url("https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-sc@5/500.css");
+@import url("https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-sc@5/700.css");
+@import url("https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-sc@5/900.css");
+
+:root {
+  /* 分类色（palette.md 主分类 8 色） */
+  --indigo: #5b4cff; --sky: #1296f0; --amber: #f5a314; --violet: #a04cf5;
+  --teal: #00a8c6; --magenta: #d23fd8; --coral: #ff6b2c; --royal: #2b6cf2;
+  --other: #b8bdc8;
+
+  --accent: #5b4cff;
+  --accent-deep: #4b3ed1;          /* 主色加 18% 黑 */
+  --accent-soft: #efedff;          /* 主色混白 90% */
+
+  /* 涨跌（us 模式）：文字用主色加 18% 黑，胶囊底为混白 88% */
+  --bull: #0c9465; --bull-c: #0fb57b; --bull-bg: #e2f6ef;
+  --bear: #be2c3d; --bear-c: #e8364a; --bear-bg: #fce7e9;
+  --flat: #6f7487; --flat-bg: #eef0f4;
+
+  --bg: #ffffff; --bg-2: #f7f8fc;
+  --card: #ffffff; --card-2: #f7f8fb;
+  --line: #eceef5; --line-2: #e1e4ee;
+  --track: #eceef4;
+  --ink: #16172a; --ink2: #444760; --ink3: #8e91a7; --ink4: #b4b7c8;
+
+  --num: "Plus Jakarta Sans", "Noto Sans SC", sans-serif;
+  --title: "Noto Sans SC", "PingFang SC", sans-serif;
+  --ui: -apple-system, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+
+  --r-card: 30px; --r-block: 22px; --r-pill: 999px;
+  --spring: cubic-bezier(.34, 1.56, .64, 1);
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --accent: #7d70ff; --accent-deep: #a59cff; --accent-soft: #23214a;
+  --bull: #34d399; --bull-bg: #0f2e26; --bear: #ff6b7a; --bear-bg: #351820; --flat: #9a9eb8; --flat-bg: #22253a;
+  --bg: #0d0f1c; --bg-2: #111427;
+  --card: #151830; --card-2: #1b1f3a;
+  --line: #242847; --line-2: #2e3356; --track: #252a48;
+  --ink: #f2f3fb; --ink2: #c3c6dd; --ink3: #8a8eab; --ink4: #5d6182;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--ui); font-size: 15px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color .4s var(--ease), color .4s var(--ease);
+}
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; }
+.num { font-family: var(--num); font-weight: 800; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+
+/* ---------- 导航 ---------- */
+.nav {
+  position: sticky; top: 0; z-index: 50; height: 68px;
+  display: flex; align-items: center; gap: 28px; padding: 0 max(28px, calc((100vw - 1320px) / 2));
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: saturate(1.6) blur(16px); -webkit-backdrop-filter: saturate(1.6) blur(16px);
+  border-bottom: 1.5px solid transparent; transition: border-color .3s;
+}
+.nav.scrolled { border-bottom-color: var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--title); font-weight: 900; font-size: 19px; letter-spacing: -.01em; }
+.brand-mark { width: 30px; height: 30px; display: block; }
+.brand .pro { font-family: var(--num); font-weight: 800; font-size: 11px; color: #fff; background: var(--accent); border-radius: var(--r-pill); padding: 2px 8px; letter-spacing: .02em; }
+.nav-links { display: flex; gap: 4px; }
+.nav-links a { font-size: 15px; font-weight: 500; color: var(--ink2); padding: 8px 14px; border-radius: var(--r-pill); transition: background .2s, color .2s; }
+.nav-links a:hover { color: var(--ink); background: var(--card-2); }
+.nav-links a.on { color: var(--ink); font-weight: 700; background: var(--card-2); }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.search-pill { display: flex; align-items: center; gap: 8px; height: 40px; width: 240px; padding: 0 14px; border-radius: var(--r-pill); border: 1.5px solid var(--line); color: var(--ink3); font-size: 14px; cursor: text; transition: border-color .2s; }
+.search-pill:hover { border-color: var(--line-2); }
+.search-pill kbd { margin-left: auto; font-family: var(--num); font-size: 11px; font-weight: 700; color: var(--ink3); border: 1.5px solid var(--line); border-radius: 6px; padding: 0 6px; }
+.icon-btn { width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--line); background: var(--card); display: grid; place-items: center; cursor: pointer; color: var(--ink2); transition: all .2s var(--ease); }
+.icon-btn:hover { color: var(--ink); border-color: var(--line-2); transform: rotate(-12deg); }
+.btn { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 20px; border-radius: var(--r-pill);
+  background: var(--ink); color: var(--bg); font-weight: 700; font-size: 14px; white-space: nowrap; transition: transform .2s var(--spring), background .2s; }
+.btn:hover { transform: translateY(-2px); }
+.btn.accent { background: var(--accent); color: #fff; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); height: 39px; }
+.btn:focus-visible, .icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- 通用组件 ---------- */
+.card { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--r-card); }
+.pill { display: inline-flex; align-items: center; gap: 4px; font-weight: 800; font-size: 13px; border-radius: var(--r-pill); padding: 2px 10px; white-space: nowrap; line-height: 1.5; font-family: var(--num); }
+.pill.bull { background: var(--bull-bg); color: var(--bull); }
+.pill.bear { background: var(--bear-bg); color: var(--bear); }
+.pill.flat { background: var(--flat-bg); color: var(--flat); }
+.tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; border-radius: var(--r-pill); padding: 3px 11px; line-height: 1.4; white-space: nowrap;
+  color: var(--tc-deep, var(--accent-deep)); background: var(--tc-bg, var(--accent-soft)); }
+.seg-tag { color: #fff; background: var(--c); }
+.up { color: var(--bull); } .down { color: var(--bear); } .flat { color: var(--flat); }
+
+/* 圆形 logo 徽章：外圈 = 环节色浅一档，描边与 logo 之间不留白；没取到 logo 时露出首字母 */
+.badge { position: relative; width: var(--bs, 36px); height: var(--bs, 36px); flex: none; border-radius: 50%; overflow: hidden; background: #fff;
+  box-shadow: 0 0 0 var(--bw, 2px) var(--ring, #e4e6ee); display: flex; align-items: center; justify-content: center;
+  font-family: var(--num); font-weight: 800; font-size: calc(var(--bs, 36px) * .42); color: var(--c, var(--ink2)); }
+.badge i { font-style: normal; line-height: 1; }
+.badge img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #fff; }
+
+/* 版块标题：强调色编号 + 900 字重 */
+.sec-head { display: flex; align-items: flex-end; gap: 18px; margin-bottom: 28px; }
+.sec-no { width: 44px; height: 44px; border-radius: 14px; background: var(--accent-soft); color: var(--accent-deep); display: grid; place-items: center; font-family: var(--num); font-weight: 800; font-size: 17px; flex: none; }
+.sec-head h2 { margin: 0; font-family: var(--title); font-weight: 900; font-size: 40px; line-height: 1.15; letter-spacing: -.02em; }
+.sec-head h2 em { font-style: normal; color: var(--accent); }
+.sec-head p { margin: 6px 0 0; color: var(--ink3); font-size: 16px; }
+.sec-head .right { margin-left: auto; }
+
+.seg-ctl { display: inline-flex; gap: 4px; padding: 4px; border-radius: var(--r-pill); background: var(--card-2); border: 1.5px solid var(--line); }
+.seg-ctl button { border: 0; background: transparent; cursor: pointer; padding: 7px 16px; border-radius: var(--r-pill); font-size: 14px; font-weight: 600; color: var(--ink2); transition: all .25s var(--ease); }
+.seg-ctl button:hover { color: var(--ink); }
+.seg-ctl button.on { background: var(--card); color: var(--ink); font-weight: 800; box-shadow: 0 0 0 1.5px var(--line-2); }
+
+.disclaimer { font-size: 12.5px; color: var(--ink3); }
+.ai-tag { font-size: 11.5px; font-weight: 700; color: var(--accent-deep); background: var(--accent-soft); border-radius: 6px; padding: 1px 7px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+}

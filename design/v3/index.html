@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChainLens 链镜 · AI 产业城</title>
+<link rel="stylesheet" href="assets/brand.css">
+<link rel="stylesheet" href="assets/home.css">
+<script>document.documentElement.dataset.theme = localStorage.getItem('cl-theme') || 'light';</script>
+</head>
+<body>
+<div class="page">
+  <div class="page-bg"></div>
+
+  <header class="nav" id="nav">
+    <a class="brand" href="index.html">
+      <svg class="brand-mark" viewBox="0 0 30 30"><path d="M15 3 26 9.3v11.4L15 27 4 20.7V9.3Z" fill="#c9c3ff"/><path d="M15 3 26 9.3 15 15.6 4 9.3Z" fill="#efedff"/><path d="M15 15.6 26 9.3v11.4L15 27Z" fill="#5b4cff"/><path d="M15 15.6V27L4 20.7V9.3Z" fill="#8f84ff"/></svg>
+      ChainLens<span class="pro">链镜</span>
+    </a>
+    <nav class="nav-links"><a class="on" href="#">今日</a><a href="#city">产业城</a><a href="#bubbles">气泡池</a><a href="#cards">情报卡</a><a href="#quiz">小测验</a><a href="#">日报</a></nav>
+    <div class="nav-right">
+      <div class="search-pill"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>搜索公司 / 环节<kbd>⌘K</kbd></div>
+      <button class="icon-btn" id="themeBtn" title="切换浅色 / 深色"></button>
+      <a class="btn accent" href="#subscribe">订阅日报</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- ================= Hero：等距 AI 产业城 ================= -->
+    <section class="hero" id="city">
+      <div class="hero-l">
+        <div class="eyebrow"><span class="live-dot"></span><span id="dateLine">10月30日 周五 · 美股收盘</span><span class="tag-o">示例数据</span></div>
+        <h1 class="t1">AI 产业城</h1>
+        <p class="t2" id="headline"></p>
+        <p class="t3">8 个环节、52 家公司排成一座城。<b>楼越高，当天成交越热</b>；方块沿着道路从上游流向下游。把鼠标放到楼上，看看都是谁。</p>
+
+        <div class="card scrub">
+          <div class="scrub-h"><button class="play" id="play" title="自动播放"></button>拖动日期，看城市长高<span class="hint">近 7 个交易日</span></div>
+          <div class="days" id="days"></div>
+        </div>
+        <div class="kpis" id="kpis"></div>
+      </div>
+      <div class="hero-r">
+        <div class="city" id="cityBox"></div>
+        <div class="city-legend"><span>▮ 楼高 = 环节热度（成员量倍数中位数）</span><span>■ 方块 = 上游 → 下游</span><span>点击楼看详情</span></div>
+      </div>
+    </section>
+
+    <div id="sections"></div>
+
+    <footer class="footer">
+      <div><div class="warn" id="disc"></div>数据来源：KZG 期权 Pro（期权）、研报日报、公开媒体 · 行情延迟 · 徽标仅用于识别</div>
+      <div style="margin-left:auto;text-align:right">本页所有数字均为虚构示例<br>视觉规范：雾彩·清透（与 KZG 期权 Pro 日报同源）</div>
+    </footer>
+  </main>
+</div>
+
+<div class="card pop" id="pop"></div>
+<div class="scrim" id="scrim"></div>
+<aside class="card drawer" id="drawer"></aside>
+
+<script src="assets/iso.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/city.js"></script>
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+const { layers, byT, days } = CL;
+const mix = ISO.mix;
+const pct = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(2) + '%';
+const dirCls = v => v > 0 ? 'bull' : v < 0 ? 'bear' : 'flat';
+const badge = (c, size, ring) => `<span class="badge" style="--bs:${size}px;--c:${mix(ring, '#000000', .18)};--ring:${mix(ring, '#ffffff', .55)}"><i>${c.t[0]}</i>${c.logo ? `<img src="${c.logo}" alt="" onerror="this.remove()">` : ''}</span>`;
+window.UI = { badge, pct, dirCls };
+$('#disc').textContent = CL.disclaimer;
+
+// ---------- 主题切换 ----------
+const sun = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+const moon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>';
+const themeBtn = $('#themeBtn');
+const syncTheme = () => themeBtn.innerHTML = document.documentElement.dataset.theme === 'dark' ? sun : moon;
+themeBtn.onclick = () => {
+  const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = t; localStorage.setItem('cl-theme', t); syncTheme();
+  city.retheme(); window.dispatchEvent(new Event('cl-theme'));
+};
+syncTheme();
+addEventListener('scroll', () => $('#nav').classList.toggle('scrolled', scrollY > 10), { passive: true });
+
+// ---------- 产业城 ----------
+const pop = $('#pop');
+const city = initCity($('#cityBox'), CL, {
+  hover(L, d) {
+    if (!L) { pop.classList.remove('show'); return; }
+    const day = cur;
+    const ms = L.members.slice().sort((a, b) => b.vx[day] - a.vx[day]);
+    pop.style.setProperty('--c', L.color);
+    pop.innerHTML = `<div class="pop-h"><span class="tag seg-tag" style="--c:${L.color}">${L.name}</span><b></b><span class="heat">${L.heat[day].toFixed(1)}x</span></div>
+      <div class="segs">${Object.keys(L.segs).map(s => `<span class="tag" style="--tc-deep:${mix(L.color, '#000000', .18)};--tc-bg:${mix(L.color, '#ffffff', .9)}">${s}</span>`).join('')}</div>
+      <div class="logos">${ms.slice(0, 10).map((c, i) => `<div class="m" style="animation-delay:${i * 35}ms">${badge(c, 36, L.color)}<span>${c.t}</span><span class="${c.chg[day] >= 0 ? 'up' : 'down'}">${pct(c.chg[day])}</span></div>`).join('')}</div>
+      <div class="foot"><span>${L.members.length} 家公司 · 按当日量倍数排序</span><span style="color:${mix(L.color, '#000000', .18)};font-weight:700">点击查看 →</span></div>`;
+    // 弹层放在楼的外侧（楼在右半边就放左边），不挡住正在看的楼
+    const box = $('#cityBox').getBoundingClientRect();
+    const right = d.anchor[0] < box.width * 0.55;
+    let x = right ? box.left + d.anchor[0] + 90 : box.left + d.anchor[0] - 390, y = box.top + scrollY + d.anchor[1] - 20;
+    x = Math.max(12, Math.min(x, innerWidth - 312));
+    pop.style.left = x + 'px'; pop.style.top = y + 'px';
+    pop.classList.add('show');
+  },
+  open: openDrawer,
+});
+
+// ---------- 日期 ----------
+let cur = days.length - 1, timer = null;
+const daysEl = $('#days');
+daysEl.innerHTML = days.map((d, i) => `<button class="day" data-i="${i}"><span class="sky">${layers.map(L => `<i style="height:${4 + (L.heat[i] - .6) * 11}px;background:${L.color}"></i>`).join('')}</span><span>${d}</span></button>`).join('');
+const DOW = { '10-22': '周三', '10-23': '周四', '10-24': '周五', '10-27': '周一', '10-28': '周二', '10-29': '周三', '10-30': '周五' };
+const MKT_CP = [0.84, 0.79, 0.88, 0.92, 0.81, 0.86, 0.90], NORM = 0.78;
+const STRONG = ['IREN', 'MU', 'NVDA', 'SMCI', 'COHR', 'LITE', 'LITE'];
+const STRONG_Z = [2.6, 2.2, 2.4, -2.6, 2.1, 2.8, 3.1];
+function setDay(i, silent) {
+  cur = i;
+  city.setDay(i);
+  daysEl.querySelectorAll('.day').forEach((b, k) => b.classList.toggle('on', k === i));
+  const hot = layers.slice().sort((a, b) => b.heat[i] - a.heat[i])[0];
+  $('#headline').innerHTML = `<span class="swap" style="color:${mix(hot.color, '#000000', .1)}">${hot.name} 今天最热</span>`;
+  $('#dateLine').textContent = `${+days[i].slice(0, 2)}月${+days[i].slice(3)}日 ${DOW[days[i]]} · 美股收盘`;
+  const dev = (MKT_CP[i] / NORM - 1) * 100, s = byT[STRONG[i]], z = STRONG_Z[i];
+  $('#kpis').innerHTML = `
+    <div class="card kpi"><div class="l">全市场 CP</div><div class="v">${MKT_CP[i].toFixed(2)}</div><div class="d">常态 <b>${NORM}</b> · <span class="${dev >= 0 ? 'up' : 'down'}">${dev >= 0 ? '+' : '−'}${Math.abs(dev).toFixed(0)}%</span></div></div>
+    <div class="card kpi"><div class="l">最热环节</div><div class="v" style="color:${mix(hot.color, '#000000', .18)}">${hot.heat[i].toFixed(1)}x</div><div class="d">${hot.name}</div></div>
+    <div class="card kpi"><div class="l">最强信号</div><div class="v">${badge(s, 26, layers[s.li].color)}${s.t}</div><div class="d">CP <b class="${z > 0 ? 'up' : 'down'}">${z > 0 ? '+' : '−'}${Math.abs(z)}σ</b> · 期权</div></div>`;
+}
+daysEl.addEventListener('pointerdown', e => { const b = e.target.closest('.day'); if (b) { stop(); setDay(+b.dataset.i); daysEl.setPointerCapture(e.pointerId); } });
+daysEl.addEventListener('pointermove', e => {
+  if (!daysEl.hasPointerCapture(e.pointerId)) return;
+  const el = document.elementFromPoint(e.clientX, daysEl.getBoundingClientRect().top + 20);
+  const b = el && el.closest('.day'); if (b && +b.dataset.i !== cur) setDay(+b.dataset.i);
+});
+const playBtn = $('#play');
+const icPlay = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4v16l14-8z"/></svg>', icPause = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>';
+function stop() { clearInterval(timer); timer = null; playBtn.innerHTML = icPlay; }
+playBtn.onclick = () => {
+  if (timer) return stop();
+  setDay(0); playBtn.innerHTML = icPause;
+  timer = setInterval(() => cur >= days.length - 1 ? stop() : setDay(cur + 1), 1300);
+};
+stop(); setDay(cur);
+
+// ---------- 环节详情抽屉 ----------
+const drawer = $('#drawer'), scrim = $('#scrim');
+function closeDrawer() { drawer.classList.remove('open'); scrim.classList.remove('show'); }
+scrim.onclick = closeDrawer;
+addEventListener('keydown', e => e.key === 'Escape' && closeDrawer());
+function openDrawer(L) {
+  pop.classList.remove('show');
+  const i = cur, dark = document.documentElement.dataset.theme === 'dark';
+  const B = new ISO.Iso(); const o = ISO.DRAW[L.obj]; o.fn(B, ISO.palette(L.color, dark ? 'dark' : 'light'));
+  const svgArt = `<svg viewBox="-300 -260 600 420" width="150">${B.out()}</svg>`;
+  const ups = L.members.filter(c => c.chg[i] > 0).length;
+  const sigC = { o: 'var(--violet)', r: 'var(--sky)', n: 'var(--amber)' };
+  drawer.style.setProperty('--tint', dark ? mix(L.color, '#151830', .82) : mix(L.color, '#ffffff', .92));
+  drawer.innerHTML = `
+    <div class="dw-top"><button class="icon-btn x" id="dwX">✕</button><div class="art">${svgArt}</div>
+      <span class="tag seg-tag" style="--c:${L.color}">${L.en}</span>
+      <h3>${L.name}</h3><div class="sub">${Object.keys(L.segs).join(' · ')}</div>
+      <div class="stats"><div>环节热度<b style="color:${mix(L.color, '#000000', .18)}">${L.heat[i].toFixed(1)}x</b></div><div>上涨 / 下跌<b><span class="up">${ups}</span> / <span class="down">${L.members.length - ups}</span></b></div><div>有信号<b>${L.members.filter(c => c.signals.length).length}</b></div></div></div>
+    <div class="dw-body">${Object.entries(L.segs).map(([seg, list]) => `<div class="dw-seg"><h4><i style="width:8px;height:8px;border-radius:50%;background:${L.color}"></i>${seg}</h4>
+      ${list.split(' ').map(t => byT[t]).map(c => `<a class="mrow" href="../v2/stock.html?t=${c.t}">${badge(c, 38, L.color)}<div class="nm"><b>${c.t}</b><small>${c.name}</small></div>
+        <span class="sig-dots">${c.signals.map(s => `<i style="background:${sigC[s]}"></i>`).join('')}</span><span class="vx">${c.vx[i].toFixed(1)}x 量</span><span class="pill ${dirCls(c.chg[i])}">${pct(c.chg[i])}</span></a>`).join('')}</div>`).join('')}
+      <p class="disclaimer" style="margin-top:18px">量倍数 = 当日期权成交量 / 20 日均值。示例数据，不构成任何投资建议。</p></div>
+    <div class="dw-foot"><a class="btn ghost" href="../v2/chain.html">看上下游关系</a><a class="btn accent" href="#bubbles">去气泡池玩</a></div>`;
+  drawer.classList.add('open'); scrim.classList.add('show');
+  $('#dwX').onclick = closeDrawer;
+  drawer.querySelector('.dw-foot .accent').onclick = closeDrawer;
+}
+
+window.__home = { city, setDay, openDrawer: id => openDrawer(layers.find(l => l.id === id)), hover: (i, on) => city.hover(i, on) };
+})();
+</script>
+</body>
+</html>
