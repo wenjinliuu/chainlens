@@ -74,7 +74,7 @@
     const news = Array.from({ length: nNews }, (_, i) => ({ di: Math.min(59, 59 - Math.floor(i * 9 + r() * 6)), title: NEWS[L.id][i % 3], src: r() > .6 ? '公司公告' : '示例媒体' })).map(n => ({ ...n, d: days[n.di] }));
     // 期权事件
     const opts = dev.map((v, i) => ({ di: 40 + i, v })).filter(x => Math.abs(x.v) > .3).map(x => ({ ...x, d: days[x.di] }));
-    const events = [...opts.map(o => ({ k: 'o', di: o.di, d: o.d, title: `CP 偏离 ${o.v > 0 ? '+' : '−'}${Math.round(Math.abs(o.v) * 100)}%`, sub: '晚潮 · 期权数据面' })),
+    const events = [...opts.map(o => ({ k: 'o', di: o.di, d: o.d, title: `CP 偏离 ${o.v > 0 ? '+' : '−'}${Math.round(Math.abs(o.v) * 100)}%`, sub: '期权日报 · 期权数据面' })),
       ...reports.map(x => ({ k: 'r', di: x.di, d: x.d, title: `${x.firm} ${x.r0 === x.r1 ? '维持' + x.r1 : x.r0 + '→' + x.r1}`, sub: `目标价 ${x.p0} → ${x.p1}` })),
       ...news.map(n => ({ k: 'n', di: n.di, d: n.d, title: n.title, sub: n.src }))].sort((a, b) => a.di - b.di);
     const ups = REL.filter(e => e[1] === t).map(e => ({ c: CL.byT[e[0]], rel: e[2] }));
@@ -88,7 +88,7 @@
   // ---------- 页面 ----------
   const T0 = (new URLSearchParams(location.search).get('t') || 'NVDA').toUpperCase();
   let cur = CL.byT[T0] ? T0 : 'NVDA';
-  const SIG = { o: ['var(--violet)', '晚潮'], r: ['var(--sky)', '研报'], n: ['var(--amber)', '新闻'] };
+  const SIG = { o: ['var(--violet)', '期权'], r: ['var(--sky)', '研报'], n: ['var(--amber)', '新闻'] };
 
   function renderList(q) {
     q = (q || '').trim().toLowerCase();
@@ -115,14 +115,14 @@
       <div class="ch-px"><b class="num">${D.last.c.toFixed(2)}</b><span class="pill ${dirCls(D.chg)}">${pct(D.chg)}</span><small>USD · 10-30 收盘 · 延迟数据</small></div>
       <div class="ch-act"><a class="btn ghost" href="stock.html?t=${c.t}">看盘工具 →</a><button class="btn accent" id="followBtn">关注这家公司</button></div></div>
       <div class="ch-kpi">
-        <div><span>晚潮 · CP 偏离</span><b class="num ${D.dev[19] >= 0 ? 'up' : 'down'}">${D.dev[19] >= 0 ? '+' : '−'}${Math.round(Math.abs(D.dev[19]) * 100)}%</b><small>对比 20 日常态</small></div>
+        <div><span>期权日报 · CP 偏离</span><b class="num ${D.dev[19] >= 0 ? 'up' : 'down'}">${D.dev[19] >= 0 ? '+' : '−'}${Math.round(Math.abs(D.dev[19]) * 100)}%</b><small>对比 20 日常态</small></div>
         <div><span>研报目标价</span><b class="num">${Math.round(D.tLo)}–${Math.round(D.tHi)}</b><small>${D.reports.length} 条 · 均值 ${Math.round(D.tAvg)}</small></div>
         <div><span>近 60 日新闻</span><b class="num">${D.news.length}</b><small>公告与媒体</small></div>
         <div><span>上游 / 下游</span><b class="num">${D.ups.length} / ${D.downs.length}</b><small>示意关系</small></div>
       </div>`;
     $('#followBtn').onclick = e => { e.target.textContent = '✓ 已关注（演示）'; e.target.classList.remove('accent'); };
     // 期权
-    $('#pOpt').innerHTML = `<div class="ph"><h3><span class="dot" style="background:var(--violet)"></span>晚潮 · 期权数据面</h3><span class="disclaimer">来源：期权日报 · 示例</span></div>
+    $('#pOpt').innerHTML = `<div class="ph"><h3><span class="dot" style="background:var(--violet)"></span>期权日报 · 期权数据面</h3><span class="disclaimer">来源：期权日报 · 示例</span></div>
       <div class="opt-grid"><div><span>量倍数</span><b class="num">${D.vx}x</b></div><div><span>权利金倍数</span><b class="num">${D.px}x</b></div><div><span>可信度</span><b class="dots3">${[1, 2, 3].map(i => `<i class="${i <= ({ 低: 1, 中: 2, 高: 3 })[D.conf] ? 'on' : ''}"></i>`).join('')}<em>${D.conf}</em></b></div></div>
       <div class="opt-row"><span>CP 对比常态</span>${devBar(D.dev[19])}</div>
       <div class="opt-row"><span>LEAP 趋势</span><b>${D.leap}</b></div>
@@ -140,7 +140,7 @@
       ${D.news.map(n => `<div class="nw" data-di="${n.di}"><span class="nw-d num">${n.d}</span><div><b>${n.title}</b><small>${n.src}</small></div></div>`).join('')}`;
     // 产业链
     const rel = (arr, lab) => `<div class="rel-col"><div class="rel-h">${lab}</div>${arr.length ? arr.map(x => `<a class="rel" href="?t=${x.c.t}" data-t="${x.c.t}">${badge(x.c, 30, CL.layers[x.c.li].color)}<b class="num">${x.c.t}</b><small>${x.rel}</small><span class="pill ${dirCls(x.c.chg[6])}">${pct(x.c.chg[6])}</span></a>`).join('') : '<div class="rel-none">暂无（示意）</div>'}</div>`;
-    $('#pChain').innerHTML = `<div class="ph"><h3><span class="dot" style="background:${L.color}"></span>产业链位置</h3><a class="disclaimer" href="index.html#island">在产业岛上看 →</a></div>
+    $('#pChain').innerHTML = `<div class="ph"><h3><span class="dot" style="background:${L.color}"></span>产业链位置</h3><a class="disclaimer" href="index.html#island">在产业镇上看 →</a></div>
       <div class="rel-wrap">${rel(D.ups, '上游 · 供应方')}<div class="rel-me">${badge(c, 44, L.color)}<b class="num">${c.t}</b><small>${L.name}</small></div>${rel(D.downs, '下游 · 客户')}</div>`;
     document.querySelectorAll('#pChain .rel').forEach(a => a.onclick = e => { e.preventDefault(); go(a.dataset.t); });
     // 出现记录

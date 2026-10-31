@@ -3,7 +3,7 @@
  * 依赖 design/v3/assets/brand.css 的 token 与组件；本文件只放看盘页自己的布局与组件
  * - 白 → #f7f8fc 纵向过渡；卡片白底、圆角 30（小卡 22）、1.5px #eceef5 描边，不用阴影
  * - 绿涨红跌：#0fb57b / #e8364a，文字用加 18% 黑的 #0c9465 / #be2c3d
- * - 事件色：期权 = 靛紫（晚潮）、研报 = 天蓝（研报）、新闻 = 珊瑚橙
+ * - 事件色：期权 = 靛紫（期权日报）、研报 = 天蓝（研报）、新闻 = 珊瑚橙
  */
 
 body { background: linear-gradient(180deg, var(--bg) 0, var(--bg-2) 720px, var(--bg-2) 100%); min-height: 100vh; }
@@ -71,7 +71,7 @@ body { background: linear-gradient(180deg, var(--bg) 0, var(--bg-2) 720px, var(-
 .rbar .fill { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 999px; background: linear-gradient(90deg, #c9c3ff, var(--accent)); width: 0; transition: width 1.1s var(--ease); }
 .rbar .cur { position: absolute; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: #fff; border: 4px solid var(--accent); left: 0; transition: left 1.1s var(--ease); }
 
-/* ---------- 晚潮 / 研报 小卡（四个数字） ---------- */
+/* ---------- 期权日报 / 研报日报 小卡（四个数字） ---------- */
 .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 .kpi { border-radius: var(--r-block); padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 4px; min-width: 0; position: relative; }
 .kpi .l { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--ink3); }
@@ -141,7 +141,7 @@ body { background: linear-gradient(180deg, var(--bg) 0, var(--bg-2) 720px, var(-
 .mt .z em { position: absolute; top: 13px; left: 50%; transform: translateX(-50%); font-style: normal; font-family: var(--num); font-size: 10px; font-weight: 700; color: var(--ink4); white-space: nowrap; }
 .mt .z.end { background: transparent; }
 
-/* ---------- 晚潮数据面 ---------- */
+/* ---------- 期权日报数据面 ---------- */
 .eve-dir { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; padding: 14px 16px; border-radius: var(--r-block); background: var(--card-2); }
 .eve-dir .pill { font-family: var(--ui); font-size: 14px; padding: 3px 12px; }
 .eve-dir .lab { font-size: 13px; font-weight: 700; color: var(--ink2); }

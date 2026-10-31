@@ -68,7 +68,7 @@ function initStar(canvas, ui, labelsEl) {
       const a = i / 20 * Math.PI * 2 - Math.PI / 2, h = 14 + Math.abs(v) * 240, last = i === 19;
       const m = new THREE.Mesh(new RoundedBoxGeometry(26, h, 26, 2, 5), mat(mix(v >= 0 ? BULL : BEAR, W, last ? .05 : .35), last ? { emissive: v >= 0 ? BULL : BEAR, emissiveIntensity: .25 } : {}));
       m.position.set(Math.cos(a) * 205, h / 2, Math.sin(a) * 205); root.add(m);
-      m.userData.tip = `<b>${D.days[40 + i]}</b> · 晚潮 CP 偏离 <b class="${v >= 0 ? 'up' : 'down'}">${v >= 0 ? '+' : '−'}${Math.round(Math.abs(v) * 100)}%</b>`; m.userData.di = 40 + i; hits.push(m);
+      m.userData.tip = `<b>${D.days[40 + i]}</b> · 期权日报 CP 偏离 <b class="${v >= 0 ? 'up' : 'down'}">${v >= 0 ? '+' : '−'}${Math.round(Math.abs(v) * 100)}%</b>`; m.userData.di = 40 + i; hits.push(m);
     });
     const ring = new THREE.Mesh(new THREE.TorusGeometry(205, 2.5, 8, 120), mat('#e3e1fb')); ring.rotation.x = Math.PI / 2; root.add(ring);
     // 中圈：研报卡片
@@ -105,7 +105,7 @@ function initStar(canvas, ui, labelsEl) {
     labelsEl.innerHTML = '';
     const mk = (txt, pos, cls) => { const el = document.createElement('div'); el.className = 'st-lab ' + (cls || ''); el.innerHTML = txt; labelsEl.appendChild(el); labels.push({ el, pos }); };
     labels = labels.filter(l => l.el);
-    mk('晚潮 · 近 20 日 CP 偏离', new THREE.Vector3(0, 30, 250), 'k-o');
+    mk('期权日报 · 近 20 日 CP 偏离', new THREE.Vector3(0, 30, 250), 'k-o');
     mk('研报 · 绕中圈', new THREE.Vector3(0, 440, 0), 'k-r');
     if (D.ups.length) mk('← 上游 · 供应方', new THREE.Vector3(-700, 330, 0), 'k-u');
     if (D.downs.length) mk('下游 · 客户 →', new THREE.Vector3(700, 330, 0), 'k-u');
@@ -175,7 +175,7 @@ function initLine(canvas, ui) {
       flag.position.set(X(e.di) + 15, top, 18); root.add(flag);
       const face = new THREE.Mesh(new THREE.PlaneGeometry(26, 26), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, toneMapped: false, map: (() => { const t = textTex([[EVL[e.k], `900 34px ${CN}`, EVC[e.k], 13, 44]], 60, 60, { r: 30 }); return t; })() }));
       face.position.set(X(e.di) + 15, top, 20.5); root.add(face);
-      flag.userData = face.userData = { tip: `<b>${e.d}</b> · ${({ o: '晚潮', r: '研报', n: '新闻' })[e.k]}<br>${e.title}<br><span style="color:var(--ink3)">${e.sub}</span>`, di: e.di }; hits.push(flag, face);
+      flag.userData = face.userData = { tip: `<b>${e.d}</b> · ${({ o: '期权日报', r: '研报日报', n: '新闻' })[e.k]}<br>${e.title}<br><span style="color:var(--ink3)">${e.sub}</span>`, di: e.di }; hits.push(flag, face);
     });
     root.children.forEach((m, i) => { m.userData.y0 = m.position.y; m.userData.dl = i * .6; m.scale.y = .001; });
   }

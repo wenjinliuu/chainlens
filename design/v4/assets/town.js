@@ -1,6 +1,6 @@
 /*
  * 潮信 · AI 产业镇道具库（Three.js，黏土风）
- * 所有模型都以 +x 为车头 / 前进方向、y 向上，单位与产业岛一致（站点底座约 250）。
+ * 所有模型都以 +x 为车头 / 前进方向、y 向上，单位与产业镇一致（站点底座约 250）。
  * 返回 { group, tick(t, dt, speed) } 的是会动的道具；纯静态道具直接返回 Group，交给 island.js 合并几何体以减少绘制次数。
  */
 window.TOWN = (async () => {
@@ -97,7 +97,7 @@ function buildBus() { // 潮信巴士
   g.add(at(box(66, 24, 22, M(W)), 0, 17, 0));
   g.add(at(box(58, 8, 22.4, M('#dfeefe', { roughness: .2 })), 2, 21, 0));
   g.add(at(box(66.4, 4, 22.4, M('#5b4cff')), 0, 9, 0));
-  const tex = textTexture([['潮信', '900 30px "Noto Sans SC", sans-serif', '#5b4cff', 18, 34], ['早潮看消息 · 晚潮看信号', '700 15px "Noto Sans SC", sans-serif', '#1296f0', 96, 32]], 300, 48, '#ffffff');
+  const tex = textTexture([['潮信', '900 30px "Noto Sans SC", sans-serif', '#5b4cff', 18, 34], ['盘前汇总 · 期权日报 · 研报日报', '700 15px "Noto Sans SC", sans-serif', '#1296f0', 96, 32]], 300, 48, '#ffffff');
   [-1, 1].forEach(s => { const p = new THREE.Mesh(new THREE.PlaneGeometry(56, 9), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false })); at(p, 0, 13.5, s * 11.3); if (s < 0) p.rotation.y = Math.PI; g.add(p); });
   lamps(g, 33.5, -33.5, 12, 7);
   return vehicle(g, wheels(g, [-20, 22], 10, 5.2));
@@ -291,7 +291,7 @@ function hotStockTexture(c, L) { // 街区屋顶广告牌：这一环节今天�
   const tex = canvasTex(360, 180, g => {
     g.fillStyle = '#ffffff'; rr(g, 0, 0, 360, 180, 22); g.fill();
     g.fillStyle = mix(L.color, W, .9); rr(g, 0, 0, 360, 44, [22, 22, 0, 0]); g.fill();
-    g.fillStyle = mix(L.color, '#000000', .18); g.font = `800 17px ${CNF}`; g.textAlign = 'left'; g.fillText(`晚潮 · ${L.name} · 今日最热`, 18, 29);
+    g.fillStyle = mix(L.color, '#000000', .18); g.font = `800 17px ${CNF}`; g.textAlign = 'left'; g.fillText(`期权日报 · ${L.name} · 今日最热`, 18, 29);
     g.fillStyle = '#8e91a7'; g.font = `700 14px ${NUMF}`; g.textAlign = 'right'; g.fillText(`量 ${c.vx[6].toFixed(1)}x`, 342, 29);
     g.save(); g.beginPath(); g.arc(58, 112, 36, 0, Math.PI * 2); g.fillStyle = mix(L.color, W, .5); g.fill(); g.beginPath(); g.arc(58, 112, 31, 0, Math.PI * 2); g.fillStyle = '#fff'; g.fill(); g.clip();
     if (logo) g.drawImage(logo, 27, 81, 62, 62); else { g.fillStyle = mix(L.color, '#000', .18); g.font = `800 30px ${NUMF}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(c.t[0], 58, 114); g.textBaseline = 'alphabetic'; }

@@ -2,8 +2,8 @@
  * 潮信 · 看盘工具页（个股）
  * - 行情、期权、研报、新闻全部是【虚构示例】：按代码做种子生成，刷新后不变
  * - 指标计算复用 design/v2/assets/indicators.js（window.IND）；公司、环节、颜色、logo 复用 design/v3/assets/data.js（window.CL）
- * - 期权数据面（CP 偏离、量倍数、LEAP 趋势、数据面倾向）按晚潮期权日报（kzg-option-brief）的口径虚构；
- *   正式版直接读取晚潮的计算结果，不在本站重算
+ * - 期权数据面（CP 偏离、量倍数、LEAP 趋势、数据面倾向）按期权日报（kzg-option-brief）的口径虚构；
+ *   正式版直接读取期权日报的计算结果，不在本站重算
  * - 图表：TradingView Lightweight Charts v5，保留 TradingView 署名（attributionLogo）
  * - 普通脚本，不用 ES module，设计稿可以直接双击用 file:// 打开
  */
@@ -23,7 +23,7 @@
   const UP = '#0fb57b', DN = '#e8364a', UPD = '#0c9465', DND = '#be2c3d';
   // 指标线用分类色（避开涨跌红绿）
   const COL = { ma5: '#f5a314', ma10: '#00a8c6', ma20: '#d23fd8', ma60: '#2b6cf2', boll: '#a04cf5', tgt: '#1296f0', cp: '#5b4cff', vma: '#8e91a7', k: '#f5a314', d: '#00a8c6', j: '#d23fd8' };
-  // 事件：期权 = 晚潮靛紫，研报 = 研报天蓝，新闻 = 珊瑚橙
+  // 事件：期权 = 期权日报靛紫，研报 = 研报天蓝，新闻 = 珊瑚橙
   const EV = { o: { c: '#5b4cff', n: '期权', l: '期' }, r: { c: '#1296f0', n: '研报', l: '研' }, n: { c: '#ff6b2c', n: '新闻', l: '闻' } };
 
   const fmt = (v, d = 2) => v == null || !isFinite(v) ? '—' : v.toFixed(d);
@@ -115,7 +115,7 @@
     // 历史上的几次异动；今天有没有异动与 data.js 的 signals 保持一致
     const spikes = [[30 + (r() * 20 | 0), -1], [80 + (r() * 30 | 0), 1], [150 + (r() * 40 | 0), r() < .5 ? 1 : -1], [260 + (r() * 60 | 0), 1]];
     if (sig.includes('o')) spikes.push([0, oDir]); else spikes.push([5 + (r() * 12 | 0), r() < .7 ? 1 : -1]);
-    // 异动当天：CP 相对前 20 日常态偏离约 3～5 个标准分（晚潮门槛是 2.5σ 且偏离 ≥ ±20%）
+    // 异动当天：CP 相对前 20 日常态偏离约 3～5 个标准分（期权日报门槛是 2.5σ 且偏离 ≥ ±20%）
     spikes.forEach(([ago, s]) => {
       const i = n - 1 - ago, pv = raw.slice(i - 20, i).map(x => x.lnCP), nm = median(pv), sd = Math.max(median(pv.map(x => Math.abs(x - nm))) * 1.4826, .05);
       raw[i].lnCP = nm + s * Math.max(.3, sd * (3 + r() * 1.6)); raw[i].vx *= 1.5 + r() * .8; raw[i].pm *= 1.1 + r() * .5;
@@ -164,7 +164,7 @@
     const S = { t, co, L, daily, idx, opt, reports, tgt, news };
     S.od = optStats(daily, S, 'D');
 
-    // ---- 事件：期权异动按晚潮规则（|标准分| ≥ 2.5 且偏离至少 ±20%）由代码判定 ----
+    // ---- 事件：期权异动按期权日报规则（|标准分| ≥ 2.5 且偏离至少 ±20%）由代码判定 ----
     const events = [];
     S.od.forEach((o, i) => { if (isSig(o)) events.push({ i, k: 'o', title: `期权异动 · CP 比 ${fmt(o.cp)}`, detail: `常态 ${fmt(o.norm)}，${sgn(o.z)}${Math.abs(o.z).toFixed(1)}σ` }); });
     reports.forEach(x => events.push({ i: x.i, k: 'r', title: `${x.inst} ${x.action}`, detail: `目标价 ${x.from ? x.from + ' → ' : ''}${x.tp}` }));
@@ -202,7 +202,7 @@
     });
   }
 
-  // 数据面倾向（示例，按晚潮口径）：CP 信号 + LEAP 信号，同向或只有一个 → 偏多 / 偏空；相反 → 分歧
+  // 数据面倾向（示例，按期权日报口径）：CP 信号 + LEAP 信号，同向或只有一个 → 偏多 / 偏空；相反 → 分歧
   function eveJudge(S) {
     const o = S.od[S.od.length - 1];
     const cpS = isSig(o) ? Math.sign(o.z) : 0;
@@ -353,7 +353,7 @@
     (function f(now) { const k = Math.min((now - t0) / 700, 1), e = 1 - Math.pow(1 - k, 4); el.textContent = (from + (to - from) * e).toFixed(2); if (k < 1) requestAnimationFrame(f); })(t0);
   }
 
-  // ---------------------------------------------------------------- 晚潮 / 研报：四个数字
+  // ---------------------------------------------------------------- 期权日报 / 研报日报：四个数字
   function spark(vals, opts) {
     const w = 240, h = 36, ok = vals.filter(v => v != null), mn = Math.min(...ok, opts.base != null ? opts.base : Infinity), mx = Math.max(...ok, opts.base != null ? opts.base : -Infinity);
     const X = i => i / (vals.length - 1) * w, Y = v => h - 3 - (v - mn) / ((mx - mn) || 1) * (h - 6);
@@ -387,13 +387,13 @@
     const tg = S.tgt[n - 1];
     const lo = Math.min(tg.lo, last.close) * .96, hi = Math.max(tg.hi, last.close) * 1.04, P = v => ((v - lo) / (hi - lo) * 100).toFixed(1) + '%';
     $('#kpis').innerHTML = `
-      <div class="card kpi" style="--k:${COL.cp}"><div class="l"><i></i>期权 CP 比<span class="src">晚潮</span></div>
+      <div class="card kpi" style="--k:${COL.cp}"><div class="l"><i></i>期权 CP 比<span class="src">期权日报</span></div>
         <div class="v">${fmt(o.cp)}<span class="pill ${cpS ? (o.z > 0 ? 'bull' : 'bear') : 'flat'}">${zp}</span></div>
         ${devBar(o.dev)}<div class="d">常态 <b>${fmt(o.norm)}</b> · 偏离 <b>${pct(o.dev * 100, 0)}</b> · 对比前 20 日</div></div>
-      <div class="card kpi" style="--k:${COL.cp}"><div class="l"><i></i>期权量倍数<span class="src">晚潮</span></div>
+      <div class="card kpi" style="--k:${COL.cp}"><div class="l"><i></i>期权量倍数<span class="src">期权日报</span></div>
         <div class="v">${fmt(o.vx, 1)}x<span class="tag" style="--tc-deep:${vt[1]};--tc-bg:${vt[2]}">${vt[0]}</span></div>
         ${bars20(S.od.slice(-20).map(x => x.vx))}<div class="d">权利金 <b>${fmt(o.px, 1)}x</b> · 近 20 日，虚线 = 1x</div></div>
-      <div class="card kpi" style="--k:${COL.cp}"><div class="l"><i></i>LEAP 趋势<span class="src">晚潮</span></div>
+      <div class="card kpi" style="--k:${COL.cp}"><div class="l"><i></i>LEAP 趋势<span class="src">期权日报</span></div>
         <div class="v">${pct(o.lTrend * 100, 0)}<span class="pill ${lS ? (o.lz > 0 ? 'bull' : 'bear') : 'flat'}">${sgn(o.lz)}${Math.abs(o.lz).toFixed(1)}σ</span></div>
         ${spark(S.od.slice(-60).map(x => x.l5), { c: COL.cp, base: o.lNorm })}<div class="d">近 5 日 LEAP Call/Put <b>${fmt(o.l5)}</b> · 常态 <b>${fmt(o.lNorm)}</b></div></div>
       <div class="card kpi" style="--k:${COL.tgt}"><div class="l"><i></i>研报目标价<span class="src">研报 · ${tg.n} 家</span></div>
@@ -571,7 +571,7 @@
     })));
   }
 
-  // ---------------------------------------------------------------- 晚潮数据面
+  // ---------------------------------------------------------------- 期权日报数据面
   function renderEve() {
     const J = eveJudge(S), o = J.o, n = S.daily.length, px = S.daily[n - 1].close;
     const cls = J.dir > 0 ? 'bull' : J.dir < 0 ? 'bear' : 'flat';
@@ -584,7 +584,7 @@
     const far = J.conf >= 1, hotC = call ? UPD : DND, hotBg = call ? '#e2f6ef' : '#fce7e9';
     const hot = `${call ? 'Call' : 'Put'} ${strike} · ${far ? '27/01/15' : '11/07'} 到期`;
     $('#eve').innerHTML = `
-      <div class="c-head"><div><h3>晚潮<em>数据面</em></h3><p>美东 ${md(S.daily[n - 1].time)} · 期权成交结构 · 示例</p></div><span class="tag">晚潮</span></div>
+      <div class="c-head"><div><h3>期权日报<em>数据面</em></h3><p>美东 ${md(S.daily[n - 1].time)} · 期权成交结构 · 示例</p></div><span class="tag">期权日报</span></div>
       <div class="eve-dir"><span class="pill ${cls}">${J.label}</span><span class="lab">期权数据面倾向</span>
         <span class="conf">可信度 ${[0, 1, 2].map(k => `<i class="${k <= J.conf && J.dir ? 'on' : ''}"></i>`).join('')} ${J.dir ? confT : '低'}</span></div>
       <div class="eve-rows">
@@ -593,7 +593,7 @@
         <div class="eve-row"><span class="k">最热合约</span><span class="num" style="font-weight:800">${hot}</span><span class="hot">${far ? `<span class="far" style="color:${hotC};background:${hotBg}">远月</span>` : '<span class="far" style="color:#6f7487;background:#eef0f4">短线</span>'}</span></div>
       </div>
       <div class="dline"><span>报告数据行（代码生成，写报告的 AI 只能原样引用）</span>量${fmt(o.vx, 1)}x 权利金${fmt(o.px, 1)}x｜CP ${fmt(o.cp)}（常态${fmt(o.norm)}）｜LEAP趋势${pct(o.lTrend * 100, 0).replace('−', '-')}</div>
-      <p class="note">"偏多 / 偏空"是期权成交结构的数据面倾向，不构成买卖建议。数据面对方向的预测力有限，正式版直接引用晚潮期权日报的计算结果。</p>`;
+      <p class="note">"偏多 / 偏空"是期权成交结构的数据面倾向，不构成买卖建议。数据面对方向的预测力有限，正式版直接引用期权日报的计算结果。</p>`;
   }
 
   // ---------------------------------------------------------------- 研报 / 新闻 / 产业链
@@ -625,7 +625,7 @@
     const it = ([tk, rel]) => { const c = CL.byT[tk], q = quoteOf(tk); return `<a class="ch-it" href="?t=${tk}" data-go="${tk}">${badge(c, 26)}<span class="tx"><b>${tk}</b><small>${rel}</small></span><em class="${dirc(q.chg)}">${pct(q.chg, 1)}</em></a>`; };
     const peers = byCap(L.members.filter(c => c.seg === co.seg && c.t !== t)).concat(byCap(L.members.filter(c => c.seg !== co.seg))).slice(0, 6);
     $('#chain').innerHTML = `
-      <div class="c-head"><div><h3>产业链<em>上下游</em></h3><p>第 ${li + 1} 层 / 共 8 层 · 关系为示意</p></div><a class="lnk" href="index.html#island">产业岛 →</a></div>
+      <div class="c-head"><div><h3>产业链<em>上下游</em></h3><p>第 ${li + 1} 层 / 共 8 层 · 关系为示意</p></div><a class="lnk" href="index.html#island">产业镇 →</a></div>
       <div class="ch-strip">${CL.layers.map((x, i) => `<i class="${i === li ? 'on' : ''}" style="--c:${x.color}" title="${x.name}"></i>`).join('')}</div>
       <div class="ch-strip-l"><span>上游 · 原材料</span><span style="color:${deep(L.color)}">${L.name}</span><span>应用与端侧 · 下游</span></div>
       <div class="ch-flow">

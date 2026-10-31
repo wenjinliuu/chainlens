@@ -148,7 +148,7 @@ function getTown() {
   Object.assign(sun.shadow.camera, { left: -2300, right: 2300, top: 1500, bottom: -1500, near: 100, far: 5200 }); sun.shadow.bias = -.0005; sun.shadow.radius = 4;
   scene.add(sun);
   const S = new THREE.Group();     // 静态道具，最后统一合并
-  const dyn = [];                  // 每帧更新的东西
+  const pickables = [];            // 可点击的东西：{ obj, info() }
 
   // ---------- 岛与潮水 ----------
   const shape = new THREE.Shape(), N = 80;
@@ -211,18 +211,21 @@ function getTown() {
     // 屋顶广告牌：这一环节今天成交最热的公司（广告牌有贴图，不参与合并）
     const hot = L.members.slice().sort((a, b) => b.vx[6] - a.vx[6])[0];
     const bb = T_.buildBillboard(T_.hotStockTexture(hot, L), 150, 75, 30); at(bb, cx + side * 175, G + 55, cz + 6); scene.add(bb);
+    pickables.push({ obj: bb, info: () => ({ kind: 'board', title: `${hot.t} ${hot.name}`, sub: `${L.name} · 今日成交最热 · 量 ${hot.vx[6].toFixed(1)}x · ${hot.chg[6] >= 0 ? '+' : '−'}${Math.abs(hot.chg[6]).toFixed(2)}%`, go: hot.t, L }) });
     chimneys.push({ p: ch, puffs: Array.from({ length: 5 }, (_, k) => { const m = sph(10, M('#ffffff', { roughness: 1, transparent: true, opacity: .8 }), 10); scene.add(m); return { m, ph: k / 5 }; }) });
     // 货堆（大道边）与叉车
     const pileZ = cz + toAve * 200, fx = cx + side * 175;
     const pile = T_.buildCrates(5, L.color); at(pile, fx + side * 36, G + 5, pileZ); S.add(pile);
     const fk = T_.buildForklift(); fk.group.rotation.y = back ? -Math.PI / 2 : Math.PI / 2; scene.add(fk.group);
+    pickables.push({ obj: fk.group, info: () => ({ kind: 'fork', title: `${L.name}街区的叉车`, sub: '把仓库里的货搬到路边，等卡车来运走', L }) });
     forklifts.push({ v: fk, x: fx, za: cz + toAve * 52, zb: pileZ - toAve * 4, ph: i * .13 });
     // 工人（在站点前干活）、机器人臂
     [[-side * 150, toAve * 150], [-side * 60, toAve * 150]].forEach(([dx, dz], k) => {
       const p = T_.buildPerson(i * 3 + k, { vest: true, helmet: true }); at(p.group, cx + dx, G + 5, cz + dz);
       p.group.lookAt(cx, G + 5, cz); p.group.rotateY(-Math.PI / 2); scene.add(p.group); workers.push(p);
+      pickables.push({ obj: p.group, info: () => ({ kind: 'worker', title: `${L.name}街区的工人`, sub: `今天这个环节期权热度 ${L.heat[6].toFixed(1)}x，${L.heat[6] >= 1.5 ? '开足马力' : '正常开工'}`, L }) });
     });
-    if ([2, 4, 5].includes(i)) { const a = T_.buildRobotArm(L.color); at(a.group, cx - side * 160, G + 5, cz - toAve * 160); a.group.scale.setScalar(1.2); scene.add(a.group); arms.push(a); }
+    if ([2, 4, 5].includes(i)) { const a = T_.buildRobotArm(L.color); at(a.group, cx - side * 160, G + 5, cz - toAve * 160); a.group.scale.setScalar(1.2); scene.add(a.group); arms.push(a); pickables.push({ obj: a.group, info: () => ({ kind: 'arm', title: `${L.name}街区的机械臂`, sub: '自动化产线，24 小时不停', L }) }); }
     // 行道树、长椅
     for (let k = 0; k < 5; k++) { const t = T_.buildTreeSmall(i + k); at(t, cx - BW / 2 + 40 + k * ((BW - 80) / 4), G + 5, cz + toAve * (BD / 2 - 14)); t.scale.setScalar(1.3); S.add(t); }
     for (let k = 0; k < 3; k++) { const t = T_.buildTreeSmall(i + k + 2); at(t, cx - side * (BW / 2 - 16), G + 5, cz - 120 + k * 120); t.scale.setScalar(1.2); S.add(t); }
@@ -283,6 +286,8 @@ function getTown() {
   const dockWh = T_.buildWarehouse('#5b4cff'); dockWh.rotation.y = -Math.PI / 2; at(dockWh, 1740, G + 2, AVE.z); S.add(dockWh);
   const gantry = T_.buildGantry(); at(gantry.group, 1640, G + 2, 120); scene.add(gantry.group);
   const docked = buildShip(); docked.scale.setScalar(1.25); at(docked, 1630, WATER_Y + 8, 330); scene.add(docked);
+  pickables.push({ obj: gantry.group, info: () => ({ kind: 'port', title: '港口岸桥', sub: '把 8 个环节的成品装上货船，运往全世界' }) });
+  pickables.push({ obj: docked, info: () => ({ kind: 'port', title: '靠港货船', sub: '集装箱是 8 层产业链的颜色，装满就出发' }) });
 
   // ---------- 电力：电塔与电线 ----------
   const pyl = [[-150, -130], [-150, 140], [170, 140], [760, 140]].map(([x, z]) => { const p = T_.buildPylon(); p.rotation.y = Math.PI / 2; at(p, x, G + 5, z); S.add(p); p.updateMatrixWorld(true); return p; });
@@ -330,7 +335,17 @@ function getTown() {
     const cruise = k === 'bus' || k === 'truck' ? 62 : k === 'flat' ? 66 : 80;
     const beam = new THREE.Mesh(new THREE.PlaneGeometry(110, 64), T_.NIGHT.beam); beam.rotation.x = -Math.PI / 2;
     const vlen = k === 'bus' ? 70 : k === 'truck' ? 66 : 44; beam.position.set(vlen / 2 + 52, 2.2, 0); v.group.add(beam);
-    vehicles.push({ id: vid++, v, R, s: R.path.len * j / R.kinds.length + (R.open ? 0 : ri * 37), sp: cruise * .5, cruise, kind: k, len: k === 'bus' ? 70 : k === 'truck' ? 66 : 44, pos: new THREE.Vector3(), dir: new THREE.Vector3(1, 0, 0), wait: 0 });
+    const rec = { id: vid++, v, R, s: R.path.len * j / R.kinds.length + (R.open ? 0 : ri * 37), sp: cruise * .5, cruise, kind: k, len: k === 'bus' ? 70 : k === 'truck' ? 66 : 44, pos: new THREE.Vector3(), dir: new THREE.Vector3(1, 0, 0), wait: 0, li: (ri + j * 3) % 8, cargoLi: 0 };
+    vehicles.push(rec);
+    pickables.push({ obj: v.group, info: () => {
+      const L = CL.layers[k === 'flat' ? rec.cargoLi : rec.li];
+      const CN = { raw: '矿石与金属锭', energy: '电力设备', chip: '芯片', net: '光模块与交换机', dc: '服务器', compute: 'GPU', cloud: '云服务', app: 'AI 应用' };
+      if (k === 'bus') return { kind: 'bus', title: '潮信巴士', sub: '绕着小镇跑，车身上写着三个栏目：盘前汇总 · 期权日报 · 研报日报' };
+      if (k === 'truck') return { kind: 'truck', title: `${L.name}的集装箱车`, sub: `${rec.R.open ? '从大桥开来，开进港口仓库' : '绕环岛路送货'} · 装着${CN[L.id]}`, L };
+      if (k === 'flat') return { kind: 'flat', title: `平板车 · 正在${L.name}街区`, sub: `车斗里是${CN[L.id]}；每过一个街区，货物就"加工"成下一环节的样子`, L };
+      const st = rec.sp < 4 ? (rec.wait > 1 ? '在等红灯' : '停着') : '正在行驶';
+      return { kind: 'car', title: k === 'van' ? '厢式车' : '小汽车', sub: `${st} · 时速约 ${Math.round(rec.sp * 1.2)} 公里` };
+    } });
   }));
   const nearestBlock = p => { let bi = 0, bd = 1e12; BLOCKS.forEach((b, i) => { const d = (b.cx - p.x) ** 2 + (b.cz - p.z) ** 2; if (d < bd) { bd = d; bi = i; } }); return bi; };
 
@@ -339,9 +354,13 @@ function getTown() {
   BLOCKS.forEach((B, bi) => {
     const lp = (cw) => rectLoop(B.cx - BW / 2 + 16, B.cx + BW / 2 - 16, B.cz - BD / 2 + 16, B.cz + BD / 2 - 16, [24, 24, 24, 24], cw, 0, G + 5);
     const paths = [lp(true), lp(false)];
-    for (let k = 0; k < 4; k++) { const p = T_.buildPerson(bi * 5 + k); scene.add(p.group); walkers.push({ o: p, path: paths[k % 2], s: paths[0].len * (k / 4 + bi * .07), sp: 15 + (k * 7 % 9) }); }
+    const L = CL.layers[bi], JOBS = ['去上班', '午休散步', '下班回家', '去港口看船'], who = ['工程师', '分析师', '实习生', '产品经理'];
+    for (let k = 0; k < 4; k++) { const p = T_.buildPerson(bi * 5 + k); scene.add(p.group); walkers.push({ o: p, path: paths[k % 2], s: paths[0].len * (k / 4 + bi * .07), sp: 15 + (k * 7 % 9) });
+      pickables.push({ obj: p.group, info: () => ({ kind: 'person', title: `${L.name}街区的${who[k]}`, sub: `${JOBS[(bi + k) % 4]} · 手机里刚收到今天的期权日报`, L }) }); }
     const bot = T_.buildWalkerBot(bi); scene.add(bot.group); walkers.push({ o: bot, path: paths[(bi + 1) % 2], s: paths[0].len * .62, sp: 17 });
-    if (bi % 2 === 0) { const d = T_.buildDeliveryBot(bi); scene.add(d.group); walkers.push({ o: d, path: paths[bi % 4 === 0 ? 0 : 1], s: paths[0].len * .3, sp: 24, wheels: true }); }
+    pickables.push({ obj: bot.group, info: () => ({ kind: 'bot', title: '送货机器人', sub: `背包里是研报日报：今天 ${L.name}有 ${L.members.filter(c => c.signals.includes('r')).length} 条评级调整`, L }) });
+    if (bi % 2 === 0) { const d = T_.buildDeliveryBot(bi); scene.add(d.group); walkers.push({ o: d, path: paths[bi % 4 === 0 ? 0 : 1], s: paths[0].len * .3, sp: 24, wheels: true });
+      pickables.push({ obj: d.group, info: () => ({ kind: 'bot', title: '快递小车', sub: '给街区里的公司送盘前汇总（即将上线）', L }) }); }
   });
 
   // ---------- 港口入口的市场大屏 + 滚动字幕 ----------
@@ -360,11 +379,14 @@ function getTown() {
 
   // ---------- 灯塔、小更、货船、飞艇、海鸥、云 ----------
   const light = buildLighthouse(); at(light.group, 1560, WATER_Y + 30, -600); light.group.scale.setScalar(1.15); scene.add(light.group);
+  pickables.push({ obj: light.group, info: () => ({ kind: 'light', title: '潮信灯塔', sub: '小更的家。每天从这里出发，把日报送到各个街区' }) });
   light.group.traverse(o => { if (o.isMesh && o.material.type !== 'MeshBasicMaterial') o.castShadow = true; });
   const LIGHT_TOP = light.group.position.clone().add(new THREE.Vector3(0, 340, 0));
   const ship = buildShip(); ship.scale.setScalar(1.4); scene.add(ship);
   const robin = buildRobin(); robin.group.scale.setScalar(2.1); scene.add(robin.group);
+  pickables.push({ obj: robin.group, info: () => ({ kind: 'robin', title: '小更', sub: '潮信的信使，一只知更鸟。叼着的信封里是今天的日报' }) });
   const blimp = T_.buildBlimp(); blimp.group.scale.setScalar(1.6); scene.add(blimp.group);
+  pickables.push({ obj: blimp.group, info: () => ({ kind: 'blimp', title: '潮信飞艇', sub: '在小镇上空巡航，提醒大家：收盘后看信号' }) });
   const gulls = Array.from({ length: 7 }, (_, i) => { const g = T_.buildGull(i); g.group.scale.setScalar(2.2); scene.add(g.group); return { g, r: 500 + i * 140, h: 420 + (i % 3) * 70, w: .25 + (i % 4) * .05, ph: i * .9, cx: (i % 2 ? 1 : -1) * 600 }; });
   const clouds = Array.from({ length: 7 }, (_, i) => { const c = T_.buildCloud(i); c.scale.setScalar(1.3 + (i % 3) * .35); at(c, -3200 + i * 950, 480 + (i % 3) * 110, -1750 - (i % 3) * 420); scene.add(c); return c; }); // 云在岛的远处，不挡镇子
 
@@ -455,7 +477,7 @@ function getTown() {
       place(a.v.group, a.R.path, a.s, a.pos, a.dir);
       if (a.R.open) { const e = Math.min(1, a.s / 90, (a.R.path.len - a.s) / 90); a.v.group.scale.setScalar(Math.max(e, .001)); }
       a.v.tick(T, dt, a.sp);
-      if (a.kind === 'flat') a.v.setCargo(nearestBlock(a.pos));
+      if (a.kind === 'flat') { a.cargoLi = nearestBlock(a.pos); a.v.setCargo(a.cargoLi); }
     });
     // 红绿灯与过马路的行人
     signalPhase(T);
@@ -522,7 +544,7 @@ function getTown() {
   town.night = 0; town.nightTarget = 0;
   town.setNight = (v, immediate) => { town.nightTarget = Math.max(0, Math.min(1, v)); if (immediate) { town.night = town.nightTarget; applyNight(town.night); } };
   town.faceCoins = cam => stations.forEach(s => s.coins.forEach(c => c.lookAt(cam.position)));
-  town.vehicles = vehicles; town.walkers = walkers;
+  town.vehicles = vehicles; town.walkers = walkers; town.pickables = pickables;
   TOWN_SINGLETON = town;
   return town;
 }
@@ -592,22 +614,39 @@ function initIsland(canvas, ui) {
   controls.minPolarAngle = .45; controls.maxPolarAngle = 1.2; controls.minAzimuthAngle = -.85; controls.maxAzimuthAngle = .85;
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
   let tween = null;
+  const setRay = e => { const r = canvas.getBoundingClientRect(); ndc.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); ray.setFromCamera(ndc, camera); };
   const pickStation = e => {
-    const r = canvas.getBoundingClientRect(); ndc.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
-    ray.setFromCamera(ndc, camera);
+    setRay(e);
     const hit = ray.intersectObjects(stations.map(s => s.grp), true)[0];
     if (!hit) return null; let o = hit.object; while (o && !stations.find(s => s.grp === o)) o = o.parent; return stations.find(s => s.grp === o) || null;
   };
+  // 镇里的小东西：车、人、机器人、广告牌、岸桥、灯塔、小更、飞艇
+  const pickThing = e => {
+    setRay(e);
+    const objs = town.pickables.map(p => p.obj), hit = ray.intersectObjects(objs, true)[0];
+    if (!hit) return null; let o = hit.object; while (o && !objs.includes(o)) o = o.parent; return town.pickables.find(p => p.obj === o) || null;
+  };
+  let thingHover = null;
   canvas.addEventListener('pointermove', e => {
-    const s = pickStation(e);
-    if (s !== town.hover) { if (town.hover) town.hover.lt = 0; town.hover = s; if (s) s.lt = 34; canvas.style.cursor = s ? 'pointer' : 'grab'; ui.hover && ui.hover(s ? s.i : -1); }
+    const th = pickThing(e);
+    if (th !== thingHover) { thingHover = th; }
+    const s = th ? null : pickStation(e);
+    if (s !== town.hover) { if (town.hover) town.hover.lt = 0; town.hover = s; if (s) s.lt = 34; ui.hover && ui.hover(s ? s.i : -1); }
+    canvas.style.cursor = th || s ? 'pointer' : 'grab';
   });
   let downAt = null;
   canvas.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; });
-  canvas.addEventListener('pointerup', e => { if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 6) { const s = pickStation(e); if (s) go(s.i); } downAt = null; });
+  canvas.addEventListener('pointerup', e => {
+    if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 6) {
+      const th = pickThing(e);
+      if (th) { const r = canvas.getBoundingClientRect(); ui.thing && ui.thing(th.info(), e.clientX - r.left, e.clientY - r.top, th); }
+      else { ui.thing && ui.thing(null); const s = pickStation(e); if (s) go(s.i); }
+    }
+    downAt = null;
+  });
   const narrow = () => camera.aspect < 1.3, far = () => narrow() ? Math.min(1.3 / camera.aspect, 2.4) : 1;
   function viewOf(i) {
-    if (i < 0) { const tgt = HOME.tgt.clone(); if (narrow()) tgt.set(0, -40, 120); return [tgt.clone().add(HOME.pos.clone().sub(HOME.tgt).multiplyScalar(far())), tgt]; }
+    if (i < 0) { const tgt = HOME.tgt.clone(); if (narrow()) tgt.set(0, -40, 120); return [tgt.clone().add(HOME.pos.clone().sub(HOME.tgt).multiplyScalar(narrow() ? Math.min(far(), 1.55) : 1)), tgt]; }
     const p = stations[i].grp.position, back = i < 4;
     const tgt = new THREE.Vector3(p.x - (narrow() ? 0 : 160), narrow() ? 60 : 110, p.z + (narrow() ? 160 : 0));
     const off = new THREE.Vector3(-260, 900, back ? 1300 : 1360).multiplyScalar(narrow() ? Math.min(far(), 1.6) : 1);
@@ -622,6 +661,7 @@ function initIsland(canvas, ui) {
   };
   view.after = () => {
     const r = canvas.getBoundingClientRect();
+    if (ui.followThing) { const th = ui.followThing(); if (th) { th.obj.getWorldPosition(tmp); tmp.y += 60; tmp.project(camera); ui.moveThing((tmp.x + 1) / 2 * r.width, (1 - tmp.y) / 2 * r.height, tmp.z < 1); } }
     stations.forEach(s => {
       tmp.set(s.grp.position.x, G + 5 + Math.max(s.h, 2) + s.lift + s.modelH + 36, s.grp.position.z).project(camera);
       const el = ui.labels[s.i];

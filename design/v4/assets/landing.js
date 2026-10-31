@@ -1,4 +1,4 @@
-/* 潮信 · 落地页交互：手机里的晚潮海报、三个栏目、AI 产业岛 UI、拆开晚潮（滚动爆炸图）、流程、样张、订阅 */
+/* 潮信 · 落地页交互：手机里的期权日报海报、三个栏目、AI 产业镇 UI、拆开期权日报（滚动爆炸图）、流程、样张、订阅 */
 (function () {
   const $ = s => document.querySelector(s);
   const LP = window.LP = {};
@@ -22,7 +22,7 @@
   let night = false;
   LP.setNight = on => {
     night = !!on;
-    $('#hero').classList.toggle('night', night); const isle = $('.isle'); isle && isle.classList.toggle('night', night);
+    $('#hero').classList.toggle('night', night); const isle = $('.isle'); isle && isle.classList.toggle('night', night); const tf = $('.town-full'); tf && tf.classList.toggle('night', night);
     const b1 = $('#nightBtn'); if (b1) b1.innerHTML = night ? '<i>☀️</i><b>白天模式</b>' : '<i>🌙</i><b>夜晚模式</b>';
     const b2 = $('#nightBtn2'); if (b2) b2.textContent = night ? '☀️ 白天' : '🌙 夜晚';
     LP.town && LP.town.setNight(night ? 1 : 0, !!window.__nightNow);
@@ -31,11 +31,11 @@
 
   // ---------- 栏目 ----------
   const COLS = [
-    { id: 'eve', name: '晚潮', sub: '期权日报', color: '#5b4cff', when: '每个交易日 15:40', status: '每日送达', art: 'moon',
+    { id: 'eve', name: '期权日报', sub: '收盘后', color: '#5b4cff', when: '每个交易日 15:40', status: '每日送达', art: 'moon',
       items: ['大盘情绪：全市场 CP 对比 20 日常态', '最强信号与 AI 链重点个股', '最热环节、全市场分时、观察名单'], desc: '收盘后，把成交量前 100 的期权数据整理成一张海报 + 文字版。海报署名 KZG 期权 Pro。' },
-    { id: 'rr', name: '研报', sub: '研报日报', color: '#1296f0', when: '每个交易日', status: '每日送达', art: 'docs',
+    { id: 'rr', name: '研报日报', sub: '每日', color: '#1296f0', when: '每个交易日', status: '每日送达', art: 'docs',
       items: ['机构评级与目标价的调整', '每篇不超过 3 条要点摘要', '按 8 层产业链归类，标明来源'], desc: '今天谁被上调、谁被下调，一页看完。只放摘要，不放研报原文。' },
-    { id: 'morn', name: '早潮', sub: '盘前汇总', color: '#f5a314', when: '美股开盘前', status: '即将上线', soon: true, art: 'sun',
+    { id: 'morn', name: '盘前汇总', sub: '开盘前', color: '#f5a314', when: '美股开盘前', status: '即将上线', soon: true, art: 'sun',
       items: ['隔夜要闻与公司公告', '盘前异动的 AI 链个股', '当天财报与宏观日程'], desc: '开盘前 5 分钟，知道今天 AI 链上发生了什么、要看什么。' },
   ];
   const check = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="m5 12 5 5 9-10"/></svg>';
@@ -62,7 +62,7 @@
       <ul>${c.items.map(x => `<li>${x}</li>`).join('')}</ul>
     </div>`).join('') + `<div class="col-week card"><b>周报</b><span>每周日上午：本周大盘方向、最热和最冷的环节、持续出现的信号、下周看点。订阅任何一个栏目都会收到。</span></div>`;
 
-  // ---------- AI 产业岛 UI ----------
+  // ---------- AI 产业镇 UI ----------
   LP.island = initIsland => {
     const L = CL.layers, sigTk = (Lr, k) => Lr.members.filter(c => c.signals.includes(k));
     $('#isleLabels').innerHTML = L.map((l, i) => `<button class="isle-label" style="--c:${l.color}" data-i="${i}"><i></i>${l.name}<b>${l.heat[6].toFixed(1)}x</b></button>`).join('');
@@ -72,7 +72,7 @@
       document.querySelectorAll('.isle-chip').forEach(c => c.classList.toggle('on', +c.dataset.i === i));
       if (i < 0) {
         panel.style.setProperty('--c', '#5b4cff');
-        panel.innerHTML = `<div class="ip-k">AI 产业岛 · 全景</div><h3>8 个环节 · 58 家公司</h3>
+        panel.innerHTML = `<div class="ip-k">AI 产业镇 · 全景</div><h3>8 个环节 · 58 家公司</h3>
           <p>从矿石、电力，到芯片、光模块、服务器，再到云和机器人。潮信每天沿着这条链，看哪里在放量、谁被调评级、发生了什么。</p>
           <div class="ip-leg"><span><i class="lg-pod"></i>底座越高 = 当天期权成交越热</span><span><i class="lg-cube"></i>方块 = 产业链流向</span><span><i class="lg-coin"></i>硬币 = 成员公司</span></div>
           <button class="btn accent" id="ipStart">从「原材料」开始导览 →</button>`;
@@ -85,13 +85,25 @@
       panel.innerHTML = `<div class="ip-k">第 ${i + 1} 站 · ${l.en}</div><h3>${l.name}</h3>
         <div class="ip-segs">${Object.keys(l.segs).map(x => `<span class="tag" style="--tc-deep:${deep(l.color)};--tc-bg:${mix(l.color, '#ffffff', .9)}">${x}</span>`).join('')}</div>
         <div class="ip-h">潮信每天在这里看什么</div>
-        <div class="ip-row"><span class="ip-c" style="--k:#5b4cff">晚潮</span><div>期权热度 <b class="num">${l.heat[6].toFixed(1)}x</b> · 信号 ${tks(o)}</div></div>
-        <div class="ip-row"><span class="ip-c" style="--k:#1296f0">研报</span><div>今日评级 / 目标价调整：${tks(r)}</div></div>
-        <div class="ip-row"><span class="ip-c" style="--k:#f5a314">早潮</span><div>盘前要闻：${tks(n)} <em>即将上线</em></div></div>
+        <div class="ip-row"><span class="ip-c" style="--k:#5b4cff">期权日报</span><div>期权热度 <b class="num">${l.heat[6].toFixed(1)}x</b> · 信号 ${tks(o)}</div></div>
+        <div class="ip-row"><span class="ip-c" style="--k:#1296f0">研报日报</span><div>今日评级 / 目标价调整：${tks(r)}</div></div>
+        <div class="ip-row"><span class="ip-c" style="--k:#f5a314">盘前汇总</span><div>盘前要闻：${tks(n)} <em>即将上线</em></div></div>
         <div class="ip-logos">${l.members.slice().sort((a, b) => b.cap - a.cap).slice(0, 8).map(c => `<a href="company.html?t=${c.t}" title="${c.t} ${c.name} · 公司档案">${badge(c, 34, l.color)}</a>`).join('')}</div>
         <div class="ip-more">点 logo 打开公司档案 →</div>`;
     }
-    const isl = initIsland($('#isleCanvas'), { labels: [...document.querySelectorAll('.isle-label')], select: render });
+    // 点镇里的东西：气泡跟着它走
+    const bub = $('#isleBubble'); let followed = null;
+    const KIND_ICON = { truck: '🚚', flat: '🛻', bus: '🚌', car: '🚗', fork: '🏗️', worker: '👷', arm: '🦾', person: '🚶', bot: '🤖', board: '📢', port: '⚓', light: '🗼', robin: '🐦', blimp: '🎈' };
+    const thing = (info, x, y, th) => {
+      if (!info) { followed = null; bub.classList.remove('show'); return; }
+      followed = th;
+      bub.style.setProperty('--c', info.L ? info.L.color : '#5b4cff');
+      bub.innerHTML = `<span class="ib-ic">${KIND_ICON[info.kind] || '✨'}</span><div><b>${info.title}</b><p>${info.sub}</p>${info.go ? `<a href="company.html?t=${info.go}">打开 ${info.go} 的公司档案 →</a>` : ''}</div><button class="ib-x" type="button">✕</button>`;
+      bub.querySelector('.ib-x').onclick = () => thing(null);
+      bub.classList.add('show'); moveThing(x, y, true);
+    };
+    const moveThing = (x, y, vis) => { bub.style.left = x + 'px'; bub.style.top = y + 'px'; bub.style.opacity = vis ? 1 : 0; };
+    const isl = initIsland($('#isleCanvas'), { labels: [...document.querySelectorAll('.isle-label')], select: i => { thing(null); render(i); }, thing, followThing: () => followed, moveThing });
     LP.town = isl.town;
     document.querySelectorAll('.isle-label, .isle-chip').forEach(b => b.onclick = () => isl.go(+b.dataset.i));
     $('#islePrev').onclick = () => isl.go(isl.focus <= 0 ? L.length - 1 : isl.focus - 1);
