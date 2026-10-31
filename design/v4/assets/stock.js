@@ -30,7 +30,7 @@
   const sgn = v => v > 0 ? '+' : v < 0 ? '−' : '';
   const pct = (v, d = 2) => v == null || !isFinite(v) ? '—' : sgn(v) + Math.abs(v).toFixed(d) + '%';
   const dirc = v => v > 0 ? 'up' : v < 0 ? 'down' : 'flat';
-  const big = v => v >= 1e12 ? (v / 1e12).toFixed(2) + '万亿' : v >= 1e8 ? (v / 1e8).toFixed(2) + '亿' : v >= 1e4 ? (v / 1e4).toFixed(1) + '万' : String(Math.round(v));
+  const big = v => v >= 1e12 ? (v / 1e12).toFixed(2) + '万亿' : v >= 1e10 ? Math.round(v / 1e8) + '亿' : v >= 1e8 ? (v / 1e8).toFixed(2) + '亿' : v >= 1e4 ? (v / 1e4).toFixed(1) + '万' : String(Math.round(v));
   const md = s => s.slice(5);
   const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
   const median = a => { const s = a.slice().sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
@@ -454,7 +454,7 @@
     S.events.filter(e => state.ev.has(e.k)).forEach(e => { const k = map[e.i]; (evAt[k] = evAt[k] || []).push(e); });
     const marks = [];
     Object.keys(evAt).map(Number).sort((a, b) => a - b).forEach(k => {
-      ['r', 'n', 'o'].forEach(kind => { if (evAt[k].some(e => e.k === kind)) marks.push({ time: T[k], position: kind === 'o' ? 'belowBar' : 'aboveBar', color: EV[kind].c, shape: 'circle', text: EV[kind].l, size: 1 }); });
+      ['r', 'n', 'o'].forEach(kind => { if (evAt[k].some(e => e.k === kind)) marks.push({ time: T[k], position: kind === 'o' ? 'belowBar' : 'aboveBar', color: EV[kind].c, shape: 'circle', text: EV[kind].l, size: { D: 1, W: .7, M: .4 }[P] }); });
     });
     LC.createSeriesMarkers(candle, marks);
 
@@ -484,7 +484,7 @@
         const cpl = line(pane, COL.cp, O.map(x => x.cp), { lineWidth: 1.8, lastValueVisible: true, priceFormat: { type: 'price', precision: 2, minMove: .01 }, crosshairMarkerVisible: true, crosshairMarkerRadius: 3 });
         cpl.attachPrimitive(new Band(O.map(x => x.lo != null ? { lo: x.lo, hi: x.hi } : null), { fill: rgba(COL.cp, .1), autoscale: true }));
         line(pane, rgba(COL.cp, .6), O.map(x => x.norm), { lineWidth: 1, lineStyle: LC.LineStyle.Dotted });
-        LC.createSeriesMarkers(cpl, O.map((x, i) => isSig(x) ? { time: T[i], position: 'inBar', color: x.z > 0 ? UP : DN, shape: 'circle', size: .6 } : null).filter(Boolean));
+        LC.createSeriesMarkers(cpl, O.map((x, i) => isSig(x) ? { time: T[i], position: 'inBar', color: x.z > 0 ? UP : DN, shape: 'circle', size: { D: .6, W: .45, M: .3 }[P] } : null).filter(Boolean));
       }
     });
     const sizePanes = () => { const ps = chart.panes(); ps[0].setStretchFactor(MAIN); subs.forEach((s, i) => ps[i + 1] && ps[i + 1].setStretchFactor(SUBH[s])); };
@@ -639,8 +639,11 @@
     const label = btn.textContent; btn.textContent = '生成中…'; btn.disabled = true;
     try {
       if (!window.htmlToImage) await loadScript('https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js');
-      const url = await window.htmlToImage.toPng($('#shot'), { pixelRatio: 2, skipFonts: true, backgroundColor: '#f7f8fc', filter: el => !(el.classList && el.classList.contains('no-shot')) });
-      const a = document.createElement('a'); a.href = url; a.download = `潮信-看盘-${S.t}-${END}.png`; a.click();
+      const blob = await window.htmlToImage.toBlob($('#shot'), { pixelRatio: 2, skipFonts: true, backgroundColor: '#f7f8fc', filter: el => !(el.classList && el.classList.contains('no-shot')) });
+      const url = URL.createObjectURL(blob), a = document.createElement('a');
+      // 文件名用 ASCII：部分浏览器会把中文文件名换成 "download"
+      a.href = url; a.download = `chaoxin-stock-${S.t}-${END}.png`; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
     } catch (e) { console.warn(e); toast('高清图生成失败，请检查网络后重试'); }
     finally { btn.textContent = label; btn.disabled = false; }
   }

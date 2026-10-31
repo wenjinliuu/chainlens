@@ -97,6 +97,26 @@
     requestAnimationFrame(scrollFeed);
   })(fLast);
 
+  // ---------- 研报卡片环 UI ----------
+  LP.research = initResearch => {
+    const det = $('#rsDetail');
+    const blank = () => { det.innerHTML = `<div class="rs-empty"><b>点一张卡片</b>看机构、评级、目标价和要点；潮信每天把这些整理成一页"研报日报"。</div>`; };
+    const show = r => {
+      const L = CL.layers[r.c.li], d = r.p0 == null ? null : (r.p1 / r.p0 - 1) * 100;
+      det.innerHTML = `<div class="rs-h">${badge(r.c, 44, L.color)}<div><b class="num">${r.t}</b><small>${r.c.name} · ${L.name}</small></div>
+          ${d == null ? '<span class="pill flat">首次覆盖</span>' : `<span class="pill ${d >= 0 ? 'bull' : 'bear'}">目标价 ${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(0)}%</span>`}</div>
+        <div class="rs-m"><span>${r.firm} · ${r.date}</span><span>${r.r0 === r.r1 ? '维持 ' + r.r1 : r.r0 === '—' ? '首次覆盖 · ' + r.r1 : r.r0 + ' → ' + r.r1}</span><span class="num">${r.p0 == null ? '' : r.p0 + ' → '}<b>${r.p1}</b></span></div>
+        <ul>${r.pts.map(p => `<li>${p}</li>`).join('')}</ul>
+        <a class="rs-link" href="company.html?t=${r.t}">看 ${r.t} 的公司档案 →</a>`;
+    };
+    blank();
+    const rs = initResearch($('#rsCanvas'), { select: show });
+    document.querySelectorAll('#rsFilter button').forEach(b => b.onclick = () => {
+      document.querySelectorAll('#rsFilter button').forEach(x => x.classList.toggle('on', x === b)); if (b.dataset.f === 'all') blank(); rs.setFilter(b.dataset.f);
+    });
+    LP.rs = rs;
+  };
+
   // ---------- 拆开日报 ----------
   const STEPS = [
     ['标题区：一句话说清今天', '黑色主句是日期和大盘情绪，靛紫大字是今天最重要的一件事，灰色副句补充原因。'],
