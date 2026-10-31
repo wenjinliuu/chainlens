@@ -1,5 +1,5 @@
 /*
- * ChainLens v4 · 日报海报复刻（落地页展示用）
+ * 潮信 · 晚潮海报复刻（落地页展示用；海报署名仍为 KZG 期权 Pro）
  * 版块与样式按 KZG 期权 Pro 日报（kzg-option-brief/src/poster.js、docs/poster-style.md）：
  * 标题区 → 三个大数字 → 热点事件 → AI 链重点 → AI 环节热度 → 全市场分时 → 页脚
  * 全部为虚构示例数据。renderPoster() 返回 1080 宽的海报 HTML，每个版块带 data-sec 序号，供"拆开日报"使用。

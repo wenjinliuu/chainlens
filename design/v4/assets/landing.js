@@ -1,4 +1,4 @@
-/* ChainLens v4 · 落地页交互：手机里的日报、拆开日报（滚动爆炸图）、流程、样张、订阅 */
+/* 潮信 · 落地页交互：手机里的晚潮海报、三个栏目、AI 产业岛 UI、拆开晚潮（滚动爆炸图）、流程、样张、订阅 */
 (function () {
   const $ = s => document.querySelector(s);
   const LP = window.LP = {};
@@ -6,6 +6,79 @@
   // ---------- 订阅（设计稿演示：只切换状态，不发送） ----------
   LP.subscribe = form => { form.closest('.sub-wrap').classList.add('sub-done'); return false; };
   addEventListener('scroll', () => $('#nav').classList.toggle('scrolled', scrollY > 10), { passive: true });
+  const { mix } = ISO;
+  const deep = c => mix(c, '#000000', .18);
+  const badge = (c, size, color) => `<span class="badge" style="--bs:${size}px;--c:${deep(color)};--ring:${mix(color, '#ffffff', .55)}"><i>${c.t[0]}</i>${c.logo ? `<img src="${c.logo}" alt="" onerror="this.remove()">` : ''}</span>`;
+
+  // ---------- 栏目 ----------
+  const COLS = [
+    { id: 'eve', name: '晚潮', sub: '期权日报', color: '#5b4cff', when: '每个交易日 15:40', status: '每日送达', art: 'moon',
+      items: ['大盘情绪：全市场 CP 对比 20 日常态', '最强信号与 AI 链重点个股', '最热环节、全市场分时、观察名单'], desc: '收盘后，把成交量前 100 的期权数据整理成一张海报 + 文字版。海报署名 KZG 期权 Pro。' },
+    { id: 'rr', name: '研报', sub: '研报日报', color: '#1296f0', when: '每个交易日', status: '每日送达', art: 'docs',
+      items: ['机构评级与目标价的调整', '每篇不超过 3 条要点摘要', '按 8 层产业链归类，标明来源'], desc: '今天谁被上调、谁被下调，一页看完。只放摘要，不放研报原文。' },
+    { id: 'morn', name: '早潮', sub: '盘前汇总', color: '#f5a314', when: '美股开盘前', status: '即将上线', soon: true, art: 'sun',
+      items: ['隔夜要闻与公司公告', '盘前异动的 AI 链个股', '当天财报与宏观日程'], desc: '开盘前 5 分钟，知道今天 AI 链上发生了什么、要看什么。' },
+  ];
+  const check = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="m5 12 5 5 9-10"/></svg>';
+  document.querySelectorAll('.col-pick').forEach(box => {
+    box.innerHTML = COLS.map(c => `<button type="button" class="cp-chip on" style="--c:${c.color}">${check}<b>${c.name}</b>${c.sub}${c.soon ? '<em>即将上线</em>' : ''}</button>`).join('');
+    box.querySelectorAll('.cp-chip').forEach(b => b.onclick = () => b.classList.toggle('on'));
+  });
+  function colArt(kind, c) {
+    const B = new ISO.Iso(), P = ISO.palette(c, 'light', .12);
+    if (kind === 'docs') {
+      for (let k = 0; k < 4; k++) B.box(k * 10, -k * 8, k * 9, 150, 190, 6, k === 3 ? P.body : P.pin);
+      for (let l = 0; l < 5; l++) B.box(52, -10 + l * 30, 42, 80, 10, 2, P.core);
+      B.box(52 - 30, -10, 42, 22, 22, 4, P.dark3);
+    } else {
+      for (let k = 0; k < 12; k++) { const h = 26 + Math.sin(k * .75) * 16 + (k % 3) * 3; B.box(k * 22, 0, 0, 18, 110, h, k % 2 ? P.core : P.body); }
+    }
+    return `<svg viewBox="${B.viewBox(14)}">${B.out()}</svg>`;
+  }
+  $('#colCards').innerHTML = COLS.map(c => `<div class="col-card card" style="--c:${c.color};--cs:${mix(c.color, '#ffffff', .9)};--cd:${deep(c.color)}">
+      <div class="col-art"><span class="orb ${c.art}"></span>${colArt(c.art, c.color)}</div>
+      <div class="col-top"><span class="col-name">${c.name}</span><span class="col-sub">${c.sub}</span><span class="col-st${c.soon ? ' soon' : ''}">${c.status}</span></div>
+      <div class="col-when">${c.when}</div>
+      <p>${c.desc}</p>
+      <ul>${c.items.map(x => `<li>${x}</li>`).join('')}</ul>
+    </div>`).join('') + `<div class="col-week card"><b>周报</b><span>每周日上午：本周大盘方向、最热和最冷的环节、持续出现的信号、下周看点。订阅任何一个栏目都会收到。</span></div>`;
+
+  // ---------- AI 产业岛 UI ----------
+  LP.island = initIsland => {
+    const L = CL.layers, sigTk = (Lr, k) => Lr.members.filter(c => c.signals.includes(k));
+    $('#isleLabels').innerHTML = L.map((l, i) => `<button class="isle-label" style="--c:${l.color}" data-i="${i}"><i></i>${l.name}<b>${l.heat[6].toFixed(1)}x</b></button>`).join('');
+    $('#isleChips').innerHTML = L.map((l, i) => `<button class="isle-chip" style="--c:${l.color}" data-i="${i}"><i></i>${i + 1}. ${l.name}</button>`).join('');
+    const panel = $('#islePanel');
+    function render(i) {
+      document.querySelectorAll('.isle-chip').forEach(c => c.classList.toggle('on', +c.dataset.i === i));
+      if (i < 0) {
+        panel.style.setProperty('--c', '#5b4cff');
+        panel.innerHTML = `<div class="ip-k">AI 产业岛 · 全景</div><h3>8 个环节 · 52 家公司</h3>
+          <p>从矿石、电力，到芯片、光模块、服务器，再到云和机器人。潮信每天沿着这条链，看哪里在放量、谁被调评级、发生了什么。</p>
+          <div class="ip-leg"><span><i class="lg-pod"></i>底座越高 = 当天期权成交越热</span><span><i class="lg-cube"></i>方块 = 产业链流向</span><span><i class="lg-coin"></i>硬币 = 成员公司</span></div>
+          <button class="btn accent" id="ipStart">从「原材料」开始导览 →</button>`;
+        $('#ipStart').onclick = () => isl.go(0);
+        return;
+      }
+      const l = L[i], o = sigTk(l, 'o'), r = sigTk(l, 'r'), n = sigTk(l, 'n');
+      const tks = a => a.length ? a.map(c => `<span class="num">${c.t}</span>`).join('、') : '暂无';
+      panel.style.setProperty('--c', l.color);
+      panel.innerHTML = `<div class="ip-k">第 ${i + 1} 站 · ${l.en}</div><h3>${l.name}</h3>
+        <div class="ip-segs">${Object.keys(l.segs).map(x => `<span class="tag" style="--tc-deep:${deep(l.color)};--tc-bg:${mix(l.color, '#ffffff', .9)}">${x}</span>`).join('')}</div>
+        <div class="ip-h">潮信每天在这里看什么</div>
+        <div class="ip-row"><span class="ip-c" style="--k:#5b4cff">晚潮</span><div>期权热度 <b class="num">${l.heat[6].toFixed(1)}x</b> · 信号 ${tks(o)}</div></div>
+        <div class="ip-row"><span class="ip-c" style="--k:#1296f0">研报</span><div>今日评级 / 目标价调整：${tks(r)}</div></div>
+        <div class="ip-row"><span class="ip-c" style="--k:#f5a314">早潮</span><div>盘前要闻：${tks(n)} <em>即将上线</em></div></div>
+        <div class="ip-logos">${l.members.slice().sort((a, b) => b.cap - a.cap).slice(0, 8).map(c => `<span title="${c.name}">${badge(c, 34, l.color)}</span>`).join('')}</div>`;
+    }
+    const isl = initIsland($('#isleCanvas'), { labels: [...document.querySelectorAll('.isle-label')], select: render });
+    document.querySelectorAll('.isle-label, .isle-chip').forEach(b => b.onclick = () => isl.go(+b.dataset.i));
+    $('#islePrev').onclick = () => isl.go(isl.focus <= 0 ? L.length - 1 : isl.focus - 1);
+    $('#isleNext').onclick = () => isl.go(isl.focus >= L.length - 1 ? 0 : isl.focus + 1);
+    $('#isleHome').onclick = () => isl.go(-1);
+    render(-1);
+    LP.isl = isl;
+  };
 
   // ---------- 手机里自动滚动的日报 ----------
   const feed = $('#feed');
@@ -96,6 +169,12 @@
     ③ <b style="color:var(--ink)">SMCI</b> 偏空 · 可信度中 — 量 2.1x，CP −35%；财报前 Put 放大<br><br>
     观察：MU、CRWV<br>
     <span style="color:var(--ink3)">—— 期权数据面倾向，不构成投资建议</span></div>`);
+
+  const RR = [['NVDA', '机构 A', '中性 → 增持', 145, 165, ['数据中心收入占比继续提升', '新平台量产节奏早于此前披露', '毛利率假设上调 1 个百分点']],
+    ['MU', '机构 B', '维持 增持', 135, 160, ['HBM 产能扩建进度加快', '存储价格环比回升']], ['ANET', '机构 C', '增持 → 中性', 140, 128, ['估值已反映多数预期']]];
+  $('#sampleC').insertAdjacentHTML('afterbegin', `<div class="rr-sheet"><b class="rr-t">📑 研报日报 · 10月30日</b><div class="rr-s">今日 9 条评级 / 目标价调整，摘录 3 条</div>
+    ${RR.map(([t, f, rt, a, b, pts]) => { const c = CL.byT[t], col = CL.layers[c.li].color, up = b >= a; return `<div class="rr-item"><div class="rr-h">${badge(c, 30, col)}<b class="num">${t}</b><span>${f} · ${rt}</span><span class="pill ${up ? 'bull' : 'bear'}">${a} → ${b}</span></div><ul>${pts.map(x => `<li>${x}</li>`).join('')}</ul></div>`; }).join('')}
+    <div class="rr-f">摘要整理自机构公开报告，不构成投资建议</div></div>`);
 
   // ---------- 订阅区插画 ----------
   (() => { const B = new ISO.Iso(); ISO.DRAW.robot.fn(B, ISO.palette('#5b4cff', 'light')); $('#ctaArt').innerHTML = `<svg viewBox="-170 -260 360 360" width="380">${B.out()}</svg>`; })();

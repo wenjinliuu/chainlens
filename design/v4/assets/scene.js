@@ -1,6 +1,6 @@
 /*
- * ChainLens v4 · 首屏 3D 场景（Three.js）
- * - 日报海报的等距物件（ISO.DRAW：芯片、GPU、机柜…）经适配器转成真实 3D 方块，黏土材质 + 雾彩配色
+ * 潮信 · 首屏 3D 场景（Three.js）
+ * - 日报海报的等距物件经 clay.js 转成 3D 黏土模型（芯片、GPU、机柜），加 3D K 线
  * - 3D K 线、印着公司 logo 的硬币（logo 来自 global-stock-logos）
  * - 鼠标视差、拖动旋转、悬停硬币翻转；离开视口时暂停渲染
  */
@@ -10,39 +10,9 @@ const { RoundedBoxGeometry } = await import('three/addons/geometries/RoundedBoxG
 const { RoomEnvironment } = await import('three/addons/environments/RoomEnvironment.js');
 
 
-const { mix, DRAW } = window.ISO;
+const { buildObject, buildCoin, mix } = await window.CLAY;
 const W = '#ffffff';
 
-// ---------- 等距物件 → 3D ----------
-function claySet(c) {
-  const m = (hex, rough) => new THREE.MeshStandardMaterial({ color: hex, roughness: rough ?? .62, metalness: 0, envMapIntensity: .55 });
-  return { body: m(mix(c, W, .62)), pin: m(mix(c, W, .42)), core: m(mix(c, W, .2)), inner: m(mix(c, W, .78), .4), dark3: m(mix(c, '#16172a', .12)) };
-}
-function buildObject(kind, color) {
-  const g = new THREE.Group(), mats = claySet(color);
-  const pick = c => c === undefined ? mats.body : (typeof c === 'string' ? mats.inner : (c.__k ? mats[c.__k] : mats.body));
-  const p = { body: { __k: 'body' }, pin: { __k: 'pin' }, core: { __k: 'core' }, inner: 'inner', dark3: { __k: 'dark3' } };
-  const B = {
-    box(x, y, z, w, d, h, c) {
-      const r = Math.min(w, d, h) * .18;
-      const geo = Math.min(w, d, h) > 9 ? new RoundedBoxGeometry(w, h, d, 3, r) : new THREE.BoxGeometry(w, h, d);
-      const mesh = new THREE.Mesh(geo, pick(c));
-      mesh.position.set(x + w / 2, z + h / 2, y + d / 2);
-      g.add(mesh);
-    },
-    poly(pts, c) { // 只用于物件顶面的扁平方块
-      const xs = pts.map(q => q[0]), ys = pts.map(q => q[1]), z = pts[0][2];
-      const x0 = Math.min(...xs), y0 = Math.min(...ys), w = Math.max(...xs) - x0, d = Math.max(...ys) - y0;
-      const mesh = new THREE.Mesh(new RoundedBoxGeometry(w, 2, d, 2, 1), pick(c));
-      mesh.position.set(x0 + w / 2, z + 1, y0 + d / 2);
-      g.add(mesh);
-    },
-  };
-  DRAW[kind].fn(B, p);
-  const box = new THREE.Box3().setFromObject(g), ctr = box.getCenter(new THREE.Vector3());
-  g.children.forEach(ch => ch.position.sub(ctr));
-  return g;
-}
 function buildCandles() {
   const g = new THREE.Group();
   const up = new THREE.MeshStandardMaterial({ color: mix('#0fb57b', W, .18), roughness: .5 });
@@ -60,31 +30,6 @@ function buildCandles() {
   });
   return g;
 }
-function logoTexture(url, ring) {
-  const cv = document.createElement('canvas'); cv.width = cv.height = 256;
-  const ctx = cv.getContext('2d');
-  const paint = img => {
-    ctx.clearRect(0, 0, 256, 256);
-    ctx.fillStyle = ring; ctx.beginPath(); ctx.arc(128, 128, 128, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(128, 128, 112, 0, Math.PI * 2); ctx.fill();
-    if (img) { ctx.save(); ctx.beginPath(); ctx.arc(128, 128, 112, 0, Math.PI * 2); ctx.clip(); ctx.drawImage(img, 16, 16, 224, 224); ctx.restore(); }
-    tex.needsUpdate = true;
-  };
-  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
-  paint(null);
-  const img = new Image(); img.crossOrigin = 'anonymous'; img.onload = () => paint(img); img.src = url;
-  return tex;
-}
-function buildCoin(c, color) {
-  const ring = mix(color, W, .45);
-  const side = new THREE.MeshStandardMaterial({ color: ring, roughness: .45 });
-  const face = new THREE.MeshStandardMaterial({ map: logoTexture(c.logo, ring), roughness: .5 });
-  const coin = new THREE.Mesh(new THREE.CylinderGeometry(32, 32, 9, 64), [side, face, face]);
-  coin.rotation.x = Math.PI / 2;
-  const g = new THREE.Group(); g.add(coin); g.userData.coin = c;
-  return g;
-}
-
 // ---------- 场景 ----------
 function initHeroScene(canvas, opts) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
@@ -148,7 +93,7 @@ function initHeroScene(canvas, opts) {
   new IntersectionObserver(es => { visible = es[0].isIntersecting; if (visible) { last = performance.now(); requestAnimationFrame(tick); } }).observe(canvas);
   const easeBack = k => { const c = 1.70158 * 1.3; return 1 + (c + 1) * Math.pow(k - 1, 3) + c * Math.pow(k - 1, 2); };
   function tick(now) {
-    const dt = Math.min((now - last) / 1000, .05); last = now; const t = (now - t0) / 1000;
+    const dt = Math.max(0, Math.min((now - last) / 1000, .05)); last = now; const t = (now - t0) / 1000;
     ptr.x += (ptr.tx - ptr.x) * .06; ptr.y += (ptr.ty - ptr.y) * .06;
     drag.spin += (drag.t - drag.spin) * (drag.on ? .25 : .08);
     opts.onTilt && opts.onTilt(ptr.x, ptr.y, drag.spin);

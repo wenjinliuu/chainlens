@@ -4,7 +4,7 @@
 - 所有回复、注释说明、文档一律使用**简体中文**；代码、命令、专有名词可保留英文。
 
 ## 项目
-ChainLens（链镜）：AI 产业链情报台。先读：
+ChainLens（仓库名）：AI 产业链情报台，**对外品牌叫"潮信"**，栏目为早潮（盘前）、晚潮（期权日报，海报署名暂为 KZG 期权 Pro）、研报、周报。先读：
 1. `docs/compliance.md`（合规，优先级最高）
 2. `docs/design.md`
 3. `docs/architecture.md`

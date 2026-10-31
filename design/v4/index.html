@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI 产业链期权日报 · 免费订阅 · ChainLens</title>
-<meta name="description" content="每个交易日收盘后，把 AI 产业链的期权成交数据整理成一张海报和一份文字版，北京时间 15:40 送达。">
+<title>潮信 · AI 产业链情报 · 免费订阅</title>
+<meta name="description" content="潮信：早潮看消息，晚潮看信号。盘前汇总、期权日报、研报日报，按 8 层 AI 产业链整理，每天准时送达。">
 <link rel="stylesheet" href="../v3/assets/brand.css">
 <link rel="stylesheet" href="assets/landing.css">
 <script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }</script>
@@ -15,10 +15,10 @@
 
   <header class="nav" id="nav">
     <a class="brand" href="#">
-      <svg class="brand-mark" viewBox="0 0 30 30"><path d="M15 3 26 9.3v11.4L15 27 4 20.7V9.3Z" fill="#c9c3ff"/><path d="M15 3 26 9.3 15 15.6 4 9.3Z" fill="#efedff"/><path d="M15 15.6 26 9.3v11.4L15 27Z" fill="#5b4cff"/><path d="M15 15.6V27L4 20.7V9.3Z" fill="#8f84ff"/></svg>
-      ChainLens<span class="pro">链镜</span>
+      <svg class="brand-mark" viewBox="0 0 32 32"><path d="M16 2.5 28 9.4v10.2L16 26.5 4 19.6V9.4Z" fill="#c9c3ff"/><path d="M16 2.5 28 9.4 16 16.3 4 9.4Z" fill="#efedff"/><path d="M16 16.3 28 9.4v10.2L16 26.5Z" fill="#5b4cff"/><path d="M16 16.3v10.2L4 19.6V9.4Z" fill="#8f84ff"/><path d="M2.5 25.5c2.2-2.4 4.4-2.4 6.6 0s4.4 2.4 6.6 0 4.4-2.4 6.6 0 4.4 2.4 6.6 0" fill="none" stroke="#1296f0" stroke-width="2.6" stroke-linecap="round"/></svg>
+      潮信<span class="pro">AI 产业链情报</span>
     </a>
-    <nav class="nav-links"><a href="#inside">日报里有什么</a><a href="#board">3D 盘面</a><a href="#how">怎么生成</a><a href="#samples">样张</a><a href="#faq">常见问题</a></nav>
+    <nav class="nav-links"><a href="#columns">三个栏目</a><a href="#island">产业岛</a><a href="#inside">拆开晚潮</a><a href="#board">3D 盘面</a><a href="#how">怎么生成</a><a href="#faq">常见问题</a></nav>
     <div class="nav-right">
       <a class="btn ghost" href="../v2/stock.html">看盘工具</a>
       <a class="btn accent" href="#subscribe">免费订阅</a>
@@ -29,44 +29,63 @@
     <!-- ================= 首屏 ================= -->
     <section class="hero">
       <div class="hero-l">
-        <span class="kicker"><b>每个交易日</b>北京时间 15:40 送达 · 免费</span>
-        <h1 class="h-t1">AI 产业链期权日报</h1>
-        <p class="h-t2">收盘后，信号送到手</p>
-        <p class="h-t3">每天把美股<b>成交量前 100</b> 的期权数据，按 <b>8 层 AI 产业链</b>整理成一张海报和一份文字版：大盘情绪、最强信号、最热环节，<b>3 分钟看完</b>。</p>
+        <span class="kicker"><b>免费</b>盘前 · 收盘 · 研报，每天准时送达</span>
+        <h1 class="h-brand">潮信</h1>
+        <p class="h-t2">早潮看消息，晚潮看信号</p>
+        <p class="h-t3">美股开盘前的<b>要闻汇总</b>、收盘后的<b>期权日报</b>、每天的<b>研报评级调整</b>——按 8 层 AI 产业链整理成海报和文字版，像潮水一样准时。</p>
         <div class="sub-wrap" id="sub1">
-          <form class="sub-form" onsubmit="return LP.subscribe(this)"><input type="email" required placeholder="输入邮箱，每天收到日报"><button class="btn accent" type="submit">免费订阅</button></form>
+          <form class="sub-form" onsubmit="return LP.subscribe(this)"><input type="email" required placeholder="输入邮箱，订阅潮信"><button class="btn accent" type="submit">免费订阅</button></form>
+          <div class="col-pick" data-form="sub1"></div>
           <div class="sub-ok">✓ 已发送确认邮件，点击邮件里的链接完成订阅（设计稿演示）</div>
         </div>
         <div class="assure">
           <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="m5 12 5 5 9-10"/></svg>永久免费</span>
-          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="m5 12 5 5 9-10"/></svg>一键退订</span>
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="m5 12 5 5 9-10"/></svg>栏目随时增减</span>
           <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="m5 12 5 5 9-10"/></svg>只讲数据，不荐股</span>
-        </div>
-        <div class="facts">
-          <div><b>前 100</b>只成交最活跃<br>约占全市场 85%</div>
-          <div><b>8 层</b>AI 产业链<br>52 家核心公司</div>
-          <div><b>每份</b>报告<br>自动核对数字</div>
         </div>
       </div>
       <div class="stage" id="stage">
         <canvas id="scene"></canvas>
         <div class="phone-rig" id="rig">
           <div class="phone"><div class="screen"><div class="island"></div><div class="status"><span>15:40</span><span>●●● ▮</span></div><div class="feed" id="feed"></div></div></div>
-          <div class="toast"><span class="ic"><svg width="22" height="22" viewBox="0 0 30 30"><path d="M15 3 26 9.3v11.4L15 27 4 20.7V9.3Z" fill="#c9c3ff"/><path d="M15 3 26 9.3 15 15.6 4 9.3Z" fill="#fff"/><path d="M15 15.6 26 9.3v11.4L15 27Z" fill="#efedff"/></svg></span>
-            <div><b>📊 期权概览 · 10月30日</b><p>大盘偏乐观 · 光模块 Call 集中放量，LITE 进重点</p></div><small>现在</small></div>
+          <div class="toast"><span class="ic" style="background:#5b4cff">🌊</span>
+            <div><b>晚潮 · 期权概览 10月30日</b><p>大盘偏乐观 · 光模块 Call 集中放量，LITE 进重点</p></div><small>现在</small></div>
+          <div class="toast t2"><span class="ic" style="background:#1296f0">📑</span>
+            <div><b>研报 · 今日 9 条评级调整</b><p>NVDA 获机构 A 上调至增持，目标价 165</p></div><small>2 分钟前</small></div>
           <div class="chip-float cf1"><span class="pill bull">偏多</span><div><b>3 只</b>AI 链重点</div></div>
-          <div class="chip-float cf2"><span style="width:10px;height:10px;border-radius:50%;background:#5b4cff"></span><div><b>2.3x</b>最热环节 · 光模块</div></div>
         </div>
         <div class="drag-hint"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 12h8M5 9l-3 3 3 3M19 9l3 3-3 3"/></svg>左右拖动看看 · 鼠标放到硬币上</div>
       </div>
     </section>
 
-    <!-- ================= 拆开日报 ================= -->
+    <!-- ================= 三个栏目 ================= -->
+    <section class="section" id="columns" style="padding-top:40px">
+      <div class="sec-head reveal"><div class="sec-no">01</div><div><h2>一次订阅，<em>三股潮水</em></h2><p>按需勾选，随时增减。每个栏目都按同一套 8 层 AI 产业链整理。</p></div></div>
+      <div class="cols reveal" id="colCards"></div>
+    </section>
+
+    <!-- ================= AI 产业岛 ================= -->
+    <section class="section" id="island">
+      <div class="sec-head reveal"><div class="sec-no">02</div><div><h2>潮信盯着<em>整条 AI 产业链</em></h2><p>从矿石到机器人，8 个环节、52 家公司。拖动转一转，点一站看看潮信每天在那里看什么。</p></div></div>
+      <div class="isle reveal">
+        <canvas id="isleCanvas"></canvas>
+        <div class="isle-labels" id="isleLabels"></div>
+        <div class="isle-panel card" id="islePanel"></div>
+        <div class="isle-bar">
+          <button class="icon-btn" id="islePrev" title="上一站">‹</button>
+          <div class="isle-chips" id="isleChips"></div>
+          <button class="icon-btn" id="isleNext" title="下一站">›</button>
+          <button class="btn ghost" id="isleHome">全景</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 拆开晚潮 ================= -->
     <section class="explode" id="inside">
       <div class="ex-sticky">
         <div class="ex-text">
-          <div class="sec-no">01</div>
-          <h2>一张海报，<br><em>拆开来看</em></h2>
+          <div class="sec-no">03</div>
+          <h2>晚潮海报，<br><em>拆开来看</em></h2>
           <div class="ex-steps" id="exSteps"></div>
         </div>
         <div class="ex-stage"><div class="ex-poster" id="exPoster"></div></div>
@@ -75,7 +94,7 @@
 
     <!-- ================= 3D 盘面 ================= -->
     <section class="section" id="board">
-      <div class="sec-head reveal"><div class="sec-no">02</div><div><h2>数据摊开给你看，<em>还能转着看</em></h2><p>日报里的每个结论都有数据：拖动旋转，鼠标放到柱子上看读数。</p></div></div>
+      <div class="sec-head reveal"><div class="sec-no">04</div><div><h2>数据摊开给你看，<em>还能转着看</em></h2><p>每个结论都有数据：拖动旋转，鼠标放到柱子上看读数。</p></div></div>
       <div class="board reveal">
         <div class="board-canvas">
           <canvas id="chart3d"></canvas>
@@ -88,21 +107,22 @@
 
     <!-- ================= 怎么生成 ================= -->
     <section class="section" id="how">
-      <div class="sec-head reveal"><div class="sec-no">03</div><div><h2>每天自动生成，<em>数字由代码算</em></h2><p>从源站出数据到推送到手机，大约 40 分钟。</p></div></div>
+      <div class="sec-head reveal"><div class="sec-no">05</div><div><h2>晚潮怎么生成：<em>数字由代码算</em></h2><p>从源站出数据到推送到手机，大约 40 分钟。研报和早潮也遵守同样的规则。</p></div></div>
       <div class="flow reveal" id="flow"></div>
       <div class="princ reveal">
         <div class="card"><span class="k">规则 1</span><b>数字由代码算</b><p>海报和报告里的每个数字都来自代码计算，写解读的 AI 只能引用，不能改。</p></div>
         <div class="card"><span class="k">规则 2</span><b>阈值按分布定</b><p>异动阈值按数据分布设定（单只票约 5%～10% 的交易日触发），不按股价涨跌倒推调参。</p></div>
-        <div class="card"><span class="k">规则 3</span><b>坦白说准确率</b><p>期权数据面对方向的预测力本来有限，做得好约 55%～60%。所以日报只讲数据面倾向和依据，不给买卖建议。</p></div>
+        <div class="card"><span class="k">规则 3</span><b>坦白说准确率</b><p>期权数据面对方向的预测力本来有限，做得好约 55%～60%。所以潮信只讲数据面倾向和依据，不给买卖建议。</p></div>
       </div>
     </section>
 
     <!-- ================= 样张 ================= -->
     <section class="section" id="samples">
-      <div class="sec-head reveal"><div class="sec-no">04</div><div><h2>每天两份，<em>海报 + 文字版</em></h2><p>海报适合扫一眼和转发；文字版适合细读。周日上午另有一份周报。</p></div></div>
-      <div class="samples reveal">
-        <div class="sample" id="sampleA"><div class="cap"><span class="tag">日报海报</span><b>一张图看完今天</b><span>可下载高清图</span></div></div>
-        <div class="sample" id="sampleB"><div class="cap"><span class="tag" style="--tc-deep:#0b77c0;--tc-bg:#e7f4fe">文字版</span><b>📊 期权概览</b><span>推送到手机，复制即可转发</span></div></div>
+      <div class="sec-head reveal"><div class="sec-no">06</div><div><h2>每天收到的，<em>长这样</em></h2><p>海报适合扫一眼和转发；文字版适合细读；研报只放摘要，不放原文。</p></div></div>
+      <div class="samples three reveal">
+        <div class="sample" id="sampleA"><div class="cap"><span class="tag">晚潮 · 海报</span><b>一张图看完今天</b><span>可下载高清图</span></div></div>
+        <div class="sample" id="sampleB"><div class="cap"><span class="tag" style="--tc-deep:#4b3ed1;--tc-bg:#efedff">晚潮 · 文字版</span><b>📊 期权概览</b><span>复制即可转发</span></div></div>
+        <div class="sample" id="sampleC"><div class="cap"><span class="tag" style="--tc-deep:#0b77c0;--tc-bg:#e7f4fe">研报日报</span><b>今天谁被上调了</b><span>每篇不超过 3 条要点</span></div></div>
       </div>
     </section>
 
@@ -110,10 +130,11 @@
     <section class="section" id="subscribe">
       <div class="cta reveal">
         <div>
-          <h2>明天 15:40，<br><em>第一份日报</em>就到</h2>
-          <p>免费订阅，随时退订。我们只发日报和周报，不发广告。</p>
+          <h2>明天，<br><em>第一股潮水</em>就到</h2>
+          <p>免费订阅，栏目随时增减，随时退订。只发潮信，不发广告。</p>
           <div class="sub-wrap" id="sub2">
             <form class="sub-form" onsubmit="return LP.subscribe(this)"><input type="email" required placeholder="你的邮箱"><button class="btn accent" type="submit">免费订阅</button></form>
+            <div class="col-pick" data-form="sub2"></div>
             <div class="sub-ok">✓ 已发送确认邮件（设计稿演示）</div>
           </div>
         </div>
@@ -123,19 +144,19 @@
 
     <!-- ================= 常见问题 ================= -->
     <section class="section" id="faq">
-      <div class="sec-head reveal"><div class="sec-no">05</div><div><h2>常见问题</h2></div></div>
+      <div class="sec-head reveal"><div class="sec-no">07</div><div><h2>常见问题</h2></div></div>
       <div class="faq reveal">
-        <details open><summary>真的免费吗？</summary><p>免费。日报只做公开信息和期权数据的整理，不收费，也不会推荐付费产品或引导开户。</p></details>
-        <details><summary>几点发？发什么？</summary><p>北京时间周二至周六 15:40 左右，分析美东前一个交易日：一张海报 + 一份文字版。周日上午发一份周报。</p></details>
-        <details><summary>这是投资建议吗？</summary><p>不是。日报里的"偏多 / 偏空"是期权成交结构的数据面倾向，配合消息面说明依据，不构成任何买卖建议。市场有风险，投资需谨慎。</p></details>
-        <details><summary>数据从哪来？</summary><p>期权成交数据来自每日成交量前 100 的股票（约占全市场成交量 85%），按 20 日常态做对比；消息来自公司公告和主流媒体，每条都标来源。</p></details>
+        <details open><summary>真的免费吗？</summary><p>免费。潮信只做公开信息和期权数据的整理，不收费，也不会推荐付费产品或引导开户。</p></details>
+        <details><summary>三个栏目分别什么时候到？</summary><p>早潮：美股开盘前（即将上线）；晚潮：北京时间周二至周六 15:40 左右，分析美东前一个交易日；研报：每个交易日；周日上午另有一份周报。</p></details>
+        <details><summary>这是投资建议吗？</summary><p>不是。晚潮里的"偏多 / 偏空"是期权成交结构的数据面倾向，研报只整理机构公开的评级和目标价摘要，都不构成任何买卖建议。市场有风险，投资需谨慎。</p></details>
+        <details><summary>数据从哪来？</summary><p>期权成交数据来自每日成交量前 100 的股票（约占全市场 85%），按 20 日常态对比；研报来自机构公开报告的摘要，不转载原文；消息来自公司公告和主流媒体，每条标来源。</p></details>
         <details><summary>准确率怎么样？</summary><p>坦白说，期权数据面对方向的预测力本来有限，做得好约 55%～60%。我们会持续验证并公开规则，把"什么时候不该信"也讲清楚。</p></details>
-        <details><summary>怎么退订？</summary><p>每封邮件底部都有一键退订链接，点一下就好，不需要登录。</p></details>
+        <details><summary>为什么海报上写着 KZG 期权 Pro？</summary><p>晚潮的期权日报海报沿用原来的署名"KZG 期权 Pro"，内容和潮信的晚潮是同一份。</p></details>
       </div>
     </section>
 
     <footer class="footer">
-      <div><div class="warn">本站内容为公开信息整理，不构成任何投资建议。市场有风险，投资需谨慎。</div>期权数据：每日成交前 100 · 消息：公司公告、主流媒体 · 徽标仅用于识别</div>
+      <div><div class="warn">本站内容为公开信息整理，不构成任何投资建议。市场有风险，投资需谨慎。</div>潮信 · 期权数据：每日成交前 100 · 研报：机构公开报告摘要 · 消息：公司公告、主流媒体 · 徽标仅用于识别</div>
       <div style="margin-left:auto;text-align:right">本页所有数字均为虚构示例<br>视觉：雾彩·清透（与日报海报同源）</div>
     </footer>
   </main>
@@ -146,25 +167,30 @@
 <script src="../v3/assets/data.js"></script>
 <script src="assets/poster.js"></script>
 <script src="assets/landing.js"></script>
+<script src="assets/clay.js"></script>
 <script src="assets/scene.js"></script>
+<script src="assets/island.js"></script>
 <script src="assets/board.js"></script>
 <script>
 (async () => {
-const { initHeroScene } = await HERO, { initBoard } = await BOARD;
-const rig = document.getElementById('rig'), tip = document.getElementById('coinTip');
-initHeroScene(document.getElementById('scene'), {
-  host: document.getElementById('stage'),
-  offsetX: () => 40,
-  onTilt(x, y, spin) { rig.style.setProperty('--ry', (-18 + x * 10 + spin * .5) + 'deg'); rig.style.setProperty('--rx', (7 - y * 6) + 'deg'); },
-  onCoin(c, e) {
-    if (!c) { tip.classList.remove('show'); return; }
-    tip.innerHTML = `<b class="num">${c.t}</b> <span style="color:var(--ink3)">${c.name}</span> · <span style="color:var(--ink2)">${CL.layers[c.li].name}</span>`;
-    tip.style.left = (e.clientX + 16) + 'px'; tip.style.top = (e.clientY - 46) + 'px'; tip.classList.add('show');
-  },
-});
-const read = document.getElementById('boardRead');
-const board = initBoard(document.getElementById('chart3d'), { read: t => read.innerHTML = t ? `<b>${t}</b>` : '把鼠标放到柱子上看读数' });
-window.LP.onBoard(v => board.show(v));
+  const rig = document.getElementById('rig'), tip = document.getElementById('coinTip');
+  const { initHeroScene } = await HERO;
+  initHeroScene(document.getElementById('scene'), {
+    host: document.getElementById('stage'),
+    offsetX: () => 40,
+    onTilt(x, y, spin) { rig.style.setProperty('--ry', (-18 + x * 10 + spin * .5) + 'deg'); rig.style.setProperty('--rx', (7 - y * 6) + 'deg'); },
+    onCoin(c, e) {
+      if (!c) { tip.classList.remove('show'); return; }
+      tip.innerHTML = `<b class="num">${c.t}</b> <span style="color:var(--ink3)">${c.name}</span> · <span style="color:var(--ink2)">${CL.layers[c.li].name}</span>`;
+      tip.style.left = (e.clientX + 16) + 'px'; tip.style.top = (e.clientY - 46) + 'px'; tip.classList.add('show');
+    },
+  });
+  const { initIsland } = await ISLAND;
+  window.LP.island(initIsland);
+  const { initBoard } = await BOARD;
+  const read = document.getElementById('boardRead');
+  const board = initBoard(document.getElementById('chart3d'), { read: t => read.innerHTML = t ? `<b>${t}</b>` : '把鼠标放到柱子上看读数' });
+  window.LP.onBoard(v => board.show(v));
 })();
 </script>
 </body>
