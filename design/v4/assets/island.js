@@ -144,7 +144,8 @@ function getTown() {
   scene.fog = new THREE.Fog(FOG, 5200, 11000);
   const hemi = new THREE.HemisphereLight('#ffffff', '#cfe6ff', .95); scene.add(hemi);
   const sun = new THREE.DirectionalLight('#fffaf2', 1.7); sun.position.set(-1100, 1900, 1000);
-  sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096);
+  const Q = window.Q || { dpr: 2, shadows: true, shadowMap: 4096, density: 1, water: 1, tick() {}, onChange() {} };
+  sun.castShadow = Q.shadows; sun.shadow.mapSize.set(Q.shadowMap, Q.shadowMap);
   Object.assign(sun.shadow.camera, { left: -2300, right: 2300, top: 1500, bottom: -1500, near: 100, far: 5200 }); sun.shadow.bias = -.0005; sun.shadow.radius = 4;
   scene.add(sun);
   const S = new THREE.Group();     // 静态道具，最后统一合并
@@ -157,7 +158,7 @@ function getTown() {
   const island = new THREE.Mesh(ext(110, 24, 24), [M('#e4f4e6', { roughness: .85 }), M('#d9d4fb', { roughness: .7 })]); island.receiveShadow = true; scene.add(island);
   const sand = new THREE.Mesh(ext(60, 14, 75), M('#fbefd6', { roughness: .95 })); sand.position.y = -46; sand.receiveShadow = true; scene.add(sand);
   scene.add(at(new THREE.Mesh(ext(260, 10, 100), M('#e8dcc4', { roughness: .95 })), 0, -120, 0));
-  const waterGeo = new THREE.PlaneGeometry(16000, 11000, 260, 180); waterGeo.rotateX(-Math.PI / 2);
+  const waterGeo = new THREE.PlaneGeometry(16000, 11000, Math.round(260 * Q.water), Math.round(180 * Q.water)); waterGeo.rotateX(-Math.PI / 2);
   const uni = {
     uTime: { value: 0 }, uTide: { value: 0 }, uSun: { value: new THREE.Vector3(-.45, .8, .4).normalize() },
     uShallow: { value: new THREE.Color('#a6ecef') }, uMid: { value: new THREE.Color('#8fd2f6') }, uDeep: { value: new THREE.Color('#78b4ef') },
@@ -338,7 +339,7 @@ function getTown() {
   const CARC = T_.SHIRT.slice(0, 9);
   const vehicles = [];
   let vid = 0;
-  routes.forEach((R, ri) => R.kinds.forEach((k, j) => {
+  routes.forEach((R, ri) => R.kinds.slice(0, Math.max(1, Math.round(R.kinds.length * Q.density))).forEach((k, j) => {
     const col = CARC[(ri * 3 + j) % CARC.length];
     const v = k === 'bus' ? T_.buildBus() : k === 'truck' ? T_.buildTruck(CL.layers[(ri + j * 3) % 8].color) : k === 'van' ? T_.buildVan(col) : k === 'flat' ? T_.buildFlatbed(0) : T_.buildCar(col);
     scene.add(v.group);
@@ -365,7 +366,7 @@ function getTown() {
     const lp = (cw) => rectLoop(B.cx - BW / 2 + 16, B.cx + BW / 2 - 16, B.cz - BD / 2 + 16, B.cz + BD / 2 - 16, [24, 24, 24, 24], cw, 0, G + 5);
     const paths = [lp(true), lp(false)];
     const L = CL.layers[bi], JOBS = ['去上班', '午休散步', '下班回家', '去港口看船'], who = ['工程师', '分析师', '实习生', '产品经理'];
-    for (let k = 0; k < 4; k++) { const p = T_.buildPerson(bi * 5 + k); scene.add(p.group); walkers.push({ o: p, path: paths[k % 2], s: paths[0].len * (k / 4 + bi * .07), sp: 15 + (k * 7 % 9) });
+    for (let k = 0; k < Math.max(1, Math.round(4 * Q.density)); k++) { const p = T_.buildPerson(bi * 5 + k); scene.add(p.group); walkers.push({ o: p, path: paths[k % 2], s: paths[0].len * (k / 4 + bi * .07), sp: 15 + (k * 7 % 9) });
       pickables.push({ obj: p.group, info: () => ({ kind: 'person', title: `${L.name}街区的${who[k]}`, sub: `${JOBS[(bi + k) % 4]} · 手机里刚收到今天的期权日报`, L }) }); }
     const bot = T_.buildWalkerBot(bi); scene.add(bot.group); walkers.push({ o: bot, path: paths[(bi + 1) % 2], s: paths[0].len * .62, sp: 17 });
     pickables.push({ obj: bot.group, info: () => ({ kind: 'bot', title: '送货机器人', sub: `背包里是研报日报：今天 ${L.name}有 ${L.members.filter(c => c.signals.includes('r')).length} 条评级调整`, L }) });
@@ -397,8 +398,8 @@ function getTown() {
   pickables.push({ obj: robin.group, info: () => ({ kind: 'robin', title: '小更', sub: '潮信的信使，一只知更鸟。叼着的信封里是今天的日报' }) });
   const blimp = T_.buildBlimp(); blimp.group.scale.setScalar(1.6); scene.add(blimp.group);
   pickables.push({ obj: blimp.group, info: () => ({ kind: 'blimp', title: '潮信飞艇', sub: '在小镇上空巡航，提醒大家：收盘后看信号' }) });
-  const gulls = Array.from({ length: 7 }, (_, i) => { const g = T_.buildGull(i); g.group.scale.setScalar(2.2); scene.add(g.group); return { g, r: 500 + i * 140, h: 420 + (i % 3) * 70, w: .25 + (i % 4) * .05, ph: i * .9, cx: (i % 2 ? 1 : -1) * 600 }; });
-  const clouds = Array.from({ length: 7 }, (_, i) => { const c = T_.buildCloud(i); c.scale.setScalar(1.3 + (i % 3) * .35); at(c, -3200 + i * 950, 480 + (i % 3) * 110, -1750 - (i % 3) * 420); scene.add(c); return c; }); // 云在岛的远处，不挡镇子
+  const gulls = Array.from({ length: Math.max(2, Math.round(7 * Q.density)) }, (_, i) => { const g = T_.buildGull(i); g.group.scale.setScalar(2.2); scene.add(g.group); return { g, r: 500 + i * 140, h: 420 + (i % 3) * 70, w: .25 + (i % 4) * .05, ph: i * .9, cx: (i % 2 ? 1 : -1) * 600 }; });
+  const clouds = Array.from({ length: Math.max(3, Math.round(7 * Q.density)) }, (_, i) => { const c = T_.buildCloud(i); c.scale.setScalar(1.3 + (i % 3) * .35); at(c, -3200 + i * 950, 480 + (i % 3) * 110, -1750 - (i % 3) * 420); scene.add(c); return c; }); // 云在岛的远处，不挡镇子
 
   bake(S, scene);
   // 注意：用 scene.environment 时，three.js r170 不读材质的 envMapIntensity，环境光强度要靠 scene.environmentIntensity 控制
@@ -567,6 +568,7 @@ function loop(now) {
   const dt = Math.max(0, Math.min((now - last) / 1000, .04)); last = now; CLOCK += dt;
   const vis = [...views].filter(v => v.visible);
   if (!vis.length) { running = false; return; }
+  window.Q && window.Q.tick(dt);
   getTown().update(CLOCK, dt);
   vis.forEach(v => v.render(CLOCK, dt));
   requestAnimationFrame(loop);
@@ -575,9 +577,11 @@ function wake() { if (!running) { running = true; last = performance.now(); requ
 function makeView(canvas, opts) {
   const town = getTown();
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, opts.maxDpr || 2));
+  const Q = window.Q || { dpr: 2, shadows: true, onChange() {} };
+  renderer.setPixelRatio(Math.min(devicePixelRatio, opts.maxDpr || 2, Q.dpr));
   renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NeutralToneMapping;
-  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.enabled = Q.shadows; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  Q.onChange(() => { renderer.setPixelRatio(Math.min(devicePixelRatio, opts.maxDpr || 2, Q.dpr)); renderer.shadowMap.enabled = Q.shadows; town.scene.traverse(o => { if (o.isLight && o.shadow) o.castShadow = Q.shadows; }); view.resize(); });
   const env = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), .04).texture; // 环境贴图属于各自的 WebGL 上下文
   const camera = new THREE.PerspectiveCamera(28, 1, 10, 16000);
   const view = { canvas, renderer, camera, visible: false, onResize: null, before: null, after: null };

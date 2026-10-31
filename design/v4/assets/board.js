@@ -45,7 +45,7 @@ function miniObject(kind, color) {
 
 function initBoard(canvas, ui) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(devicePixelRatio, window.Q ? window.Q.dpr : 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NeutralToneMapping;
   const scene = new THREE.Scene();
   scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), .04).texture;

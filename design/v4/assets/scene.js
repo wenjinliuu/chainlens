@@ -34,7 +34,7 @@ function buildCandles() {
 // ---------- 场景 ----------
 function initHeroScene(canvas, opts) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(devicePixelRatio, window.Q ? window.Q.dpr : 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.NeutralToneMapping;
   const scene = new THREE.Scene();
@@ -144,7 +144,7 @@ function initHeroScene(canvas, opts) {
 // ---------- 订阅区：小更和邮筒；订阅成功后衔信飞走 ----------
 function initMascot(canvas) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NeutralToneMapping;
+  renderer.setPixelRatio(Math.min(devicePixelRatio, window.Q ? window.Q.dpr : 2)); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NeutralToneMapping;
   const scene = new THREE.Scene();
   scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), .04).texture;
   scene.add(new THREE.HemisphereLight('#ffffff', '#d9d4ff', 1.1));

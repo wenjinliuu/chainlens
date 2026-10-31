@@ -15,7 +15,7 @@ const EVC = { o: '#a04cf5', r: '#1296f0', n: '#f5a314' }, EVL = { o: '期', r: '
 
 function base(canvas) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NeutralToneMapping;
+  renderer.setPixelRatio(Math.min(devicePixelRatio, window.Q ? window.Q.dpr : 2)); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NeutralToneMapping;
   const scene = new THREE.Scene();
   scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), .04).texture;
   scene.add(new THREE.HemisphereLight('#ffffff', '#dcd7ff', 1.05));

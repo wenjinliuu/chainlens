@@ -103,7 +103,7 @@ function hubTexture(up, down, nw) {
 
 function initResearch(canvas, ui) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NeutralToneMapping;
+  renderer.setPixelRatio(Math.min(devicePixelRatio, window.Q ? window.Q.dpr : 2)); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NeutralToneMapping;
   const scene = new THREE.Scene();
   scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), .04).texture;
   scene.add(new THREE.HemisphereLight('#ffffff', '#d9e6ff', 1.05));
