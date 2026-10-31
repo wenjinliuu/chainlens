@@ -55,12 +55,15 @@ function initHeroScene(canvas, opts) {
     obj.rotation.set(rx, ry, 0); holder.scale.setScalar(.001);
     root.add(holder); items.push(holder); return holder;
   };
+  if (!opts.minimal) { // 首屏背景改为产业镇后，不再需要这些漂浮物件
   add(buildObject('chip', '#5b4cff'), -250, -210, 60, .95, -.78, .62, 0);
   add(buildObject('gpu', '#a04cf5'), 245, 250, -40, .78, -.9, .55, 120);
   add(buildObject('rack', '#1296f0'), 270, -220, 20, .72, -.7, .38, 240);
   add(buildCandles(), -255, 215, -20, .9, -.55, .42, 360);
   const coinSpots = [['NVDA', -180, 300, 120, '#1296f0'], ['MU', -335, 40, 100, '#5b4cff'], ['TSM', 330, 10, 140, '#5b4cff']];
-  const coins = coinSpots.map(([t, x, y, z, col], i) => add(buildCoin(CL.byT[t], col), x, y, z, 1, 0, 0, 480 + i * 90));
+  coinSpots.forEach(([t, x, y, z, col], i) => add(buildCoin(CL.byT[t], col), x, y, z, 1, 0, 0, 480 + i * 90));
+  }
+  const coins = items.filter(it => it.children[0].userData.coin);
 
   // 小更的飞行路线（单位≈像素，相对手机中心；手机左上角约在 (-165, 345)）
   const robin = buildRobin(); robin.group.scale.setScalar(1.7); root.add(robin.group);

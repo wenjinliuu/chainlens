@@ -1,0 +1,290 @@
+/*
+ * 潮信 · AI 产业镇道具库（Three.js，黏土风）
+ * 所有模型都以 +x 为车头 / 前进方向、y 向上，单位与产业岛一致（站点底座约 250）。
+ * 返回 { group, tick(t, dt, speed) } 的是会动的道具；纯静态道具直接返回 Group，交给 island.js 合并几何体以减少绘制次数。
+ */
+window.TOWN = (async () => {
+const C = await window.CLAY;
+const { THREE, RoundedBoxGeometry, mix, CARGO } = C;
+const W = '#ffffff', INK = '#2b2d45';
+
+// 材质缓存：同色同参数共用一个材质，静态道具才能按材质合并
+const MC = new Map();
+function M(color, o) {
+  const k = color + JSON.stringify(o || {});
+  if (!MC.has(k)) MC.set(k, new THREE.MeshStandardMaterial(Object.assign({ color, roughness: .62, metalness: 0, envMapIntensity: .55 }, o || {})));
+  return MC.get(k);
+}
+const box = (w, h, d, m, r) => new THREE.Mesh(r === 0 || Math.min(w, h, d) < 6 ? new THREE.BoxGeometry(w, h, d) : new RoundedBoxGeometry(w, h, d, 2, Math.min(w, h, d) * (r || .2)), m);
+const cyl = (rt, rb, h, m, seg) => new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg || 14), m);
+const sph = (r, m, seg) => new THREE.Mesh(new THREE.SphereGeometry(r, seg || 14, Math.max(8, (seg || 14) * .7 | 0)), m);
+const at = (o, x, y, z) => { o.position.set(x, y, z); return o; };
+const shadow = g => { g.traverse(o => { if (o.isMesh) o.castShadow = true; }); return g; };
+
+function textTexture(lines, w, h, bg) {
+  const cv = document.createElement('canvas'); cv.width = w * 2; cv.height = h * 2;
+  const g = cv.getContext('2d'), tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+  const draw = () => { g.setTransform(2, 0, 0, 2, 0, 0); g.fillStyle = bg; g.fillRect(0, 0, w, h); lines.forEach(([t, f, c, x, y, al]) => { g.font = f; g.fillStyle = c; g.textAlign = al || 'left'; g.fillText(t, x, y); }); tex.needsUpdate = true; };
+  draw(); document.fonts && document.fonts.ready.then(draw);
+  return tex;
+}
+
+// ================= 车辆 =================
+function wheels(g, xs, z, r, y) {
+  const m = M('#3a3c52', { roughness: .8 }), hub = M('#e9eaf2');
+  const list = [];
+  xs.forEach(x => [-1, 1].forEach(s => {
+    const w = new THREE.Group(); at(w, x, y || r, s * z);
+    const t = cyl(r, r, 4, m, 16); t.rotation.x = Math.PI / 2; w.add(t);
+    const h = cyl(r * .45, r * .45, 4.4, hub, 10); h.rotation.x = Math.PI / 2; w.add(h);
+    g.add(w); list.push(w);
+  }));
+  return list;
+}
+function vehicle(g, ws, extra) {
+  shadow(g);
+  return { group: g, tick(t, dt, v) { ws.forEach(w => { w.rotation.z -= v * dt / 5; }); extra && extra(t, dt, v); } };
+}
+function buildCar(color) {
+  const g = new THREE.Group();
+  g.add(at(box(34, 10, 17, M(color)), 0, 9, 0));
+  g.add(at(box(19, 9, 15, M('#dfeefe', { roughness: .2 })), -2, 18, 0));
+  g.add(at(box(17, 2, 15.4, M(color)), -2, 22.5, 0));
+  [-1, 1].forEach(s => g.add(at(box(2, 3, 4, M('#fff6cf', { emissive: '#ffe9a0', emissiveIntensity: .4 }), 0), 17, 10, s * 5)));
+  return vehicle(g, wheels(g, [-10, 10], 8.5, 4.6));
+}
+function buildVan(color) {
+  const g = new THREE.Group();
+  g.add(at(box(40, 20, 19, M(W)), 0, 15, 0));
+  g.add(at(box(12, 9, 18, M('#dfeefe', { roughness: .2 })), 15, 19, 0));
+  g.add(at(box(40.4, 4, 19.4, M(color)), 0, 11, 0));
+  return vehicle(g, wheels(g, [-12, 12], 9, 4.8));
+}
+function buildTruck(color) { // 集装箱卡车
+  const g = new THREE.Group();
+  g.add(at(box(15, 20, 19, M(mix(color, INK, .05))), 24, 15, 0));
+  g.add(at(box(6, 8, 17, M('#dfeefe', { roughness: .2 })), 29, 20, 0));
+  g.add(at(box(60, 4, 16, M('#8e91a7')), -6, 6.5, 0));
+  const ctn = new THREE.Group(); at(ctn, -10, 19, 0); g.add(ctn);
+  ctn.add(box(42, 20, 19, M(mix(color, W, .18)), .08));
+  for (let k = -3; k <= 3; k++) ctn.add(at(box(1.4, 18, 19.6, M(mix(color, INK, .1)), 0), k * 5.6, 0, 0));
+  return vehicle(g, wheels(g, [-26, -16, 24], 8.5, 4.8));
+}
+function buildFlatbed(layerIdx) { // 平板车：车斗上的货物随所在站点变形
+  const g = new THREE.Group();
+  g.add(at(box(14, 19, 19, M('#5b4cff')), 22, 14, 0));
+  g.add(at(box(6, 8, 17, M('#dfeefe', { roughness: .2 })), 27, 19, 0));
+  g.add(at(box(40, 4, 19, M('#c9c3ff')), -6, 9, 0));
+  const slot = new THREE.Group(); at(slot, -6, 11, 0); g.add(slot);
+  let cur = -1, item = null, pop = 1;
+  const v = vehicle(g, wheels(g, [-16, 20], 9, 4.8), (t, dt) => {
+    pop += (1 - pop) * Math.min(dt * 9, 1);
+    if (item) item.scale.setScalar(.9 * (pop + Math.sin(Math.min(pop, 1) * Math.PI) * .25));
+  });
+  v.setCargo = li => { if (li === cur) return; cur = li; if (item) slot.remove(item); item = shadow(CARGO(li)); slot.add(item); pop = .1; };
+  v.setCargo(layerIdx || 0);
+  return v;
+}
+function buildBus() { // 潮信巴士
+  const g = new THREE.Group();
+  g.add(at(box(66, 24, 22, M(W)), 0, 17, 0));
+  g.add(at(box(58, 8, 22.4, M('#dfeefe', { roughness: .2 })), 2, 21, 0));
+  g.add(at(box(66.4, 4, 22.4, M('#5b4cff')), 0, 9, 0));
+  const tex = textTexture([['潮信', '900 30px "Noto Sans SC", sans-serif', '#5b4cff', 18, 34], ['早潮看消息 · 晚潮看信号', '700 15px "Noto Sans SC", sans-serif', '#1296f0', 96, 32]], 300, 48, '#ffffff');
+  [-1, 1].forEach(s => { const p = new THREE.Mesh(new THREE.PlaneGeometry(56, 9), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false })); at(p, 0, 13.5, s * 11.3); if (s < 0) p.rotation.y = Math.PI; g.add(p); });
+  return vehicle(g, wheels(g, [-20, 22], 10, 5.2));
+}
+function buildForklift() {
+  const g = new THREE.Group();
+  g.add(at(box(20, 10, 15, M('#f5a314')), 0, 9, 0));
+  g.add(at(box(10, 12, 13, M('#dfeefe', { roughness: .2 })), -3, 20, 0));
+  g.add(at(box(11, 2, 15, M('#f5a314')), -3, 26.5, 0));
+  g.add(at(box(2, 26, 12, M('#8e91a7'), 0), 11, 15, 0));
+  const fork = new THREE.Group(); at(fork, 13, 4, 0); g.add(fork);
+  [-4, 4].forEach(z => fork.add(at(box(12, 1.5, 2.5, M('#8e91a7'), 0), 6, 0, z)));
+  const crate = box(13, 11, 13, M('#e3cfae'), .12); at(crate, 7, 7, 0); fork.add(crate);
+  const v = vehicle(g, wheels(g, [-6, 7], 7.5, 4));
+  v.fork = fork; v.crate = crate;
+  return v;
+}
+
+// ================= 人与机器人 =================
+const SKIN = ['#ffd9bf', '#f1c39f', '#d9a27d', '#a8714f'];
+const SHIRT = ['#5b4cff', '#1296f0', '#ff6b2c', '#00a8c6', '#a04cf5', '#d23fd8', '#f5a314', '#2b6cf2', '#0fb57b', '#ffffff'];
+function limb(len, w, m) { const p = new THREE.Group(); p.add(at(box(w, len, w, m, .3), 0, -len / 2, 0)); return p; }
+function buildPerson(i, opt) {
+  opt = opt || {};
+  const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
+  const shirt = M(opt.vest ? '#ff8a3d' : SHIRT[i % SHIRT.length]), pants = M(['#3b3f5c', '#5c6280', '#2f4b7c', '#8e91a7'][i % 4]), skin = M(SKIN[i % 4]);
+  const legs = [-1, 1].map(s => { const l = limb(9, 3.4, pants); at(l, 0, 10, s * 2.4); body.add(l); return l; });
+  body.add(at(box(5.5, 10, 8, shirt, .3), 0, 15, 0));
+  const arms = [-1, 1].map(s => { const a = limb(8.5, 2.6, shirt); at(a, 0, 19.5, s * 5.2); body.add(a); return a; });
+  body.add(at(sph(4, skin), 0, 24.5, 0));
+  if (opt.helmet) body.add(at(cyl(4.6, 4.6, 2.4, M('#ffd23f'), 14), 0, 27.6, 0));
+  else body.add(at(sph(4.1, M(['#3a2b25', '#6b4a35', '#1f1d2b', '#c98a4b'][i % 4]), 12), -.6, 25.6, 0)).scale.set(1, .7, 1);
+  shadow(g);
+  return {
+    group: g,
+    tick(t, dt, v, mode) {
+      if (mode === 'work') { // 原地干活：抡胳膊、点头
+        arms[0].rotation.z = -1.2 + Math.sin(t * 6 + i) * .6; arms[1].rotation.z = Math.sin(t * 3 + i) * .2; body.position.y = Math.abs(Math.sin(t * 6 + i)) * .6;
+        legs.forEach(l => { l.rotation.z = 0; }); return;
+      }
+      if (mode === 'idle') { arms.forEach(a => { a.rotation.z = 0; }); legs.forEach(l => { l.rotation.z = 0; }); body.position.y = 0; return; }
+      const s = Math.sin(t * v * .45 + i);
+      legs[0].rotation.z = s * .7; legs[1].rotation.z = -s * .7; arms[0].rotation.z = -s * .6; arms[1].rotation.z = s * .6;
+      body.position.y = Math.abs(Math.cos(t * v * .45 + i)) * 1.2;
+    },
+  };
+}
+function buildWalkerBot(i) { // 两足送货机器人
+  const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
+  const shell = M(W), joint = M('#c9c3ff'), visor = M('#16172a', { roughness: .2 });
+  const legs = [-1, 1].map(s => { const l = limb(10, 3.2, joint); at(l, 0, 11, s * 3); body.add(l); return l; });
+  body.add(at(box(10, 11, 12, shell, .3), 0, 17, 0));
+  body.add(at(box(9, 7, 10, shell, .3), 1, 26, 0));
+  body.add(at(box(1.2, 3.6, 7.5, visor, 0), 5.6, 26.5, 0));
+  const eye = box(1.4, 1.4, 6, M('#ffffff', { emissive: '#5bd8ff', emissiveIntensity: 1.4 }), 0); at(eye, 6.2, 26.8, 0); body.add(eye);
+  body.add(at(cyl(.5, .5, 5, joint), 0, 32, 0)); body.add(at(sph(1.4, M('#ff6b2c')), 0, 35, 0));
+  const pack = box(8, 8, 9, M(SHIRT[i % 8]), .25); at(pack, -7, 18, 0); body.add(pack);
+  shadow(g);
+  return { group: g, tick(t, dt, v) { const s = Math.sin(t * v * .5 + i); legs[0].rotation.z = s * .5; legs[1].rotation.z = -s * .5; body.position.y = Math.abs(Math.cos(t * v * .5 + i)) * 1; eye.material.emissiveIntensity = 1 + Math.sin(t * 4 + i) * .5; } };
+}
+function buildDeliveryBot(i) { // 六轮小快递车
+  const g = new THREE.Group();
+  g.add(at(box(16, 11, 12, M(W), .3), 0, 9, 0));
+  g.add(at(box(16.4, 3, 12.4, M(SHIRT[(i + 3) % 8])), 0, 6, 0));
+  const flag = new THREE.Group(); at(flag, -6, 14, 0); g.add(flag);
+  flag.add(at(cyl(.4, .4, 16, M('#8e91a7')), 0, 8, 0)); flag.add(at(box(5, 3.5, .6, M('#ff6b2c'), 0), 2.6, 15, 0));
+  return vehicle(g, wheels(g, [-5, 0, 5], 6.5, 2.6), t => { flag.rotation.x = Math.sin(t * 6 + i) * .15; });
+}
+
+// ================= 建筑与机械 =================
+function buildWarehouse(color) {
+  const g = new THREE.Group(), wall = M(mix(color, W, .8)), roof = M(mix(color, W, .45)), trim = M(mix(color, W, .6));
+  g.add(at(box(110, 46, 80, wall, .06), 0, 23, 0));
+  for (let k = 0; k < 4; k++) { const r = box(28, 14, 82, roof, .1); r.rotation.z = .5; at(r, -40 + k * 27, 50, 0); g.add(r); }
+  const door = box(36, 30, 2, M('#e9ebf3'), 0); at(door, 10, 15, 41); g.add(door);
+  for (let k = 0; k < 6; k++) g.add(at(box(36, .8, 2.4, trim, 0), 10, 3 + k * 5, 41.2));
+  for (let k = 0; k < 3; k++) g.add(at(box(12, 8, 2, M('#dfeefe', { roughness: .2 }), 0), -38 + k * 16, 34, 41));
+  const stack = cyl(6, 7.5, 54, trim); at(stack, -40, 70, -24); g.add(stack);
+  g.add(at(cyl(7, 7, 4, M(color)), -40, 95, -24));
+  g.userData.chimney = new THREE.Vector3(-40, 100, -24);
+  return g;
+}
+function buildRobotArm(color) {
+  const g = new THREE.Group(), m = M(mix(color, W, .25)), j = M(mix(color, INK, .1)), w = M(W);
+  g.add(at(cyl(14, 17, 10, j, 20), 0, 5, 0));
+  const yaw = new THREE.Group(); at(yaw, 0, 10, 0); g.add(yaw);
+  yaw.add(at(cyl(9, 11, 12, m, 18), 0, 6, 0));
+  const a1 = new THREE.Group(); at(a1, 0, 14, 0); yaw.add(a1);
+  a1.add(at(box(8, 46, 8, w, .35), 0, 23, 0)); a1.add(at(sph(6, j), 0, 0, 0));
+  const a2 = new THREE.Group(); at(a2, 0, 46, 0); a1.add(a2);
+  a2.add(at(sph(5.5, j), 0, 0, 0)); a2.add(at(box(36, 7, 7, m, .35), 18, 0, 0));
+  const hand = new THREE.Group(); at(hand, 36, 0, 0); a2.add(hand);
+  hand.add(at(box(4, 10, 10, j, 0), 2, -4, 0));
+  const tip = box(6, 6, 6, M('#ffffff', { emissive: color, emissiveIntensity: .8 }), .2); at(tip, 2, -12, 0); hand.add(tip);
+  shadow(g);
+  return { group: g, tick(t) { yaw.rotation.y = Math.sin(t * .8) * 1.4; a1.rotation.z = -.35 + Math.sin(t * 1.6) * .3; a2.rotation.z = -.9 + Math.sin(t * 1.6 + 1) * .45; hand.rotation.z = -a1.rotation.z - a2.rotation.z - 1.4; } };
+}
+function buildGantry() { // 港口岸桥：小车沿横梁移动，吊具升降集装箱
+  const g = new THREE.Group(), steel = M('#5b4cff'), steel2 = M('#8f84ff'), cable = M('#3a3c52');
+  [[-40, -60], [40, -60], [-40, 60], [40, 60]].forEach(([x, z]) => g.add(at(box(9, 170, 9, steel, .1), x, 85, z)));
+  [-60, 60].forEach(z => g.add(at(box(90, 9, 9, steel2, .1), 0, 60, z)));
+  g.add(at(box(12, 12, 330, steel, .1), -40, 172, 90)); g.add(at(box(12, 12, 330, steel, .1), 40, 172, 90));
+  g.add(at(box(92, 8, 12, steel2, .1), 0, 172, 250));
+  g.add(at(box(40, 22, 30, M(W)), 0, 150, -40));
+  const trolley = new THREE.Group(); g.add(trolley);
+  trolley.add(at(box(92, 8, 22, M('#ff6b2c')), 0, 182, 0));
+  const rope = box(1.4, 1, 1.4, cable, 0); trolley.add(rope);
+  const spreader = new THREE.Group(); trolley.add(spreader);
+  spreader.add(at(box(44, 4, 22, M('#ff6b2c')), 0, 0, 0));
+  const ctn = new THREE.Group(); at(ctn, 0, -12, 0); spreader.add(ctn);
+  const cmat = [M(mix('#1296f0', W, .15)), M(mix('#ff6b2c', W, .15)), M(mix('#00a8c6', W, .15)), M(mix('#a04cf5', W, .15))];
+  const body = box(42, 20, 19, cmat[0], .08); ctn.add(body);
+  shadow(g);
+  let phase = 0, n = 0;
+  return {
+    group: g,
+    tick(t, dt) { // 周期 12 秒：在岸上抓箱 → 升起 → 移到船上方 → 放下 → 空返
+      phase += dt / 12; if (phase >= 1) { phase -= 1; n++; body.material = cmat[n % 4]; }
+      const p = phase, ease = k => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      const zLand = 0, zShip = 200;
+      let z, y, has;
+      if (p < .15) { z = zLand; y = 120 - ease(p / .15) * 80; has = p > .12; }
+      else if (p < .3) { z = zLand; y = 40 + ease((p - .15) / .15) * 100; has = true; }
+      else if (p < .5) { z = zLand + ease((p - .3) / .2) * (zShip - zLand); y = 140; has = true; }
+      else if (p < .65) { z = zShip; y = 140 - ease((p - .5) / .15) * 90; has = true; }
+      else if (p < .75) { z = zShip; y = 50 + ease((p - .65) / .1) * 90; has = false; }
+      else { z = zShip - ease((p - .75) / .25) * (zShip - zLand); y = 140 - ease((p - .75) / .25) * 20; has = false; }
+      trolley.position.z = z; spreader.position.y = y; ctn.visible = has;
+      const len = 178 - y; rope.scale.y = len; rope.position.y = y + len / 2;
+    },
+  };
+}
+function buildPylon() {
+  const g = new THREE.Group(), m = M('#c9cbd8', { roughness: .5 }), m2 = M('#b0b3c6');
+  [[-7, -7], [7, -7], [-7, 7], [7, 7]].forEach(([x, z]) => { const l = box(3, 132, 3, m, 0); l.rotation.set(z * .012, 0, -x * .012); at(l, x * .6, 66, z * .6); g.add(l); });
+  for (let k = 0; k < 4; k++) g.add(at(box(14 - k * 2, 2, 14 - k * 2, m2, 0), 0, 24 + k * 30, 0));
+  g.add(at(box(70, 3, 4, m2, 0), 0, 118, 0)); g.add(at(box(50, 3, 4, m2, 0), 0, 100, 0));
+  g.userData.tips = [new THREE.Vector3(-33, 116, 0), new THREE.Vector3(33, 116, 0), new THREE.Vector3(0, 133, 0)];
+  return g;
+}
+function buildStreetLight() {
+  const g = new THREE.Group(), m = M('#b8bccd');
+  g.add(at(cyl(1.4, 2, 52, m, 8), 0, 26, 0)); g.add(at(box(14, 1.6, 1.6, m, 0), 6, 52, 0));
+  g.add(at(box(8, 3, 6, M('#fff7d6', { emissive: '#ffe7a3', emissiveIntensity: .5 }), 0), 13, 50.5, 0));
+  return g;
+}
+function buildTreeSmall(i) {
+  const g = new THREE.Group();
+  g.add(at(cyl(2.2, 3, 14, M('#c9b8a6'), 8), 0, 7, 0));
+  const leaf = M(['#a8e6cf', '#8fd8c8', '#b9e8b0'][i % 3], { roughness: .85 });
+  g.add(at(sph(11, leaf, 12), 0, 22, 0)); g.add(at(sph(8, leaf, 10), 5, 17, 3));
+  return g;
+}
+function buildBench() { const g = new THREE.Group(), m = M('#e3cfae'); g.add(at(box(22, 2, 7, m, 0), 0, 8, 0)); g.add(at(box(22, 7, 1.6, m, 0), 0, 13, -3)); [-9, 9].forEach(x => g.add(at(box(1.6, 8, 6, M('#8e91a7'), 0), x, 4, 0))); return g; }
+function buildCrates(n, color) {
+  const g = new THREE.Group();
+  for (let k = 0; k < n; k++) g.add(at(box(14, 12, 14, M(k % 2 ? '#e3cfae' : mix(color, W, .55)), .12), (k % 3) * 16, 6 + Math.floor(k / 3) * 12, Math.floor(k / 3) * 3));
+  return g;
+}
+function buildContainerStack(rows, cols, levels, colors) {
+  const g = new THREE.Group();
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) { const h = 1 + ((r * 7 + c * 3) % levels); for (let l = 0; l < h; l++) g.add(at(box(42, 19, 19, M(mix(colors[(r + c + l) % colors.length], W, .18)), .06), c * 46, 10 + l * 20, r * 22)); }
+  return g;
+}
+
+// ================= 天空 =================
+function buildBlimp() {
+  const g = new THREE.Group();
+  const hull = new THREE.Mesh(new THREE.CapsuleGeometry(30, 110, 10, 24), M(W, { roughness: .45 })); hull.rotation.z = Math.PI / 2; g.add(hull);
+  const band = new THREE.Mesh(new THREE.CylinderGeometry(30.6, 30.6, 26, 32, 1, true), M('#5b4cff')); band.rotation.z = Math.PI / 2; at(band, -38, 0, 0); g.add(band);
+  const tex = textTexture([['潮信', '900 62px "Noto Sans SC", sans-serif', '#5b4cff', 110, 70, 'center']], 220, 96, '#ffffff');
+  [-1, 1].forEach(s => { const p = new THREE.Mesh(new THREE.PlaneGeometry(64, 28), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false })); at(p, 18, 2, s * 30.8); if (s < 0) p.rotation.y = Math.PI; g.add(p); });
+  [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(([y, z]) => { const f = box(26, 3, 3, M('#1296f0'), 0); f.scale.set(1, y ? 9 : 1, z ? 9 : 1); at(f, -78, y * 14, z * 14); g.add(f); });
+  g.add(at(box(26, 9, 12, M('#efedff')), 6, -34, 0));
+  const prop = new THREE.Group(); at(prop, -96, 0, 0); g.add(prop);
+  [0, 1].forEach(k => { const b = box(1.5, 22, 3, M('#8e91a7'), 0); b.rotation.x = k * Math.PI / 2; prop.add(b); });
+  shadow(g);
+  return { group: g, tick(t) { prop.rotation.x = t * 14; } };
+}
+function buildGull(i) {
+  const g = new THREE.Group(), m = M(W), d = M('#8e91a7');
+  g.add(at(box(9, 3, 3, m, .4), 0, 0, 0));
+  const wl = new THREE.Group(), wr = new THREE.Group(); g.add(wl, wr);
+  wl.add(at(box(4, 1, 12, m, 0), 0, 0, 6)); wl.add(at(box(3, 1.1, 4, d, 0), 0, 0, 12));
+  wr.add(at(box(4, 1, 12, m, 0), 0, 0, -6)); wr.add(at(box(3, 1.1, 4, d, 0), 0, 0, -12));
+  return { group: g, tick(t) { const f = Math.sin(t * 7 + i) * .55; wl.rotation.x = -f; wr.rotation.x = f; } };
+}
+function buildCloud(i) {
+  const g = new THREE.Group(), m = M(W, { roughness: 1 });
+  const n = 5 + i % 3;
+  for (let k = 0; k < n; k++) { const r = 40 + ((k * 37 + i * 11) % 30); g.add(at(sph(r, m, 16), (k - n / 2) * 42, ((k * 13) % 3) * 8, ((k * 29) % 5 - 2) * 14)); }
+  g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  return g;
+}
+
+return { M, box, cyl, sph, at, buildCar, buildVan, buildTruck, buildFlatbed, buildBus, buildForklift, buildPerson, buildWalkerBot, buildDeliveryBot,
+  buildWarehouse, buildRobotArm, buildGantry, buildPylon, buildStreetLight, buildTreeSmall, buildBench, buildCrates, buildContainerStack, buildBlimp, buildGull, buildCloud, SHIRT };
+})();

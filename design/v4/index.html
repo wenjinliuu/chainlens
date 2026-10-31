@@ -27,7 +27,9 @@
 
   <main class="wrap">
     <!-- ================= 首屏 ================= -->
-    <section class="hero">
+    <section class="hero hero-town" id="hero">
+      <div class="hero-bg"><canvas id="townHero"></canvas><div class="hero-fade"></div>
+        <a class="hero-explore" href="#island"><span>这是潮信 AI 产业镇：8 个环节在运转</span>走进去看看 ↓</a></div>
       <div class="hero-l">
         <span class="kicker"><b>免费</b>盘前 · 收盘 · 研报，每天准时送达</span>
         <h1 class="h-brand">潮信</h1>
@@ -50,11 +52,15 @@
           <div class="phone"><div class="screen"><div class="island"></div><div class="status"><span>15:40</span><span>●●● ▮</span></div><div class="feed" id="feed"></div></div></div>
           <div class="toast"><span class="ic" style="background:#5b4cff">🌊</span>
             <div><b>晚潮 · 期权概览 10月30日</b><p>大盘偏乐观 · 光模块 Call 集中放量，LITE 进重点</p></div><small>现在</small></div>
-          <div class="toast t2"><span class="ic" style="background:#1296f0">📑</span>
-            <div><b>研报 · 今日 9 条评级调整</b><p>NVDA 获机构 A 上调至增持，目标价 165</p></div><small>2 分钟前</small></div>
-          <div class="chip-float cf1"><span class="pill bull">偏多</span><div><b>3 只</b>AI 链重点</div></div>
+          <div class="pc" style="--x:-280px;--y:-10px;--z:90px;--r:14deg;--d:0s"><div class="pc-k">全市场情绪 · 晚潮</div><div class="pc-v"><b class="num">0.90</b><span class="pill bull">偏乐观</span></div>
+            <div class="pc-dev"><i style="left:50%;width:12%"></i><s></s></div><div class="pc-s">CP 对比 20 日常态 0.78 · <b class="up">+15%</b></div></div>
+          <div class="pc" style="--x:270px;--y:-200px;--z:110px;--r:-14deg;--d:-1.5s"><div class="pc-k">最强信号</div><div class="pc-v pc-logo" data-t="LITE"><b class="num">LITE</b><span class="pill bull">偏多</span></div>
+            <div class="pc-s"><span class="pc-dots"><i class="on"></i><i class="on"></i><i class="on"></i></span>可信度高 · 量 <b>2.8x</b> · 权利金 <b>3.1x</b></div></div>
+          <div class="pc" style="--x:-275px;--y:225px;--z:70px;--r:12deg;--d:-3s"><div class="pc-k">最热 AI 环节</div><div class="pc-v"><b class="num" style="color:#4b3ed1">2.3x</b><span class="pc-sub">光模块</span></div>
+            <div class="pc-bars"><span><i style="--h:100%;background:#5b4cff"></i><em>光模块</em></span><span><i style="--h:78%;background:#1296f0"></i><em>GPU</em></span><span><i style="--h:74%;background:#00a8c6"></i><em>存储</em></span><span><i style="--h:70%;background:#a04cf5"></i><em>电力</em></span></div></div>
+          <div class="pc" style="--x:265px;--y:180px;--z:95px;--r:-12deg;--d:-4.5s"><div class="pc-k">研报 · 今日 9 条调整</div><div class="pc-v pc-logo" data-t="NVDA"><b class="num">NVDA</b><span class="pill bull">+14%</span></div>
+            <div class="pc-s">机构 A：中性 → 增持 · 目标价 <b>145 → 165</b></div></div>
         </div>
-        <div class="drag-hint"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 12h8M5 9l-3 3 3 3M19 9l3 3-3 3"/></svg>左右拖动看看 · 鼠标放到硬币上</div>
       </div>
     </section>
 
@@ -66,7 +72,7 @@
 
     <!-- ================= AI 产业岛 ================= -->
     <section class="section" id="island">
-      <div class="sec-head reveal"><div class="sec-no">02</div><div><h2>潮信盯着<em>整条 AI 产业链</em></h2><p>从矿石到机器人，8 个环节、58 家公司。拖动转一转，点一站看看潮信每天在那里看什么。</p></div></div>
+      <div class="sec-head reveal"><div class="sec-no">02</div><div><h2>走进潮信 <em>AI 产业镇</em></h2><p>从矿石到机器人，8 个环节、58 家公司在这里运转：卡车运货、工厂开工、电塔送电、港口装船。拖动转一转，点一个街区看看潮信每天在那里看什么。</p></div></div>
       <div class="isle reveal">
         <canvas id="isleCanvas"></canvas>
         <div class="isle-labels" id="isleLabels"></div>
@@ -183,6 +189,7 @@
 <script src="assets/poster.js"></script>
 <script src="assets/landing.js"></script>
 <script src="assets/clay.js"></script>
+<script src="assets/town.js"></script>
 <script src="assets/scene.js"></script>
 <script src="assets/island.js"></script>
 <script src="assets/research.js"></script>
@@ -191,7 +198,10 @@
 (async () => {
   const rig = document.getElementById('rig'), tip = document.getElementById('coinTip');
   const { initHeroScene, initMascot } = await HERO;
+  const isl = await ISLAND;
+  isl.initHeroIsland(document.getElementById('townHero'), { host: document.getElementById('hero'), shift: (w, h) => w > 1100 ? .1 : 0 });
   initHeroScene(document.getElementById('scene'), {
+    minimal: true,
     onDeliver(x, y) { // 小更投信：在它身边弹出气泡（气泡在 3D 结构之外）
       const st = document.getElementById('stage'), cv = document.getElementById('scene');
       const b = document.createElement('div'); b.className = 'deliver';
@@ -209,8 +219,7 @@
     },
   });
   if (!window.__noMascot) initMascot(document.getElementById('mascot'));
-  const { initIsland } = await ISLAND;
-  window.LP.island(initIsland);
+  window.LP.island(isl.initIsland);
   const { initResearch } = await RESEARCH;
   window.LP.research(initResearch);
   const { initBoard } = await BOARD;

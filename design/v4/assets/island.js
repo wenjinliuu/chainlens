@@ -1,25 +1,32 @@
 /*
- * 潮信 · AI 产业岛（Three.js）
- * 一座漂在潮水上的黏土小岛，8 个站点按产业链顺序排成两排：
- * - 潮水：着色器波浪 + 潮位涨落（沙滩随潮水露出 / 淹没）+ 一圈圈推向岸边的浪花 + 近岸浅、远处深
- * - 运作：传送带货物逐站变形（矿石 → 金属锭 → 芯片 → 光模块 → 服务器 → GPU → 云 → 应用）；
- *         能源站拉电线给数据中心 / 算力 / 云供电（黄色电流）；网络站向下游发数据（青色光流）
- * - 站点底座高度 = 当日环节热度；上空漂着成员公司 logo 硬币
- * - 吉祥物小更：从灯塔出发，飞到各站取信再送回灯塔；灯塔光束旋转
- * - 绕岛货船，集装箱是 8 层的颜色
- * - 悬停抬起；点击 / 导览飞镜头，侧栏说明潮信每天在这一站看什么
+ * 潮信 · AI 产业镇（Three.js）
+ * 一座漂在潮水上的小镇：8 个环节 = 8 个街区，由环岛路、中央大道和三条横街连起来。
+ * - 大道：西接跨海大桥（来自大陆），东到港口；港口岸桥给货船装集装箱
+ * - 交通：集装箱车、平板车（车上货物随所在街区变形：矿石→金属锭→芯片→光模块→服务器→GPU→云→应用）、
+ *         小汽车、厢式车、潮信巴士；各走各的车道，跟车减速、路口让行
+ * - 街区：站点模型（底座高度 = 当日环节热度）、仓库（烟囱冒烟）、叉车来回搬货、工人干活、机器人臂、
+ *         人行道上的行人 / 两足机器人 / 快递小车、行道树、路灯、长椅
+ * - 能源：电塔和电线把电从能源街区送到数据中心、算力、云（黄色电流）；网络街区向下游发数据光流
+ * - 天空：潮信飞艇、海鸥、云朵；灯塔上的小更来回送信；绕岛货船
+ * 场景只建一次（getTown），首页背景（initHeroIsland）和导览区（initIsland）各用一个相机渲染同一个场景。
+ * 全部为示例数据。
  */
 window.ISLAND = (async () => {
 const C = await window.CLAY;
-const { THREE, RoundedBoxGeometry, mat, STATIONS, buildCoin, mix, buildRobin, CARGO, buildLighthouse, buildShip, buildTree } = C;
+const T_ = await window.TOWN;
+const { THREE, RoundedBoxGeometry, STATIONS, buildCoin, mix, buildRobin, buildLighthouse, buildShip } = C;
+const { M, box, cyl, sph, at } = T_;
 const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
 const { RoomEnvironment } = await import('three/addons/environments/RoomEnvironment.js');
+const { mergeGeometries } = await import('three/addons/utils/BufferGeometryUtils.js');
 const W = '#ffffff';
+const G = 24;                       // 岛面高度
+const RX = 1400, RZ = 820;          // 岛的半轴（超椭圆）
 
-// ---------- 海浪：着色器与 JS 用同一套波形（货船随浪起伏） ----------
+// ---------- 海浪（着色器与 JS 同一套波形） ----------
 const WAVES = [[.0021, .0013, 9, .9], [-.0016, .0024, 6, 1.3], [.0042, -.0011, 3.2, 2.1], [-.0055, -.0047, 1.8, 2.8]];
-const SHORE = [1330, 780, 4.44]; // 岸线：超椭圆半轴与指数（略大于岛体，含沙滩）
-function waveH(x, z, t) { let h = 0; for (const [kx, kz, a, w] of WAVES) h += a * Math.sin(x * kx + z * kz + t * w); return h; }
+const SHORE = [RX + 85, RZ + 85, 4.44];
+const waveH = (x, z, t) => WAVES.reduce((h, [kx, kz, a, w]) => h + a * Math.sin(x * kx + z * kz + t * w), 0);
 const waterVS = `
   uniform float uTime, uTide; varying vec3 vW; varying float vH;
   ${WAVES.map((w, i) => `const vec4 W${i} = vec4(${w.map(v => v.toFixed(5)).join(',')});`).join('\n  ')}
@@ -38,13 +45,12 @@ const waterFS = `
   void main() {
     vec3 n = normalize(cross(dFdx(vW), dFdy(vW))); if (n.y < 0.0) n = -n;
     float sd = pow(pow(abs(vW.x) / ${SHORE[0]}.0, ${SHORE[2]}) + pow(abs(vW.z) / ${SHORE[1]}.0, ${SHORE[2]}), 1.0 / ${SHORE[2]}) - 1.0;
-    float d = max(sd, 0.0) * ${SHORE[1]}.0 - uTide * 2.2;           // 离岸距离（潮位高时水线向岸里推）
-    vec3 col = mix(uShallow, uMid, smoothstep(0.0, 260.0, d));
-    col = mix(col, uDeep, smoothstep(200.0, 1400.0, d));
+    float d = max(sd, 0.0) * ${SHORE[1]}.0 - uTide * 2.2;
+    vec3 col = mix(uShallow, uMid, smoothstep(0.0, 280.0, d));
+    col = mix(col, uDeep, smoothstep(220.0, 1600.0, d));
     float nz = noise(vW.xz * 0.012 + uTime * 0.08) * 0.6 + noise(vW.xz * 0.035 - uTime * 0.05) * 0.4;
-    // 一圈圈推向岸边的浪花
     float ph = d * 0.032 + uTime * 1.35 + nz * 2.2;
-    float line = smoothstep(0.86, 0.985, sin(ph)) * (1.0 - smoothstep(30.0, 360.0, d)) * smoothstep(0.25, 0.6, nz + 0.2);
+    float line = smoothstep(0.86, 0.985, sin(ph)) * (1.0 - smoothstep(30.0, 380.0, d)) * smoothstep(0.25, 0.6, nz + 0.2);
     float shore = 1.0 - smoothstep(0.0, 26.0 + 14.0 * sin(uTime * 1.7 + nz * 6.0), d);
     float crest = smoothstep(9.0, 15.0, vH) * 0.35 * nz;
     float foam = clamp(line * 0.85 + shore + crest, 0.0, 1.0);
@@ -55,140 +61,442 @@ const waterFS = `
     col = col * diff + spec;
     col = mix(col, uSky, fres * 0.45);
     col = mix(col, uFoam, foam);
-    float fogK = smoothstep(4600.0, 9500.0, length(cameraPosition - vW));
-    col = mix(col, uFog, fogK);
+    col = mix(col, uFog, smoothstep(5200.0, 11000.0, length(cameraPosition - vW)));
     gl_FragColor = vec4(col, 1.0);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }`;
 
-function initIsland(canvas, ui) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NeutralToneMapping;
-  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+// ---------- 路径：按弧长匀速取点 ----------
+class Path {
+  constructor(pts, closed) {
+    this.p = pts; this.closed = closed; this.c = [0];
+    const n = pts.length + (closed ? 1 : 0);
+    for (let i = 1; i < n; i++) this.c.push(this.c[i - 1] + pts[i % pts.length].distanceTo(pts[i - 1]));
+    this.len = this.c[this.c.length - 1];
+  }
+  at(s, pos, dir) {
+    if (this.closed) s = ((s % this.len) + this.len) % this.len; else s = Math.min(Math.max(s, 0), this.len - .01);
+    let lo = 0, hi = this.c.length - 1;
+    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (this.c[m] <= s) lo = m; else hi = m; }
+    const a = this.p[lo], b = this.p[hi % this.p.length], k = (s - this.c[lo]) / Math.max(this.c[hi] - this.c[lo], 1e-6);
+    pos.lerpVectors(a, b, k); dir.subVectors(b, a).normalize();
+  }
+}
+// 圆角矩形环（顺时针：上边向东），r = [左上, 右上, 右下, 左下]；lane > 0 向行驶方向右侧偏移
+function rectLoop(x0, x1, z0, z1, r, cw, lane, y) {
+  const P = [], V = (x, z) => new THREE.Vector3(x, y, z);
+  const line = (ax, az, bx, bz) => { const n = Math.max(2, Math.ceil(Math.hypot(bx - ax, bz - az) / 14)); for (let i = 0; i < n; i++) P.push(V(ax + (bx - ax) * i / n, az + (bz - az) * i / n)); };
+  const arc = (cx, cz, rr, a0, a1) => { const n = Math.max(4, Math.ceil(rr * Math.abs(a1 - a0) / 10)); for (let i = 0; i < n; i++) { const a = a0 + (a1 - a0) * i / n; P.push(V(cx + Math.cos(a) * rr, cz + Math.sin(a) * rr)); } };
+  const [r0, r1, r2, r3] = r;
+  line(x0 + r0, z0, x1 - r1, z0); arc(x1 - r1, z0 + r1, r1, -Math.PI / 2, 0);
+  line(x1, z0 + r1, x1, z1 - r2); arc(x1 - r2, z1 - r2, r2, 0, Math.PI / 2);
+  line(x1 - r2, z1, x0 + r3, z1); arc(x0 + r3, z1 - r3, r3, Math.PI / 2, Math.PI);
+  line(x0, z1 - r3, x0, z0 + r0); arc(x0 + r0, z0 + r0, r0, Math.PI, Math.PI * 1.5);
+  if (!cw) P.reverse();
+  return new Path(offset(P, lane, true), true);
+}
+function offset(P, lane, closed) {
+  return P.map((p, i) => {
+    const a = P[i === 0 ? (closed ? P.length - 1 : 0) : i - 1], b = P[i === P.length - 1 ? (closed ? 0 : i) : i + 1];
+    const d = new THREE.Vector3().subVectors(b, a); d.y = 0; d.normalize();
+    return new THREE.Vector3(p.x - d.z * lane, p.y, p.z + d.x * lane);
+  });
+}
+
+// ---------- 布局 ----------
+const PER = { x0: -1180, x1: 1180, z0: -560, z1: 600, r: 150, w: 100 };
+const AVE = { z: 20, w: 110, x0: -3600, x1: 1760 };
+const CROSS = [-590, 0, 590], CW_ = 80;
+const COLS = [-885, -295, 295, 885], ROWS = [-272, 312];
+const BLOCKS = [[0, 0], [1, 0], [2, 0], [3, 0], [3, 1], [2, 1], [1, 1], [0, 1]].map(([c, r]) => ({ cx: COLS[c], cz: ROWS[r], back: r === 0, side: c < 2 ? -1 : 1 }));
+const BW = 470, BD = 455, PAD = 240;
+const BRIDGE0 = -1450;
+const roadY = x => x > BRIDGE0 ? G + .8 : G + .8 + 160 * Math.sin(Math.PI * Math.min((BRIDGE0 - x) / (BRIDGE0 - AVE.x0 - 150), 1));
+
+// ---------- 合并静态几何：同一材质合成一个网格 ----------
+function bake(root, scene) {
+  root.updateMatrixWorld(true);
+  const groups = new Map();
+  root.traverse(o => {
+    if (!o.isMesh) return;
+    let g = o.geometry.clone().applyMatrix4(o.matrixWorld);
+    if (g.index) g = g.toNonIndexed();
+    Object.keys(g.attributes).forEach(k => { if (k !== 'position' && k !== 'normal') g.deleteAttribute(k); });
+    g.morphAttributes = {};
+    if (!groups.has(o.material)) groups.set(o.material, { list: [], cast: false });
+    const e = groups.get(o.material); e.list.push(g); e.cast = e.cast || o.castShadow;
+  });
+  groups.forEach((e, m) => {
+    const mesh = new THREE.Mesh(mergeGeometries(e.list), m);
+    mesh.receiveShadow = true; mesh.castShadow = e.cast; scene.add(mesh);
+  });
+}
+
+// ====================================================================
+let TOWN_SINGLETON = null;
+function getTown() {
+  if (TOWN_SINGLETON) return TOWN_SINGLETON;
   const scene = new THREE.Scene();
   const FOG = '#e6f2ff';
-  scene.fog = new THREE.Fog(FOG, 4600, 9500);
-  scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), .04).texture;
+  scene.fog = new THREE.Fog(FOG, 5200, 11000);
   scene.add(new THREE.HemisphereLight('#ffffff', '#cfe6ff', .95));
-  const sun = new THREE.DirectionalLight('#fffaf2', 1.7); sun.position.set(-900, 1600, 900);
-  sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
-  Object.assign(sun.shadow.camera, { left: -1900, right: 1900, top: 1100, bottom: -1100, near: 100, far: 4200 }); sun.shadow.bias = -.0004; sun.shadow.radius = 6;
+  const sun = new THREE.DirectionalLight('#fffaf2', 1.7); sun.position.set(-1100, 1900, 1000);
+  sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096);
+  Object.assign(sun.shadow.camera, { left: -2300, right: 2300, top: 1500, bottom: -1500, near: 100, far: 5200 }); sun.shadow.bias = -.0005; sun.shadow.radius = 4;
   scene.add(sun);
+  const S = new THREE.Group();     // 静态道具，最后统一合并
+  const dyn = [];                  // 每帧更新的东西
 
-  const camera = new THREE.PerspectiveCamera(28, 1, 10, 14000);
-  const HOME = { pos: new THREE.Vector3(-480, 2550, 3500), tgt: new THREE.Vector3(-200, -60, -60) };
-  camera.position.copy(HOME.pos);
-  const controls = new OrbitControls(camera, canvas);
-  controls.enableDamping = true; controls.enableZoom = false; controls.enablePan = false; controls.target.copy(HOME.tgt);
-  controls.minPolarAngle = .45; controls.maxPolarAngle = 1.15; controls.minAzimuthAngle = -.75; controls.maxAzimuthAngle = .75;
-
-  // ---------- 岛 ----------
-  const shape = new THREE.Shape(), RX = 1250, RZ = 700, N = 72;
+  // ---------- 岛与潮水 ----------
+  const shape = new THREE.Shape(), N = 80;
   for (let i = 0; i <= N; i++) { const a = i / N * Math.PI * 2, c = Math.cos(a), s = Math.sin(a); const x = Math.sign(c) * Math.pow(Math.abs(c), .45) * RX, z = Math.sign(s) * Math.pow(Math.abs(s), .45) * RZ; i ? shape.lineTo(x, z) : shape.moveTo(x, z); }
-  const ext = (depth, bev, size) => new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelThickness: bev, bevelSize: size, bevelSegments: 6, curveSegments: 72 }).rotateX(Math.PI / 2);
-  const island = new THREE.Mesh(ext(110, 24, 24), [mat('#f6f7fb', { roughness: .8 }), mat('#d9d4fb', { roughness: .7 })]);
-  island.receiveShadow = true; scene.add(island);
-  const sand = new THREE.Mesh(ext(60, 14, 70), mat('#fbefd6', { roughness: .95 })); sand.position.y = -46; sand.receiveShadow = true; scene.add(sand);
-  const cliff = new THREE.Mesh(ext(260, 10, 96), mat('#e8dcc4', { roughness: .95 })); cliff.position.y = -120; scene.add(cliff);
-
-  // 潮水
-  const waterGeo = new THREE.PlaneGeometry(14000, 9000, 260, 170); waterGeo.rotateX(-Math.PI / 2);
+  const ext = (depth, bev, size) => new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelThickness: bev, bevelSize: size, bevelSegments: 6, curveSegments: 80 }).rotateX(Math.PI / 2);
+  const island = new THREE.Mesh(ext(110, 24, 24), [M('#e4f4e6', { roughness: .85 }), M('#d9d4fb', { roughness: .7 })]); island.receiveShadow = true; scene.add(island);
+  const sand = new THREE.Mesh(ext(60, 14, 75), M('#fbefd6', { roughness: .95 })); sand.position.y = -46; sand.receiveShadow = true; scene.add(sand);
+  scene.add(at(new THREE.Mesh(ext(260, 10, 100), M('#e8dcc4', { roughness: .95 })), 0, -120, 0));
+  const waterGeo = new THREE.PlaneGeometry(16000, 11000, 260, 180); waterGeo.rotateX(-Math.PI / 2);
   const uni = {
     uTime: { value: 0 }, uTide: { value: 0 }, uSun: { value: new THREE.Vector3(-.45, .8, .4).normalize() },
     uShallow: { value: new THREE.Color('#a6ecef') }, uMid: { value: new THREE.Color('#8fd2f6') }, uDeep: { value: new THREE.Color('#78b4ef') },
     uFoam: { value: new THREE.Color('#ffffff') }, uSky: { value: new THREE.Color('#eaf6ff') }, uFog: { value: new THREE.Color(FOG) },
   };
-  const water = new THREE.Mesh(waterGeo, new THREE.ShaderMaterial({ uniforms: uni, vertexShader: waterVS, fragmentShader: waterFS }));
-  const WATER_Y = -62; water.position.y = WATER_Y; scene.add(water);
+  const WATER_Y = -62;
+  scene.add(at(new THREE.Mesh(waterGeo, new THREE.ShaderMaterial({ uniforms: uni, vertexShader: waterVS, fragmentShader: waterFS })), 0, WATER_Y, 0));
 
-  // 装饰：树、礁石
-  [[-1130, -520, 1.1], [-1040, 560, .9], [1120, 560, 1], [1150, -520, .85], [-560, -600, .7], [560, 610, .75], [0, -610, .8], [-1180, 40, .7]]
-    .forEach(([x, z, s]) => { const t = buildTree(s * 1.4); t.position.set(x, 24, z); scene.add(t); });
-  const rockM = mat('#d6d5e2', { flatShading: true, roughness: .9 });
-  [[1380, 400, 40], [-1420, -300, 34], [-600, 860, 28], [900, -860, 30], [1460, -120, 22]].forEach(([x, z, r]) => { const m = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 0), rockM); m.position.set(x, WATER_Y - 4, z); m.scale.y = .7; scene.add(m); });
+  // ---------- 道路 ----------
+  const roadM = M('#dcdfeb', { roughness: .9 }), lineM = M('#ffffff', { roughness: .6 }), curbM = M('#cfd2e2');
+  const flat = (w, d, m, x, z, y) => at(box(w, 1.2, d, m, 0), x, y == null ? G + .6 : y, z);
+  const { x0, x1, z0, z1, r, w } = PER;
+  S.add(flat(x1 - x0 - 2 * r, w, roadM, 0, z0)); S.add(flat(x1 - x0 - 2 * r, w, roadM, 0, z1));
+  S.add(flat(w, z1 - z0 - 2 * r, roadM, x0, (z0 + z1) / 2)); S.add(flat(w, z1 - z0 - 2 * r, roadM, x1, (z0 + z1) / 2));
+  [[x0 + r, z0 + r, Math.PI / 2], [x1 - r, z0 + r, 0], [x1 - r, z1 - r, -Math.PI / 2], [x0 + r, z1 - r, Math.PI]].forEach(([cx, cz, a]) => {
+    const g = new THREE.RingGeometry(r - w / 2, r + w / 2, 24, 1, a, Math.PI / 2); g.rotateX(-Math.PI / 2);
+    const m = new THREE.Mesh(g, roadM); at(m, cx, G + 1.2, cz); S.add(m);
+  });
+  S.add(flat(x1 - x0 + w, AVE.w, roadM, 0, AVE.z));                                       // 中央大道（岛上部分）
+  S.add(flat(x0 - 50 - BRIDGE0 + 40, AVE.w, roadM, (x0 - 50 + BRIDGE0) / 2 - 20, AVE.z));  // 环岛路到桥头
+  S.add(flat(1420 - x1, AVE.w, roadM, (1420 + x1) / 2, AVE.z));                           // 环岛路到码头
+  CROSS.forEach(cx => S.add(flat(CW_, z1 - z0, roadM, cx, (z0 + z1) / 2)));
+  // 车道虚线
+  const dashes = (ax, az, bx, bz) => { const L = Math.hypot(bx - ax, bz - az), n = Math.floor(L / 55); for (let i = 0; i < n; i++) { const k = (i + .5) / n, h = Math.abs(bx - ax) > Math.abs(bz - az); S.add(flat(h ? 24 : 3, h ? 3 : 24, lineM, ax + (bx - ax) * k, az + (bz - az) * k, G + 1.4)); } };
+  dashes(x0 + r, z0, x1 - r, z0); dashes(x0 + r, z1, x1 - r, z1); dashes(x0, z0 + r, x0, z1 - r); dashes(x1, z0 + r, x1, z1 - r);
+  dashes(x0 + 60, AVE.z, x1 - 60, AVE.z); CROSS.forEach(cx => { dashes(cx, z0 + 60, cx, AVE.z - 70); dashes(cx, AVE.z + 70, cx, z1 - 60); });
+  // 斑马线
+  const zebra = (cx, cz, alongX, n) => { for (let i = 0; i < n; i++) S.add(flat(alongX ? 5 : 30, alongX ? 30 : 5, lineM, cx + (alongX ? (i - n / 2) * 10 : 0), cz + (alongX ? 0 : (i - n / 2) * 10), G + 1.45)); };
+  CROSS.forEach(cx => { zebra(cx, AVE.z - 72, true, 8); zebra(cx, AVE.z + 72, true, 8); zebra(cx, z0 + 64, true, 8); zebra(cx, z1 - 64, true, 8); });
 
-  // 灯塔（小更的家）
-  const light = buildLighthouse(); light.group.position.set(1530, WATER_Y + 30, -330); light.group.scale.setScalar(1.15); scene.add(light.group);
-  light.group.traverse(o => { if (o.isMesh && o.material.type !== 'MeshBasicMaterial') o.castShadow = true; });
-  const LIGHT_TOP = light.group.position.clone().add(new THREE.Vector3(0, 340, 0));
-
-  // 货船
-  const ship = buildShip(); scene.add(ship); ship.scale.setScalar(1.4);
-
-  // ---------- 站点 ----------
-  const SLOT = [[-840, -250], [-280, -250], [280, -250], [840, -250], [840, 300], [280, 300], [-280, 300], [-840, 300]];
-  const PAD = 300, TOP = 24;
-  const stations = CL.layers.map((L, i) => {
-    const [x, z] = SLOT[i];
-    const grp = new THREE.Group(); grp.position.set(x, TOP, z); scene.add(grp);
-    const podMat = mat(mix(L.color, W, .82), { roughness: .55 });
-    const pod = new THREE.Mesh(new RoundedBoxGeometry(PAD, 100, PAD, 4, 18), podMat);
-    pod.castShadow = pod.receiveShadow = true; grp.add(pod);
-    const rim = new THREE.Mesh(new RoundedBoxGeometry(PAD + 16, 10, PAD + 16, 3, 8), mat(mix(L.color, W, .55))); rim.position.y = 5; rim.receiveShadow = true; grp.add(rim);
+  // ---------- 街区底板、站点、仓库、工人 ----------
+  const stations = [], chimneys = [], forklifts = [], workers = [], arms = [];
+  CL.layers.forEach((L, i) => {
+    const B = BLOCKS[i], { cx, cz, back, side } = B, toAve = back ? 1 : -1;
+    S.add(at(box(BW, 5, BD, M(mix(L.color, W, .9), { roughness: .8 }), .02), cx, G + 2.5, cz));
+    S.add(at(box(BW + 8, 3, BD + 8, curbM, 0), cx, G + 1.5, cz));
+    // 站点（底座高度 = 热度）
+    const grp = new THREE.Group(); at(grp, cx, G + 5, cz); scene.add(grp);
+    const podMat = new THREE.MeshStandardMaterial({ color: mix(L.color, W, .78), roughness: .55, envMapIntensity: .55 });
+    const pod = new THREE.Mesh(new RoundedBoxGeometry(PAD, 100, PAD, 4, 16), podMat); pod.castShadow = pod.receiveShadow = true; grp.add(pod);
     const st = STATIONS[L.id](L.color);
     st.group.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-    const s = new THREE.Box3().setFromObject(st.group).getSize(new THREE.Vector3());
-    const k = Math.min(230 / Math.max(s.x, s.z, 1), 1.25); st.group.scale.multiplyScalar(k);
-    grp.add(st.group);
+    const sz = new THREE.Box3().setFromObject(st.group).getSize(new THREE.Vector3());
+    st.group.scale.multiplyScalar(Math.min(195 / Math.max(sz.x, sz.z, 1), 1.2)); grp.add(st.group);
     const modelH = new THREE.Box3().setFromObject(st.group).getSize(new THREE.Vector3()).y;
-    const coins = L.members.slice().sort((a, b) => b.cap - a.cap).slice(0, 3).map((c, j) => { const cg = buildCoin(c, L.color, 26); grp.add(cg); return cg; });
-    return { L, i, grp, pod, podMat, st, coins, modelH, h: 0, hv: 0, ht: 0, lift: 0, lv: 0, lt: 0 };
+    const coins = L.members.slice().sort((a, b) => b.cap - a.cap).slice(0, 3).map(c => { const cg = buildCoin(c, L.color, 24); grp.add(cg); return cg; });
+    stations.push({ L, i, grp, pod, podMat, st, coins, modelH, h: 0, hv: 0, ht: 0, lift: 0, lv: 0, lt: 0 });
+    // 仓库（门朝大道），烟囱
+    const wh = T_.buildWarehouse(L.color); wh.scale.setScalar(.85); wh.rotation.y = back ? 0 : Math.PI; at(wh, cx + side * 175, G + 5, cz); S.add(wh);
+    const ch = wh.userData.chimney.clone().multiplyScalar(.85).applyAxisAngle(new THREE.Vector3(0, 1, 0), wh.rotation.y).add(wh.position);
+    chimneys.push({ p: ch, puffs: Array.from({ length: 5 }, (_, k) => { const m = sph(10, M('#ffffff', { roughness: 1, transparent: true, opacity: .8 }), 10); scene.add(m); return { m, ph: k / 5 }; }) });
+    // 货堆（大道边）与叉车
+    const pileZ = cz + toAve * 200, fx = cx + side * 175;
+    const pile = T_.buildCrates(5, L.color); at(pile, fx + side * 36, G + 5, pileZ); S.add(pile);
+    const fk = T_.buildForklift(); fk.group.rotation.y = back ? -Math.PI / 2 : Math.PI / 2; scene.add(fk.group);
+    forklifts.push({ v: fk, x: fx, za: cz + toAve * 52, zb: pileZ - toAve * 4, ph: i * .13 });
+    // 工人（在站点前干活）、机器人臂
+    [[-side * 150, toAve * 150], [-side * 60, toAve * 150]].forEach(([dx, dz], k) => {
+      const p = T_.buildPerson(i * 3 + k, { vest: true, helmet: true }); at(p.group, cx + dx, G + 5, cz + dz);
+      p.group.lookAt(cx, G + 5, cz); p.group.rotateY(-Math.PI / 2); scene.add(p.group); workers.push(p);
+    });
+    if ([2, 4, 5].includes(i)) { const a = T_.buildRobotArm(L.color); at(a.group, cx - side * 160, G + 5, cz - toAve * 160); a.group.scale.setScalar(1.2); scene.add(a.group); arms.push(a); }
+    // 行道树、长椅
+    for (let k = 0; k < 5; k++) { const t = T_.buildTreeSmall(i + k); at(t, cx - BW / 2 + 40 + k * ((BW - 80) / 4), G + 5, cz + toAve * (BD / 2 - 14)); t.scale.setScalar(1.3); S.add(t); }
+    for (let k = 0; k < 3; k++) { const t = T_.buildTreeSmall(i + k + 2); at(t, cx - side * (BW / 2 - 16), G + 5, cz - 120 + k * 120); t.scale.setScalar(1.2); S.add(t); }
+    const bench = T_.buildBench(); at(bench, cx, G + 5, cz + toAve * (BD / 2 - 32)); bench.rotation.y = back ? Math.PI : 0; S.add(bench);
   });
-  const topOf = s => new THREE.Vector3(s.grp.position.x, TOP + 10 + Math.max(s.h, 2) + s.lift + s.modelH * .8, s.grp.position.z);
-
-  // ---------- 传送带与逐站变形的货物 ----------
-  const BY = TOP + 8;
-  const curve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(-1060, BY, -40), new THREE.Vector3(0, BY, -40), new THREE.Vector3(1040, BY, -40), new THREE.Vector3(1120, BY, 25),
-    new THREE.Vector3(1040, BY, 90), new THREE.Vector3(0, BY, 90), new THREE.Vector3(-1040, BY, 90), new THREE.Vector3(-1120, BY, 25)], true, 'catmullrom', .2);
-  const beltMat = mat('#d6d9ea', { roughness: .7 }), beltMat2 = mat('#c8cce2', { roughness: .7 });
-  const segN = Math.floor(curve.getLength() / 34);
-  const belts = [];
-  for (let k = 0; k < segN; k++) {
-    const t = k / segN, p = curve.getPointAt(t), tg = curve.getTangentAt(t);
-    const m = new THREE.Mesh(new RoundedBoxGeometry(30, 12, 64, 2, 4), k % 2 ? beltMat : beltMat2);
-    m.position.copy(p).setY(BY - 1); m.rotation.y = Math.atan2(-tg.z, tg.x); m.receiveShadow = true; scene.add(m); belts.push(m);
+  // 外圈绿地：大树
+  const big = [];
+  for (let i = 0; i < 46; i++) {
+    const a = i / 46 * Math.PI * 2 + (i % 3) * .03, c = Math.cos(a), s = Math.sin(a), k = .9 + (i % 4) * .015;
+    const x = Math.sign(c) * Math.pow(Math.abs(c), .45) * RX * k, z = Math.sign(s) * Math.pow(Math.abs(s), .45) * RZ * k;
+    if (Math.abs(z - AVE.z) < 120 && Math.abs(x) > 1000) continue;
+    if (Math.abs(x) < x1 + 70 && Math.abs(z - (z0 + z1) / 2) < (z1 - z0) / 2 + 70) continue;
+    const t = T_.buildTreeSmall(i); t.scale.setScalar(2 + (i % 3) * .4); at(t, x, G, z); S.add(t); big.push(t);
   }
-  const nearest = p => { let bi = 0, bd = 1e9; stations.forEach((s, i) => { const d = (s.grp.position.x - p.x) ** 2 + ((s.grp.position.z - p.z) * 1.6) ** 2; if (d < bd) { bd = d; bi = i; } }); return bi; };
-  const cargo = Array.from({ length: 24 }, (_, k) => ({ g: null, t: k / 24, li: -1, pop: 1, pv: 0 }));
-  function morph(c, li) {
-    if (c.g) scene.remove(c.g);
-    c.g = CARGO(li); scene.add(c.g); c.li = li; c.pop = .2; c.pv = 0;
-  }
+  // 路灯
+  for (let x = -1080; x <= 1080; x += 180) [-1, 1].forEach(s => { const l = T_.buildStreetLight(); l.rotation.y = s > 0 ? Math.PI / 2 : -Math.PI / 2; at(l, x, G + 5, AVE.z + s * 66); S.add(l); });
 
-  // ---------- 电力线（能源 → 数据中心 / 算力 / 云）与数据光流（网络 → 下游，云 → 应用） ----------
+  // ---------- 跨海大桥（西） ----------
+  const deckM = M('#ffffff'), pierM = M('#d9d4fb');
+  for (let x = BRIDGE0 + 30; x > AVE.x0 - 40; x -= 40) {
+    const y0 = roadY(x), y1 = roadY(x - 40), m = box(42, 10, AVE.w + 10, deckM, 0);
+    m.rotation.z = Math.atan2(y0 - y1, 40); at(m, x - 20, (y0 + y1) / 2 - 5, AVE.z); S.add(m);
+    [-1, 1].forEach(s => { const rl = box(42, 6, 3, M('#5b4cff'), 0); rl.rotation.z = m.rotation.z; at(rl, x - 20, (y0 + y1) / 2 + 4, AVE.z + s * (AVE.w / 2 + 4)); S.add(rl); });
+  }
+  for (let x = BRIDGE0 - 120; x > AVE.x0; x -= 240) { const y = roadY(x) - 10; S.add(at(box(26, y - WATER_Y + 40, 70, pierM, .1), x, (y + WATER_Y - 40) / 2, AVE.z)); }
+
+  // ---------- 港口（东）：码头、集装箱堆场、岸桥、靠港货船 ----------
+  S.add(at(box(380, 22, 360, M('#eef0f7'), .03), 1600, G - 9, 90));
+  for (let x = 1440; x <= 1780; x += 85) for (let z = -60; z <= 250; z += 100) S.add(at(cyl(9, 9, 120, pierM, 10), x, G - 70, z));
+  const yard = T_.buildContainerStack(4, 3, 3, ['#1296f0', '#ff6b2c', '#00a8c6', '#a04cf5', '#f5a314', '#5b4cff']); at(yard, 1430, G + 2, 130); S.add(yard);
+  const dockWh = T_.buildWarehouse('#5b4cff'); dockWh.rotation.y = -Math.PI / 2; at(dockWh, 1740, G + 2, AVE.z); S.add(dockWh);
+  const gantry = T_.buildGantry(); at(gantry.group, 1640, G + 2, 120); scene.add(gantry.group);
+  const docked = buildShip(); docked.scale.setScalar(1.25); at(docked, 1630, WATER_Y + 8, 330); scene.add(docked);
+
+  // ---------- 电力：电塔与电线 ----------
+  const pyl = [[-150, -130], [-150, 140], [170, 140], [760, 140]].map(([x, z]) => { const p = T_.buildPylon(); p.rotation.y = Math.PI / 2; at(p, x, G + 5, z); S.add(p); p.updateMatrixWorld(true); return p; });
+  const tipsOf = p => p.userData.tips.map(t => t.clone().applyMatrix4(p.matrixWorld));
+  const wireM = M('#8e91a7'), spans = [];
+  for (let k = 0; k < pyl.length - 1; k++) {
+    const a = tipsOf(pyl[k]), b = tipsOf(pyl[k + 1]);
+    [0, 1].forEach(j => { const m = a[j].clone().lerp(b[j], .5); m.y -= 34; const cv = new THREE.QuadraticBezierCurve3(a[j], m, b[j]); S.add(new THREE.Mesh(new THREE.TubeGeometry(cv, 24, 1.1, 5), wireM)); if (j === 0) spans.push(cv); });
+  }
+  const sparks = [];
+  [1, 2, 3].forEach((n, r) => { for (let k = 0; k < 2; k++) { const d = new THREE.Mesh(new THREE.SphereGeometry(5, 10, 8), new THREE.MeshStandardMaterial({ color: '#fff', emissive: '#f5a314', emissiveIntensity: 1.8 })); scene.add(d); sparks.push({ d, n, t: k * .5 + r * .17 }); } });
+
+  // ---------- 数据光流（网络 → 下游，云 → 应用） ----------
   const flows = [];
-  function flow(a, b, height, color, n, speed, r) {
+  function flow(a, b, height, color, n, speed) {
     const pa = stations[a].grp.position, pb = stations[b].grp.position;
-    const A = new THREE.Vector3(pa.x, TOP + 150, pa.z), B = new THREE.Vector3(pb.x, TOP + 130, pb.z);
-    const M = A.clone().lerp(B, .5); M.y = height;
-    const cv = new THREE.QuadraticBezierCurve3(A, M, B);
-    const tube = new THREE.Mesh(new THREE.TubeGeometry(cv, 48, r, 8), mat(mix(color, W, .55), { transparent: true, opacity: .55 }));
-    scene.add(tube);
-    const dots = Array.from({ length: n }, (_, k) => { const d = new THREE.Mesh(new THREE.SphereGeometry(r * 2.4, 12, 10), mat('#ffffff', { emissive: color, emissiveIntensity: 1.6 })); scene.add(d); return { d, t: k / n }; });
+    const A = new THREE.Vector3(pa.x, G + 170, pa.z), B = new THREE.Vector3(pb.x, G + 150, pb.z), Mm = A.clone().lerp(B, .5); Mm.y = height;
+    const cv = new THREE.QuadraticBezierCurve3(A, Mm, B);
+    scene.add(new THREE.Mesh(new THREE.TubeGeometry(cv, 48, 2.2, 8), new THREE.MeshStandardMaterial({ color: mix(color, W, .55), transparent: true, opacity: .45 })));
+    const dots = Array.from({ length: n }, (_, k) => { const d = new THREE.Mesh(new THREE.SphereGeometry(5.5, 10, 8), new THREE.MeshStandardMaterial({ color: '#fff', emissive: color, emissiveIntensity: 1.6 })); scene.add(d); return { d, t: k / n }; });
     flows.push({ cv, dots, speed });
   }
-  [4, 5, 6].forEach((b, k) => flow(1, b, 520 + k * 40, '#f5a314', 3, .32, 3.2));
-  [4, 5, 6].forEach((b, k) => flow(3, b, 380 + k * 30, '#00a8c6', 4, .45, 2.6));
-  flow(6, 7, 360, '#1296f0', 4, .5, 2.6);
+  [4, 5, 6].forEach((b, k) => flow(3, b, 460 + k * 40, '#00a8c6', 3, .4));
+  flow(6, 7, 420, '#1296f0', 3, .45);
 
-  // ---------- 小更：灯塔 ⇄ 各站送信 ----------
+  // ---------- 交通 ----------
+  const PL = 33, IL = 13, AL = 36, Y = G + .8;
+  const ave = (east) => { const pts = []; for (let x = AVE.x0; x <= AVE.x1; x += 20) pts.push(new THREE.Vector3(x, roadY(x), AVE.z)); if (!east) pts.reverse(); return new Path(offset(pts, AL, false), false); };
+  const routes = [
+    { path: rectLoop(x0, x1, z0, z1, [150, 150, 150, 150], true, PL, Y), kinds: ['bus', 'truck', 'car', 'flat', 'car', 'van', 'truck'] },
+    { path: rectLoop(x0, x1, z0, z1, [150, 150, 150, 150], false, PL, Y), kinds: ['truck', 'car', 'flat', 'van', 'car', 'bus'] },
+    { path: rectLoop(-590, 590, z0, z1, [40, 40, 40, 40], true, IL, Y), kinds: ['flat', 'car', 'van', 'car'] },
+    { path: rectLoop(x0, 0, AVE.z, z1, [40, 40, 40, 150], false, IL, Y), kinds: ['car', 'flat', 'car'] },
+    { path: rectLoop(0, x1, z0, AVE.z, [40, 150, 40, 40], true, IL, Y), kinds: ['van', 'car', 'flat'] },
+    { path: ave(true), open: true, kinds: ['truck', 'car', 'truck', 'flat', 'van'] },
+    { path: ave(false), open: true, kinds: ['truck', 'car', 'van', 'truck', 'car'] },
+  ];
+  const CARC = T_.SHIRT.slice(0, 9);
+  const vehicles = [];
+  let vid = 0;
+  routes.forEach((R, ri) => R.kinds.forEach((k, j) => {
+    const col = CARC[(ri * 3 + j) % CARC.length];
+    const v = k === 'bus' ? T_.buildBus() : k === 'truck' ? T_.buildTruck(CL.layers[(ri + j * 3) % 8].color) : k === 'van' ? T_.buildVan(col) : k === 'flat' ? T_.buildFlatbed(0) : T_.buildCar(col);
+    scene.add(v.group);
+    const cruise = k === 'bus' || k === 'truck' ? 62 : k === 'flat' ? 66 : 80;
+    vehicles.push({ id: vid++, v, R, s: R.path.len * j / R.kinds.length + (R.open ? 0 : ri * 37), sp: cruise * .5, cruise, kind: k, len: k === 'bus' ? 70 : k === 'truck' ? 66 : 44, pos: new THREE.Vector3(), dir: new THREE.Vector3(1, 0, 0), wait: 0 });
+  }));
+  const nearestBlock = p => { let bi = 0, bd = 1e12; BLOCKS.forEach((b, i) => { const d = (b.cx - p.x) ** 2 + (b.cz - p.z) ** 2; if (d < bd) { bd = d; bi = i; } }); return bi; };
+
+  // ---------- 行人、机器人（街区人行道） ----------
+  const walkers = [];
+  BLOCKS.forEach((B, bi) => {
+    const lp = (cw) => rectLoop(B.cx - BW / 2 + 16, B.cx + BW / 2 - 16, B.cz - BD / 2 + 16, B.cz + BD / 2 - 16, [24, 24, 24, 24], cw, 0, G + 5);
+    const paths = [lp(true), lp(false)];
+    for (let k = 0; k < 4; k++) { const p = T_.buildPerson(bi * 5 + k); scene.add(p.group); walkers.push({ o: p, path: paths[k % 2], s: paths[0].len * (k / 4 + bi * .07), sp: 15 + (k * 7 % 9) }); }
+    const bot = T_.buildWalkerBot(bi); scene.add(bot.group); walkers.push({ o: bot, path: paths[(bi + 1) % 2], s: paths[0].len * .62, sp: 17 });
+    if (bi % 2 === 0) { const d = T_.buildDeliveryBot(bi); scene.add(d.group); walkers.push({ o: d, path: paths[bi % 4 === 0 ? 0 : 1], s: paths[0].len * .3, sp: 24, wheels: true }); }
+  });
+
+  // ---------- 灯塔、小更、货船、飞艇、海鸥、云 ----------
+  const light = buildLighthouse(); at(light.group, 1560, WATER_Y + 30, -600); light.group.scale.setScalar(1.15); scene.add(light.group);
+  light.group.traverse(o => { if (o.isMesh && o.material.type !== 'MeshBasicMaterial') o.castShadow = true; });
+  const LIGHT_TOP = light.group.position.clone().add(new THREE.Vector3(0, 340, 0));
+  const ship = buildShip(); ship.scale.setScalar(1.4); scene.add(ship);
   const robin = buildRobin(); robin.group.scale.setScalar(2.1); scene.add(robin.group);
-  const trip = { from: 0, phase: 'rest', t: 0, curve: null, target: 0 };
-  function newTrip() {
+  const blimp = T_.buildBlimp(); blimp.group.scale.setScalar(1.6); scene.add(blimp.group);
+  const gulls = Array.from({ length: 7 }, (_, i) => { const g = T_.buildGull(i); g.group.scale.setScalar(2.2); scene.add(g.group); return { g, r: 500 + i * 140, h: 420 + (i % 3) * 70, w: .25 + (i % 4) * .05, ph: i * .9, cx: (i % 2 ? 1 : -1) * 600 }; });
+  const clouds = Array.from({ length: 7 }, (_, i) => { const c = T_.buildCloud(i); c.scale.setScalar(1.3 + (i % 3) * .35); at(c, -3200 + i * 950, 480 + (i % 3) * 110, -1750 - (i % 3) * 420); scene.add(c); return c; }); // 云在岛的远处，不挡镇子
+
+  bake(S, scene);
+
+  // ---------- 小更送信 ----------
+  const trip = { phase: 'rest', t: 0, target: 0, restT: 1.2 };
+  const topOf = s => new THREE.Vector3(s.grp.position.x, G + 15 + Math.max(s.h, 2) + s.lift + s.modelH * .8, s.grp.position.z);
+  function newTrip(focus) {
     const st = stations[focus >= 0 ? focus : trip.target]; trip.target = (trip.target + 3) % stations.length;
-    const p = topOf(st).add(new THREE.Vector3(0, 70, 0));
-    const mid = LIGHT_TOP.clone().lerp(p, .5); mid.y += 260;
+    const p = topOf(st).add(new THREE.Vector3(0, 80, 0)), mid = LIGHT_TOP.clone().lerp(p, .5); mid.y += 280;
     trip.out = new THREE.QuadraticBezierCurve3(LIGHT_TOP.clone(), mid, p);
     trip.back = new THREE.QuadraticBezierCurve3(p, mid.clone().add(new THREE.Vector3(0, 80, 160)), LIGHT_TOP.clone());
     trip.phase = 'out'; trip.t = 0;
   }
 
-  // ---------- 交互 ----------
+  // ---------- 每帧更新 ----------
+  const spring = (o, k, v, tgt, dt, K, D) => { o[v] += (K * (tgt - o[k]) - D * o[v]) * dt; o[k] += o[v] * dt; };
+  const ease = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+  const tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3(), look = new THREE.Vector3();
+  const town = { scene, stations, focus: -1, hover: null };
+  const hOf = heat => 14 + Math.max(heat - .6, 0) * 70;
+  town.setDay = d => stations.forEach(s => { s.ht = hOf(s.L.heat[d]); });
+  town.setDay(6);
+  const place = (obj, path, s, pos, dir) => { path.at(s, pos, dir); obj.position.copy(pos); obj.rotation.set(0, Math.atan2(-dir.z, dir.x), Math.asin(Math.max(-1, Math.min(1, dir.y)))); };
+
+  town.update = (T, dt) => {
+    uni.uTime.value = T; uni.uTide.value = Math.sin(T * .35) * 16;
+    // 站点
+    stations.forEach(s => {
+      spring(s, 'h', 'hv', s.ht, dt, 90, 14); spring(s, 'lift', 'lv', s.lt + (s.i === town.focus ? 24 : 0), dt, 160, 16);
+      const H = Math.max(s.h, 2);
+      s.pod.scale.y = H / 100; s.pod.position.y = H / 2;
+      s.st.group.position.y = H + s.lift;
+      s.podMat.emissive.set(s === town.hover || s.i === town.focus ? mix(s.L.color, W, .7) : '#000000'); s.podMat.emissiveIntensity = .25;
+      s.st.tick(T, dt);
+      const top = H + s.lift + s.modelH + 70, show = town.focus < 0 || s.i === town.focus ? 1 : 0;
+      s.coins.forEach((c, j) => {
+        c.scale.setScalar(Math.max(c.scale.x + (show - c.scale.x) * .12, .001));
+        const a = T * .5 + j * 2.1, rr = s === town.hover || s.i === town.focus ? 115 : 70;
+        c.position.set(Math.cos(a) * rr, top + Math.sin(T * 1.6 + j) * 10 + j * 18, Math.sin(a) * rr * .5);
+      });
+    });
+    // 烟囱
+    chimneys.forEach((c, i) => c.puffs.forEach(p => { const k = (T * .22 + p.ph + i * .07) % 1; p.m.position.set(c.p.x - k * 40, c.p.y + k * 150, c.p.z + Math.sin(k * 6 + i) * 8); p.m.scale.setScalar(.5 + k * 1.8); p.m.material.opacity = .75 * (1 - k); }));
+    // 叉车：门口装货 → 开到大道边卸货 → 倒回去
+    forklifts.forEach(f => {
+      const k = (T / 11 + f.ph) % 1; let z, lift, has, v = 0;
+      if (k < .12) { z = f.za; lift = (k / .12) * 10; has = true; }
+      else if (k < .45) { z = f.za + (f.zb - f.za) * ease((k - .12) / .33); lift = 10; has = true; v = 40; }
+      else if (k < .55) { z = f.zb; lift = 10 - (k - .45) / .1 * 10; has = k < .52; }
+      else if (k < .88) { z = f.zb + (f.za - f.zb) * ease((k - .55) / .33); lift = 0; has = false; v = -40; }
+      else { z = f.za; lift = 0; has = false; }
+      f.v.group.position.set(f.x, G + 5, z); f.v.fork.position.y = 4 + lift; f.v.crate.visible = has; f.v.tick(T, dt, v);
+    });
+    workers.forEach(w => w.tick(T, dt, 0, 'work'));
+    arms.forEach(a => a.tick(T));
+    gantry.tick(T, dt);
+    // 车辆：跟车减速、路口让行（编号小的先走；等太久就放行，防止互相卡住）
+    vehicles.forEach(a => { a.R.path.at(a.s, a.pos, a.dir); });
+    vehicles.forEach(a => {
+      let tgt = a.cruise;
+      const grace = a.wait < 0;   // 等太久后有一小段"放行期"：不再给横向来车让行
+      for (const b of vehicles) {
+        if (b === a) continue;
+        tmp.subVectors(b.pos, a.pos); tmp.y = 0; const d = tmp.length(); if (d > 130) continue;
+        const ahead = tmp.x * a.dir.x + tmp.z * a.dir.z, lat = Math.abs(tmp.x * a.dir.z - tmp.z * a.dir.x), dd = a.dir.x * b.dir.x + a.dir.z * b.dir.z;
+        if (ahead <= 0) continue;
+        if (lat < 14 && dd > .3) tgt = Math.min(tgt, Math.max(0, (ahead - (a.len + b.len) / 2 - 12) * 2));                       // 跟车
+        else if (!grace && d < 90 && lat < 46 && Math.abs(dd) < .6 && b.id < a.id) tgt = Math.min(tgt, Math.max(0, (ahead - 60) * 1.5)); // 路口让行
+      }
+      if (a.wait < 0) a.wait = Math.min(a.wait + dt, 0); else a.wait = tgt < 4 ? a.wait + dt : 0;
+      if (a.wait > 2.4) a.wait = -1.4;
+      a.sp += (tgt - a.sp) * Math.min(dt * (tgt < a.sp ? 6 : 1.4), 1);
+      a.s += a.sp * dt;
+      if (a.R.open && a.s >= a.R.path.len) a.s = 0;
+      place(a.v.group, a.R.path, a.s, a.pos, a.dir);
+      if (a.R.open) { const e = Math.min(1, a.s / 90, (a.R.path.len - a.s) / 90); a.v.group.scale.setScalar(Math.max(e, .001)); }
+      a.v.tick(T, dt, a.sp);
+      if (a.kind === 'flat') a.v.setCargo(nearestBlock(a.pos));
+    });
+    // 行人
+    walkers.forEach(w => { w.s += w.sp * dt; place(w.o.group, w.path, w.s, tmp, tmp2); w.o.tick(T, dt, w.sp); });
+    // 电流、数据流
+    sparks.forEach(sp => { sp.t = (sp.t + dt * .28) % 1; const seg = Math.min(Math.floor(sp.t * sp.n), sp.n - 1), k = sp.t * sp.n - seg; sp.d.position.copy(spans[seg].getPoint(k)); });
+    flows.forEach(f => f.dots.forEach(o => { o.t = (o.t + dt * f.speed) % 1; o.d.position.copy(f.cv.getPoint(o.t)); }));
+    // 灯塔、货船、飞艇、海鸥、云
+    light.tick(T);
+    const sa = T * .04, SR = [2250, 1420], sx = Math.cos(sa) * SR[0], sz = Math.sin(sa) * SR[1];
+    ship.position.set(sx, WATER_Y + uni.uTide.value + waveH(sx, sz, T) + 6, sz);
+    ship.rotation.set((waveH(sx, sz + 60, T) - waveH(sx, sz - 60, T)) * .006, Math.atan2(-Math.cos(sa) * SR[1], -Math.sin(sa) * SR[0]) + Math.PI, (waveH(sx + 80, sz, T) - waveH(sx - 80, sz, T)) * .004);
+    docked.position.y = WATER_Y + uni.uTide.value + waveH(1630, 330, T) + 8; docked.rotation.x = Math.sin(T * .7) * .015;
+    const ba = T * .05; blimp.group.position.set(Math.cos(ba) * 1300, 760 + Math.sin(T * .3) * 20, Math.sin(ba) * 700 - 100); blimp.group.rotation.y = -ba - Math.PI / 2 + Math.PI; blimp.tick(T);
+    gulls.forEach(g => { const a = T * g.w + g.ph; g.g.group.position.set(g.cx + Math.cos(a) * g.r, g.h + Math.sin(T * 1.3 + g.ph) * 20, Math.sin(a) * g.r * .6); g.g.group.rotation.set(0, -a - Math.PI / 2 + Math.PI, Math.cos(a) * .3); g.g.tick(T); });
+    clouds.forEach((c, i) => { c.position.x += dt * (14 + i * 2); if (c.position.x > 3600) c.position.x = -3600; });
+    // 小更
+    robin.tick(T, dt);
+    if (trip.phase === 'rest') {
+      robin.flying = false; robin.group.position.copy(LIGHT_TOP); robin.group.rotation.y = Math.sin(T * .3) * .8 - .6;
+      trip.restT -= dt; if (trip.restT <= 0) newTrip(town.focus);
+    } else {
+      robin.flying = true; trip.t += dt / 3.6;
+      const cv = trip.phase === 'out' ? trip.out : trip.back, k = Math.min(trip.t, 1), e = ease(k);
+      const p = cv.getPoint(e); look.copy(cv.getPoint(Math.min(e + .02, 1)));
+      robin.group.position.copy(p); robin.group.lookAt(look.x, p.y, look.z);
+      robin.envelope.visible = trip.phase === 'back';
+      if (k >= 1) { if (trip.phase === 'out') { trip.phase = 'back'; trip.t = 0; } else { trip.phase = 'rest'; trip.restT = 2.5; robin.envelope.visible = true; } }
+    }
+  };
+  town.faceCoins = cam => stations.forEach(s => s.coins.forEach(c => c.lookAt(cam.position)));
+  town.vehicles = vehicles; town.walkers = walkers;
+  TOWN_SINGLETON = town;
+  return town;
+}
+
+// ====================================================================
+// 共享时钟：场景每帧只更新一次，可见的视图各自渲染
+const views = new Set();
+let running = false, last = 0, CLOCK = 0;
+function loop(now) {
+  const dt = Math.max(0, Math.min((now - last) / 1000, .04)); last = now; CLOCK += dt;
+  const vis = [...views].filter(v => v.visible);
+  if (!vis.length) { running = false; return; }
+  getTown().update(CLOCK, dt);
+  vis.forEach(v => v.render(CLOCK, dt));
+  requestAnimationFrame(loop);
+}
+function wake() { if (!running) { running = true; last = performance.now(); requestAnimationFrame(loop); } }
+function makeView(canvas, opts) {
+  const town = getTown();
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, opts.maxDpr || 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NeutralToneMapping;
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  const env = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), .04).texture; // 环境贴图属于各自的 WebGL 上下文
+  const camera = new THREE.PerspectiveCamera(28, 1, 10, 16000);
+  const view = { canvas, renderer, camera, visible: false, onResize: null, before: null, after: null };
+  view.render = (T, dt) => {
+    view.before && view.before(T, dt);
+    town.scene.environment = env; town.faceCoins(camera);
+    renderer.render(town.scene, camera);
+    view.after && view.after(T, dt);
+  };
+  view.resize = () => { const w = canvas.clientWidth, h = canvas.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); view.onResize && view.onResize(w, h); };
+  addEventListener('resize', view.resize);
+  new IntersectionObserver(es => { view.visible = es[0].isIntersecting; if (view.visible) wake(); }, { threshold: .02 }).observe(canvas);
+  views.add(view);
+  return view;
+}
+
+// ---------- 首页背景：镜头慢慢环绕，鼠标带一点视差 ----------
+function initHeroIsland(canvas, opts) {
+  opts = opts || {};
+  const view = makeView(canvas, { maxDpr: 1.75 });
+  const { camera } = view, ptr = { x: 0, y: 0, tx: 0, ty: 0 };
+  (opts.host || canvas).addEventListener('pointermove', e => { ptr.tx = e.clientX / innerWidth * 2 - 1; ptr.ty = e.clientY / innerHeight * 2 - 1; });
+  const tgt = new THREE.Vector3();
+  view.onResize = (w, h) => { const sh = opts.shift ? opts.shift(w, h) : 0; if (sh) camera.setViewOffset(w, h, -w * sh, 0, w, h); else camera.clearViewOffset(); };
+  view.before = (T) => {
+    ptr.x += (ptr.tx - ptr.x) * .03; ptr.y += (ptr.ty - ptr.y) * .03;
+    const narrow = camera.aspect < 1;
+    const az = -.38 + Math.sin(T * .045) * .3 + ptr.x * .08, el = .6 + ptr.y * .04 + Math.sin(T * .06) * .03, dist = narrow ? 6400 : 5100;
+    tgt.set(narrow ? 0 : 120, -40, 80);
+    camera.position.set(tgt.x + Math.sin(az) * Math.cos(el) * dist, tgt.y + Math.sin(el) * dist, tgt.z + Math.cos(az) * Math.cos(el) * dist);
+    camera.lookAt(tgt);
+  };
+  view.resize();
+  return { view };
+}
+
+// ---------- 导览区：可拖动、点站点、导览飞镜头 ----------
+function initIsland(canvas, ui) {
+  const town = getTown(), view = makeView(canvas, {}), { camera } = view, stations = town.stations;
+  const HOME = { pos: new THREE.Vector3(-560, 2900, 3900), tgt: new THREE.Vector3(-150, -60, 0) };
+  camera.position.copy(HOME.pos);
+  const controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true; controls.enableZoom = false; controls.enablePan = false; controls.target.copy(HOME.tgt);
+  controls.minPolarAngle = .45; controls.maxPolarAngle = 1.2; controls.minAzimuthAngle = -.85; controls.maxAzimuthAngle = .85;
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
-  let hover = null, focus = -1, tween = null;
+  let tween = null;
   const pickStation = e => {
     const r = canvas.getBoundingClientRect(); ndc.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
     ray.setFromCamera(ndc, camera);
@@ -197,131 +505,38 @@ function initIsland(canvas, ui) {
   };
   canvas.addEventListener('pointermove', e => {
     const s = pickStation(e);
-    if (s !== hover) { if (hover) hover.lt = 0; hover = s; if (s) s.lt = 34; canvas.style.cursor = s ? 'pointer' : 'grab'; ui.hover && ui.hover(s ? s.i : -1); }
+    if (s !== town.hover) { if (town.hover) town.hover.lt = 0; town.hover = s; if (s) s.lt = 34; canvas.style.cursor = s ? 'pointer' : 'grab'; ui.hover && ui.hover(s ? s.i : -1); }
   });
   let downAt = null;
   canvas.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; });
-  canvas.addEventListener('pointerup', e => {
-    if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 6) { const s = pickStation(e); if (s) go(s.i); }
-    downAt = null;
-  });
-  function flyTo(pos, tgt) { tween = { t0: performance.now(), d: 1300, p0: camera.position.clone(), t0v: controls.target.clone(), p1: pos, t1: tgt }; }
-  // 竖屏（手机）视野窄：按宽高比把镜头拉远；手机上面板在下方，不需要给左侧让位
-  const narrow = () => camera.aspect < 1.3;
-  const far = () => narrow() ? Math.min(1.3 / camera.aspect, 2.4) : 1;
-  function view(i) {
-    if (i < 0) {
-      const tgt = HOME.tgt.clone(); if (narrow()) tgt.set(0, -40, 120);
-      return [tgt.clone().add(HOME.pos.clone().sub(HOME.tgt).multiplyScalar(far())), tgt];
-    }
+  canvas.addEventListener('pointerup', e => { if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 6) { const s = pickStation(e); if (s) go(s.i); } downAt = null; });
+  const narrow = () => camera.aspect < 1.3, far = () => narrow() ? Math.min(1.3 / camera.aspect, 2.4) : 1;
+  function viewOf(i) {
+    if (i < 0) { const tgt = HOME.tgt.clone(); if (narrow()) tgt.set(0, -40, 120); return [tgt.clone().add(HOME.pos.clone().sub(HOME.tgt).multiplyScalar(far())), tgt]; }
     const p = stations[i].grp.position, back = i < 4;
-    const tgt = new THREE.Vector3(p.x - (narrow() ? 0 : 170), narrow() ? 60 : 120, p.z + (narrow() ? 160 : 0));
-    const off = new THREE.Vector3(-250, 960, back ? 1380 : 1450).multiplyScalar(narrow() ? Math.min(far(), 1.6) : 1);
+    const tgt = new THREE.Vector3(p.x - (narrow() ? 0 : 160), narrow() ? 60 : 110, p.z + (narrow() ? 160 : 0));
+    const off = new THREE.Vector3(-260, 900, back ? 1300 : 1360).multiplyScalar(narrow() ? Math.min(far(), 1.6) : 1);
     return [tgt.clone().add(off), tgt];
   }
-  function go(i) {
-    focus = i;
-    const [pos, tgt] = view(i);
-    flyTo(pos, tgt);
-    if (i >= 0 && trip.phase === 'rest') trip.restT = 0;
-    ui.select && ui.select(i);
-  }
-
-  // ---------- 标签（HTML，跟随 3D 位置） ----------
-  const tmp = new THREE.Vector3();
-  function placeLabels() {
+  function go(i) { town.focus = i; const [pos, tgt] = viewOf(i); tween = { t0: performance.now(), d: 1400, p0: camera.position.clone(), t0v: controls.target.clone(), p1: pos, t1: tgt }; ui.select && ui.select(i); }
+  const ease = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2, tmp = new THREE.Vector3();
+  view.onResize = () => { if (!tween) { const [pos, tgt] = viewOf(town.focus); camera.position.copy(pos); controls.target.copy(tgt); } };
+  view.before = () => {
+    if (tween) { const k = Math.min((performance.now() - tween.t0) / tween.d, 1), e = ease(k); camera.position.lerpVectors(tween.p0, tween.p1, e); controls.target.lerpVectors(tween.t0v, tween.t1, e); if (k >= 1) tween = null; }
+    controls.update();
+  };
+  view.after = () => {
     const r = canvas.getBoundingClientRect();
     stations.forEach(s => {
-      tmp.set(s.grp.position.x, TOP + 10 + Math.max(s.h, 2) + s.lift + s.modelH + 36, s.grp.position.z).project(camera);
+      tmp.set(s.grp.position.x, G + 5 + Math.max(s.h, 2) + s.lift + s.modelH + 36, s.grp.position.z).project(camera);
       const el = ui.labels[s.i];
       el.style.transform = `translate(${(tmp.x + 1) / 2 * r.width}px, ${(1 - tmp.y) / 2 * r.height}px) translate(-50%, -100%)`;
-      el.classList.toggle('on', s.i === focus || s === hover);
-      el.classList.toggle('dim', focus >= 0 && s.i !== focus);
+      el.classList.toggle('on', s.i === town.focus || s === town.hover);
+      el.classList.toggle('dim', town.focus >= 0 && s.i !== town.focus);
     });
-  }
-
-  // ---------- 热度 ----------
-  const hOf = heat => 14 + Math.max(heat - .6, 0) * 70;
-  function setDay(d) { stations.forEach(s => { s.ht = hOf(s.L.heat[d]); }); }
-  setDay(6);
-
-  function resize() {
-    const w = canvas.clientWidth, h = canvas.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
-    if (!tween) { const [pos, tgt] = view(focus); camera.position.copy(pos); controls.target.copy(tgt); }
-  }
-  resize(); addEventListener('resize', resize);
-  let visible = false, last = performance.now(), T = 0;
-  new IntersectionObserver(es => { const v = es[0].isIntersecting; if (v && !visible) { visible = true; last = performance.now(); requestAnimationFrame(tick); } visible = v; }, { threshold: .05 }).observe(canvas);
-  const spring = (o, k, v, tgt, dt, K, D) => { o[v] += (K * (tgt - o[k]) - D * o[v]) * dt; o[k] += o[v] * dt; };
-  const ease = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
-  const look = new THREE.Vector3(), SHIP_R = [1780, 1060];
-  trip.restT = 1.2;
-  function tick(now) {
-    // rAF 时间戳可能早于上一帧记录的时间，帧间隔限制为不小于 0
-    const dt = Math.max(0, Math.min((now - last) / 1000, .04)); last = now; T += dt;
-    // 潮水：波浪 + 潮位涨落（约 18 秒一个周期）
-    uni.uTime.value = T; uni.uTide.value = Math.sin(T * .35) * 16;
-    // 站点
-    stations.forEach(s => {
-      spring(s, 'h', 'hv', s.ht, dt, 90, 14); spring(s, 'lift', 'lv', s.lt + (s.i === focus ? 24 : 0), dt, 160, 16);
-      const H = Math.max(s.h, 2);
-      s.pod.scale.y = H / 100; s.pod.position.y = 10 + H / 2;
-      s.st.group.position.y = 10 + H + s.lift;
-      s.podMat.emissive.set(s === hover || s.i === focus ? mix(s.L.color, W, .7) : '#000000'); s.podMat.emissiveIntensity = .25;
-      s.st.tick(T, dt);
-      const top = 10 + H + s.lift + s.modelH + 70;
-      const show = focus < 0 || s.i === focus ? 1 : 0;
-      s.coins.forEach((c, j) => {
-        c.scale.setScalar(Math.max(c.scale.x + (show - c.scale.x) * .12, .001));
-        const a = T * .5 + j * 2.1, rr = s === hover || s.i === focus ? 120 : 70;
-        c.position.set(Math.cos(a) * rr, top + Math.sin(T * 1.6 + j) * 10 + j * 18, Math.sin(a) * rr * .5);
-        c.lookAt(camera.position);
-      });
-    });
-    // 货物：沿传送带移动，进入新站时变形并弹一下
-    cargo.forEach(c => {
-      c.t = ((c.t + dt * .016) % 1 + 1) % 1;
-      const p = curve.getPointAt(c.t), li = nearest(p);
-      if (li !== c.li) morph(c, li);
-      spring(c, 'pop', 'pv', 1, dt, 220, 12);
-      c.g.position.set(p.x, BY + 6, p.z); c.g.scale.setScalar(Math.max(c.pop, .05) * 1.15);
-      const tg = curve.getTangentAt(c.t); c.g.rotation.y = Math.atan2(-tg.z, tg.x);
-    });
-    // 电流 / 数据光点
-    flows.forEach(f => f.dots.forEach(o => { o.t = (o.t + dt * f.speed) % 1; o.d.position.copy(f.cv.getPoint(o.t)); }));
-    // 灯塔
-    light.tick(T);
-    // 货船：绕岛航行，随浪起伏
-    const sa = T * .045, sx = Math.cos(sa) * SHIP_R[0], sz = Math.sin(sa) * SHIP_R[1];
-    const sh = waveH(sx, sz, T);
-    ship.position.set(sx, WATER_Y + uni.uTide.value + sh + 6, sz);
-    ship.rotation.set((waveH(sx, sz + 60, T) - waveH(sx, sz - 60, T)) * .006, Math.atan2(-Math.cos(sa) * SHIP_R[1], -Math.sin(sa) * SHIP_R[0]) + Math.PI, (waveH(sx + 80, sz, T) - waveH(sx - 80, sz, T)) * .004);
-    // 小更送信
-    robin.tick(T, dt);
-    if (trip.phase === 'rest') {
-      robin.flying = false; robin.group.position.copy(LIGHT_TOP); robin.group.rotation.y = Math.sin(T * .3) * .8 - .6;
-      trip.restT -= dt; if (trip.restT <= 0) newTrip();
-    } else {
-      robin.flying = true;
-      trip.t += dt / 3.4;
-      const cv = trip.phase === 'out' ? trip.out : trip.back, k = Math.min(trip.t, 1), e = ease(k);
-      const p = cv.getPoint(e); look.copy(cv.getPoint(Math.min(e + .02, 1)));
-      robin.group.position.copy(p); robin.group.lookAt(look.x, p.y, look.z);
-      robin.envelope.visible = trip.phase === 'back';
-      if (k >= 1) { if (trip.phase === 'out') { trip.phase = 'back'; trip.t = 0; } else { trip.phase = 'rest'; trip.restT = 2.5; robin.envelope.visible = true; } }
-    }
-    // 镜头
-    if (tween) {
-      const k = Math.min((now - tween.t0) / tween.d, 1), e = ease(k);
-      camera.position.lerpVectors(tween.p0, tween.p1, e); controls.target.lerpVectors(tween.t0v, tween.t1, e);
-      if (k >= 1) tween = null;
-    }
-    controls.update();
-    renderer.render(scene, camera);
-    placeLabels();
-    if (visible) requestAnimationFrame(tick);
-  }
-  return { go, setDay, get focus() { return focus; } };
+  };
+  view.resize();
+  return { go, setDay: town.setDay, get focus() { return town.focus; } };
 }
-return { initIsland };
+return { initIsland, initHeroIsland, getTown };
 })();

@@ -10,6 +10,14 @@
   const deep = c => mix(c, '#000000', .18);
   const badge = (c, size, color) => `<span class="badge" style="--bs:${size}px;--c:${deep(color)};--ring:${mix(color, '#ffffff', .55)}"><i>${c.t[0]}</i>${c.logo ? `<img src="${c.logo}" alt="" onerror="this.remove()">` : ''}</span>`;
 
+  // ---------- 首屏：卡片从手机屏幕里飞出来 ----------
+  const pcs = [...document.querySelectorAll('.pc')];
+  pcs.forEach(el => { const box = el.querySelector('.pc-logo'); if (box) { const c = CL.byT[box.dataset.t]; box.insertAdjacentHTML('afterbegin', badge(c, 34, CL.layers[c.li].color)); } });
+  pcs.forEach((el, i) => setTimeout(() => el.classList.add('out'), 1400 + i * 380));
+  // 每隔一会儿，轮流有一张卡"缩回屏幕再飞出来"，像新的一期送到
+  let pcI = 0;
+  setInterval(() => { const el = pcs[pcI++ % pcs.length]; el.classList.remove('out'); setTimeout(() => el.classList.add('out'), 900); }, 5200);
+
   // ---------- 栏目 ----------
   const COLS = [
     { id: 'eve', name: '晚潮', sub: '期权日报', color: '#5b4cff', when: '每个交易日 15:40', status: '每日送达', art: 'moon',
