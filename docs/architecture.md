@@ -42,7 +42,7 @@
 - 图表：
   - K 线与事件标记：**TradingView Lightweight Charts**（Apache-2.0，**必须在页面上注明 TradingView 并附链接**，可直接保留其 attribution logo）。
   - 热力图 / 产业链图：D3 或 ECharts。
-- 样式：Tailwind CSS + 自定义设计 token（颜色、圆角、阴影统一管理）。
+- 样式：沿用设计稿的雾彩·清透 token（`design/v3/assets/brand.css`），拆成 `src/styles/`；Tailwind 可选，不作为前提（见 `docs/m1-plan.md`）。
 - PWA：manifest + service worker，缓存最近一天的 JSON。
 - 命令面板：cmdk 或自写。
 

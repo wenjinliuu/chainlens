@@ -10,6 +10,7 @@ ChainLens（仓库名）：AI 产业链情报台，**对外品牌叫"潮信"**�
 3. `docs/architecture.md`
 4. `docs/data-sources.md`
 5. `docs/roadmap.md`（当前进度与下一步）
+6. `docs/m1-plan.md`（M1 工程化方案、静态 JSON 契约、与上游字段映射）
 
 ## 硬性约束
 - 只用 Cloudflare **免费**额度，不引入 Workers Paid 依赖。
@@ -26,4 +27,4 @@ ChainLens（仓库名）：AI 产业链情报台，**对外品牌叫"潮信"**�
 - 海报、设计稿类页面提供高清图下载按钮；使用 Lightweight Charts 时保留 TradingView 署名。
 
 ## 下一步
-从 `docs/roadmap.md` 的 M0 剩余项（`design/` 设计稿）或 M1 开始。
+M0 设计稿已完成（`design/v4/`），按 `docs/m1-plan.md` 进入 M1 工程化。
