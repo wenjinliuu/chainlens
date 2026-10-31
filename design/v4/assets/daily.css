@@ -133,3 +133,8 @@ i.bull { background: var(--bull-c); } i.bear { background: var(--bear-c); } i.fl
   .ar-text { padding: 20px 18px; } .ar-rr, .ar-week, .ar-soon { padding-left: 16px; padding-right: 16px; }
   .footer { flex-direction: column; gap: 10px; }
 }
+
+/* 实验性深色模式（海报 .pz 保持白底） */
+[data-theme="dark"] body { background: linear-gradient(180deg, var(--bg), var(--bg-2) 600px); }
+[data-theme="dark"] .rp-bars i.on { box-shadow: 0 0 0 2px var(--card), 0 0 0 3.5px var(--accent); }
+[data-theme="dark"] .cal-g .d.on { color: #fff; }

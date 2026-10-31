@@ -111,3 +111,9 @@ body { background: linear-gradient(180deg, #fff, var(--bg-2) 600px); }
 .sa { display: grid; grid-template-columns: 46px auto 1fr; gap: 8px; align-items: center; padding: 6px 8px; margin: 0 -8px; border-radius: 12px; font-size: 13px; }
 .sa:hover { background: var(--accent-soft); } .sa small { color: var(--ink3); font-size: 12px; } .sa .pill { font-size: 11px; padding: 1px 7px; }
 .sa-none { display: block; font-size: 12px; color: var(--ink4); padding: 4px 0; }
+
+/* 实验性深色模式 */
+[data-theme="dark"] body { background: linear-gradient(180deg, var(--bg), var(--bg-2) 600px); }
+[data-theme="dark"] .co-head { background: linear-gradient(120deg, color-mix(in srgb, var(--c) 14%, var(--card)), var(--card)); }
+[data-theme="dark"] .ch-kpi > div { background: rgba(255,255,255,.05); }
+[data-theme="dark"] .c3-cap, [data-theme="dark"] .cb-cap, [data-theme="dark"] .st-lab { background: rgba(21,24,48,.9); color: var(--ink2); }

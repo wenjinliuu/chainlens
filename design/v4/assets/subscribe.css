@@ -38,3 +38,7 @@
 .un-alt { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13.5px; color: var(--ink2); margin-top: 4px; }
 .un-alt .chip.on { color: var(--accent-deep); background: var(--accent-soft); border-color: rgba(91,76,255,.35); }
 @media (max-width: 900px) { .sb-card { grid-template-columns: 1fr; } .sb-art { min-height: 240px; } .sb-body { padding: 10px 14px 20px; } .sb-body h1 { font-size: 28px; } .pf-grid { grid-template-columns: 1fr; } .sb-demo { font-size: 12px; } }
+
+/* 实验性深色模式 */
+[data-theme="dark"] .sb-tips code, [data-theme="dark"] .watch .w { background: var(--card-2); }
+[data-theme="dark"] .sb-art { background: radial-gradient(500px 300px at 50% 60%, var(--accent-soft), transparent 70%), linear-gradient(180deg, var(--card), var(--card-2)); }

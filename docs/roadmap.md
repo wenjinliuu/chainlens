@@ -42,4 +42,4 @@
 ## M5 · 体验打磨
 - [ ] 手机版卡片流、PWA
 - [ ] ⌘K 命令面板（设计稿已做：`design/v4/assets/search.js`）
-- [ ] 深色模式
+- [ ] 深色模式（设计稿已有实验性版本：`design/v4/assets/theme.js`，M1 迁移后再补细节）

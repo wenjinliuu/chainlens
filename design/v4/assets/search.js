@@ -37,6 +37,7 @@
     ['常见问题', '', '❓', 'index.html#faq', 'faq 问题 帮助'],
   ].forEach(([t, sub, ic, href, k]) => items.push({ g: '页面', t, sub, ic: `<span class="ic">${ic}</span>`, href, k: `${t} ${k}`.toLowerCase(), pri: 40 }));
   if (window.ARCHIVE) ARCHIVE.days.forEach(d => items.push({ g: '期权日报归档', t: `${d.md} ${d.wd}`, sub: `大盘${d.mood} · ${d.h2}`, ic: `<span class="ic">${d.mood === '偏乐观' ? '🟢' : d.mood === '偏谨慎' ? '🔴' : '⚪'}</span>`, href: `daily.html?col=eve&d=${d.date}`, k: `${d.date} ${d.date.slice(5).replace('-', '')} ${d.md} ${d.mood} ${d.h2} ${d.strong.t} ${d.hot.seg}`.toLowerCase(), pri: 10, date: true }));
+  if (window.CX_THEME) items.push({ g: '操作', t: '切换深色 / 浅色模式', sub: '实验性；海报与 3D 场景保持浅色', ic: '<span class="ic">🌗</span>', fn: () => CX_THEME.toggle(), k: '深色 浅色 主题 dark light theme 模式', pri: 30 });
   if (window.LP && LP.setNight) items.push({ g: '操作', t: '切换白天 / 夜晚模式', sub: '首屏和产业镇一起变', ic: '<span class="ic">🌙</span>', fn: () => LP.setNight(!$('#hero').classList.contains('night')), k: '夜晚 白天 模式 night', pri: 30 });
 
   // ---------- 匹配与排序 ----------

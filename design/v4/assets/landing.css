@@ -554,3 +554,12 @@
 @media (max-width: 640px) { .pk-more { display: none; } }
 .pk-x { position: absolute; right: 22px; top: 20px; border: 1.5px solid var(--line); background: var(--card); border-radius: 999px; padding: 4px 12px; font-size: 12.5px; font-weight: 700; color: var(--ink2); cursor: pointer; }
 @media (max-width: 900px) { .pk-cols { grid-template-columns: 1fr; } .pk-h b { font-size: 16px; } }
+
+/* ================= 实验性深色模式（浅色为主；海报 .kp、3D 场景、手机屏幕保持浅色） ================= */
+[data-theme="dark"] .page-bg { background: radial-gradient(900px 520px at 78% 30%, var(--accent-soft), transparent 70%), linear-gradient(180deg, var(--bg), var(--bg-2)); }
+[data-theme="dark"] .town-head .sec-no, [data-theme="dark"] .isle-bar, [data-theme="dark"] .isle-panel, [data-theme="dark"] .isle-bubble, [data-theme="dark"] .isle-label { background: rgba(21,24,48,.92); color: var(--ink); }
+[data-theme="dark"] .hero-town .sub-form { background: var(--card); }
+[data-theme="dark"] .hero-explore, [data-theme="dark"] .night-btn { background: rgba(21,24,48,.88); color: var(--ink); }
+[data-theme="dark"] .col-art { filter: saturate(.9) brightness(.92); }
+[data-theme="dark"] .sample::after { background: linear-gradient(transparent, var(--card-2) 62%); }
+[data-theme="dark"] .footer { border-top-color: var(--line); }

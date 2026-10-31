@@ -351,3 +351,8 @@ body { background: linear-gradient(180deg, var(--bg) 0, var(--bg-2) 720px, var(-
 .hs-c .pill { align-self: flex-start; font-size: 10.5px; padding: 1px 7px; margin-top: 3px; } .hs-c .s { font-size: 11px; color: var(--ink3); margin-top: 2px; }
 @media (max-width: 900px) { .hs-row { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 640px) { .hs-row { grid-template-columns: repeat(2, 1fr); } }
+
+/* 实验性深色模式 */
+[data-theme="dark"] .tg.ev.on { background: color-mix(in srgb, var(--d) 22%, var(--card)); color: color-mix(in srgb, var(--d) 70%, #fff); }
+[data-theme="dark"] .wl-row.on { background: color-mix(in srgb, var(--c) 18%, var(--card)); }
+[data-theme="dark"] .ch-strip i { background: color-mix(in srgb, var(--c) 40%, var(--card)); }

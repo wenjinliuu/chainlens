@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="assets/theme.js"></script>
 <title>潮信 · AI 产业链情报 · 免费订阅</title>
 <meta name="description" content="潮信：盘前汇总、期权日报、研报日报，按 8 层 AI 产业链整理，每天准时送达。">
 <link rel="stylesheet" href="../v3/assets/brand.css">
@@ -229,6 +230,7 @@
   });
   if (!window.__noMascot) initMascot(document.getElementById('mascot'));
   window.LP.island(isl.initIsland);
+  if (document.documentElement.dataset.theme === 'dark') { window.__nightNow = true; window.LP.setNight(true); window.__nightNow = false; } // 深色主题：小镇直接是夜晚
   const { initResearch } = await RESEARCH;
   window.LP.research(initResearch);
   const { initBoard } = await BOARD;
