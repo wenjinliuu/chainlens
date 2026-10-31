@@ -216,6 +216,7 @@
       b.innerHTML = '<span>📮</span>新潮信已送达';
       b.style.left = (x + cv.offsetLeft + 60) + 'px'; b.style.top = (y + cv.offsetTop - 60) + 'px';
       st.appendChild(b); setTimeout(() => b.remove(), 2600);
+      window.LP.delivered && window.LP.delivered();
     },
     host: document.getElementById('stage'),
     offsetX: () => 40,

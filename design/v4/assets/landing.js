@@ -16,7 +16,16 @@
   pcs.forEach((el, i) => setTimeout(() => el.classList.add('out'), 1400 + i * 380));
   // 每隔一会儿，轮流有一张卡"缩回屏幕再飞出来"，像新的一期送到
   let pcI = 0;
-  setInterval(() => { const el = pcs[pcI++ % pcs.length]; el.classList.remove('out'); setTimeout(() => el.classList.add('out'), 900); }, 5200);
+  const visible = () => pcs.filter(el => el.offsetParent !== null); // 手机端只显示前两张，轮换时跳过隐藏的
+  setInterval(() => { const vs = visible(); if (!vs.length) return; const el = vs[pcI++ % vs.length]; el.classList.remove('out'); setTimeout(() => el.classList.add('out'), 900); }, 5200);
+  // 小更把信投进邮筒时：推送吐司"叮"一下并显示"刚刚"，第一张卡（全市场情绪）缩回去再飞出来，像新的一期刚送到
+  let sinceT = 0;
+  LP.delivered = () => {
+    const t = $('.toast'); if (!t) return;
+    t.classList.add('ping'); setTimeout(() => t.classList.remove('ping'), 900);
+    const sm = t.querySelector('small'); if (sm) { sm.textContent = '刚刚'; clearTimeout(sinceT); sinceT = setTimeout(() => sm.textContent = '1 分钟前', 60000); }
+    const first = visible()[0]; if (first) { first.classList.remove('out'); setTimeout(() => first.classList.add('out'), 500); }
+  };
 
   // ---------- 夜晚模式：3D 场景 + 首屏与导览区的底色一起切换 ----------
   let night = false;

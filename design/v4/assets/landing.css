@@ -110,6 +110,8 @@
   background: rgba(255, 255, 255, .9); border: 1.5px solid var(--line); box-shadow: 0 24px 50px -16px rgba(60, 50, 160, .3); backdrop-filter: blur(14px);
   transform: translateZ(80px); animation: toast 1s var(--spring) 1.1s backwards; color: #16172a; }
 @keyframes toast { from { opacity: 0; transform: translateZ(80px) translate(-40px, -30px) scale(.85); } }
+.toast { transition: translate .4s var(--spring), scale .4s var(--spring), box-shadow .4s; }
+.toast.ping { translate: 0 -8px; scale: 1.05; box-shadow: 0 0 0 5px rgba(91,76,255,.16), 0 30px 60px -16px rgba(60,50,160,.4); } /* 小更投信时"叮"一下，用过渡而不是动画，免得入场动画重播 */
 .toast .ic { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; flex: none; background: #5b4cff; }
 .toast b { font-size: 13.5px; } .toast p { margin: 1px 0 0; font-size: 12.5px; color: #444760; line-height: 1.45; }
 .toast small { margin-left: auto; align-self: flex-start; font-size: 11px; color: #8e91a7; white-space: nowrap; }
@@ -486,7 +488,12 @@
 }
 @media (max-width: 640px) {
   .pc { width: 168px; } .pc .pc-s, .pc .pc-dev, .pc .pc-bars { display: none; }
-  .pc:nth-of-type(n+4) { display: none; }
+  /* 手机端只留两张：全市场情绪在手机左上、最强信号在右下，位置改到窄屏放得下的地方（行内变量要用 !important 盖掉） */
+  /* 注意 nth-of-type 把同级的 .phone、.toast 两个 div 也算进去：第 3、4 个才是前两张卡 */
+  .pc:nth-of-type(n+5) { display: none; }
+  .pc:nth-of-type(3) { --x: -118px !important; --y: -60px !important; --z: 70px !important; }
+  .pc:nth-of-type(4) { --x: 122px !important; --y: 150px !important; --z: 70px !important; }
+  .toast { left: -44px; top: -14px; width: 270px; }
 }
 
 /* ================= 夜晚模式 ================= */
