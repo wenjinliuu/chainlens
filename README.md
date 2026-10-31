@@ -17,6 +17,7 @@ ChainLens 只做**公开信息的整理与可视化**，不提供任何投资建
 | 文档 | 内容 |
 |---|---|
 | [docs/design.md](docs/design.md) | 产品设计：板块、页面布局、电脑版 / 手机版、视觉风格 |
+| [docs/design-direction.md](docs/design-direction.md) | 设计方向 v2：参考案例、视觉与动效原则（取代 design.md 的视觉风格一节） |
 | [docs/architecture.md](docs/architecture.md) | 技术架构：数据流、存储、前端、部署、邮件 |
 | [docs/data-sources.md](docs/data-sources.md) | 数据来源与数据模型（JSON 结构） |
 | [docs/compliance.md](docs/compliance.md) | 合规原则（必读） |

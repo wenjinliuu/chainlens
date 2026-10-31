@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>专业行情 · ChainLens</title>
+<link rel="stylesheet" href="assets/theme.css">
+<style>
+.wrap { position: relative; z-index: 1; min-width: 1280px; padding: 16px 20px 28px; display: flex; flex-direction: column; gap: 12px; }
+.rise { opacity: 0; transform: translateY(10px); animation: rise .7s var(--ease) forwards; animation-delay: calc(var(--i, 0) * 70ms); }
+@keyframes rise { to { opacity: 1; transform: none; } }
+
+/* ---------- 报价头 ---------- */
+.quote { display: grid; grid-template-columns: auto auto 1fr; gap: 34px; align-items: center; padding: 16px 20px; }
+.idn { display: flex; align-items: center; gap: 14px; }
+.logo-tile { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; color: var(--c);
+  background: color-mix(in srgb, var(--c) 12%, var(--bg-2)); border: 1px solid color-mix(in srgb, var(--c) 40%, transparent); box-shadow: 0 0 30px -8px var(--c); }
+.idn .t { font-family: var(--mono); font-size: 22px; font-weight: 600; color: var(--fg-0); letter-spacing: -.02em; }
+.idn .n { font-size: 12.5px; color: var(--fg-2); margin-top: 3px; display: flex; gap: 8px; align-items: center; }
+.tagx { font-size: 11px; padding: 1px 7px; border-radius: 5px; border: 1px solid var(--line-2); color: var(--fg-1); }
+.px { font-family: var(--mono); font-size: 36px; font-weight: 500; color: var(--fg-0); letter-spacing: -.03em; line-height: 1; }
+.pxc { font-family: var(--mono); font-size: 14px; margin-top: 6px; display: flex; gap: 10px; }
+.pxc .badge { padding: 1px 7px; border-radius: 5px; }
+.stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px 22px; padding-left: 30px; border-left: 1px solid var(--line); }
+.stats div { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--fg-3); white-space: nowrap; }
+.stats b { font-family: var(--mono); font-weight: 500; color: var(--fg-1); }
+
+/* ---------- 主区 ---------- */
+.main { display: grid; grid-template-columns: 1fr 360px; gap: 12px; }
+.chart-panel { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+.toolbar { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.tb-label { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; color: var(--fg-3); margin-left: 6px; }
+.tb-sep { width: 1px; height: 18px; background: var(--line-2); margin: 0 2px; }
+.chip.ev-o.on { border-color: rgba(167,139,250,.5); } .chip.ev-r.on { border-color: rgba(79,157,255,.5); } .chip.ev-n.on { border-color: rgba(255,181,71,.5); }
+.chart-wrap { position: relative; flex: 1; min-height: 660px; }
+#chart { position: absolute; inset: 0; }
+.lg { position: absolute; left: 12px; z-index: 4; pointer-events: none; font-family: var(--mono); font-size: 11px; display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--fg-2); max-width: calc(100% - 90px); }
+.lg b { font-weight: 500; }
+.lg .k { color: var(--fg-3); margin-right: 4px; }
+.lg-main1 { font-size: 11.5px; }
+.lg-main1 .sym { color: var(--fg-0); font-weight: 600; }
+
+/* ---------- 右栏 ---------- */
+.rail { display: flex; flex-direction: column; gap: 12px; }
+.card { padding: 14px 16px; }
+.card-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.card-h h3 { margin: 0; font-size: 13px; font-weight: 600; color: var(--fg-0); display: flex; align-items: center; gap: 8px; }
+.ta-row { padding: 9px 0; border-top: 1px solid var(--line); }
+.ta-row:first-of-type { border-top: 0; padding-top: 0; }
+.ta-top { display: flex; align-items: center; gap: 10px; }
+.ta-top .k { font-family: var(--mono); font-size: 11px; color: var(--fg-2); width: 56px; }
+.meter { flex: 1; height: 4px; border-radius: 2px; background: var(--bg-3); position: relative; }
+.meter .z { position: absolute; top: -3px; width: 1px; height: 10px; background: var(--fg-3); opacity: .6; }
+.meter .m { position: absolute; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); left: 0; transition: left 1.2s var(--ease); }
+.meter .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: linear-gradient(90deg, transparent, rgba(63,211,255,.5)); width: 0; transition: width 1.2s var(--ease); }
+.ta-top .v { font-family: var(--mono); font-size: 12px; color: var(--fg-0); width: 64px; text-align: right; }
+.ta-text { font-size: 12px; color: var(--fg-1); margin-top: 6px; line-height: 1.55; }
+.range { margin: 4px 0 14px; }
+.range .lab { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--fg-2); margin-bottom: 8px; }
+.range .lab b { font-family: var(--mono); font-weight: 500; color: var(--fg-1); }
+.bar { position: relative; height: 6px; border-radius: 3px; background: var(--bg-3); }
+.bar .seg { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
+.bar .cur { position: absolute; top: -5px; width: 2px; height: 16px; margin-left: -1px; background: var(--fg-0); border-radius: 1px; box-shadow: 0 0 8px rgba(255,255,255,.6); }
+.bar .cur span { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); font-family: var(--mono); font-size: 10.5px; color: var(--fg-0); white-space: nowrap; }
+.facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; margin-top: 12px; }
+.facts div { font-size: 11.5px; color: var(--fg-3); }
+.facts b { display: block; font-weight: 500; color: var(--fg-1); font-size: 12.5px; margin-top: 2px; }
+.mix { display: flex; height: 8px; border-radius: 4px; overflow: hidden; gap: 2px; margin: 12px 0 8px; }
+.mix-lg { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11px; color: var(--fg-2); }
+.mix-lg span { display: flex; align-items: center; gap: 5px; }
+.mini-chain { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; }
+.mini-chain .col { display: flex; flex-direction: column; gap: 5px; }
+.mini-chain a { display: flex; justify-content: space-between; padding: 5px 8px; border-radius: 6px; background: var(--bg-2); font-family: var(--mono); font-size: 11.5px; color: var(--fg-1); transition: background .15s; }
+.mini-chain a:hover { background: var(--bg-3); color: var(--fg-0); }
+.mini-chain .self { padding: 10px 12px; border-radius: 10px; font-family: var(--mono); font-weight: 600; color: var(--fg-0); border: 1px solid var(--c); box-shadow: 0 0 20px -6px var(--c); text-align: center; font-size: 13px; }
+
+/* ---------- 底部 ---------- */
+.bottom { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 12px; }
+.rp { display: grid; grid-template-columns: 74px 1fr auto; gap: 4px 12px; padding: 11px 0; border-top: 1px solid var(--line); }
+.rp:first-of-type { border-top: 0; padding-top: 0; }
+.rp .d { font-family: var(--mono); font-size: 11px; color: var(--fg-3); padding-top: 2px; }
+.rp .f { color: var(--fg-0); font-weight: 500; }
+.rp .r { font-size: 12px; color: var(--fg-2); }
+.rp .tp { font-family: var(--mono); font-size: 12.5px; text-align: right; color: var(--fg-1); }
+.rp ul { grid-column: 2 / 4; margin: 4px 0 0; padding-left: 15px; color: var(--fg-1); font-size: 12px; line-height: 1.65; }
+.nw { padding: 10px 0; border-top: 1px solid var(--line); display: block; }
+.nw:first-of-type { border-top: 0; padding-top: 0; }
+.nw .tt { color: var(--fg-0); font-size: 13px; line-height: 1.5; }
+.nw .m { font-size: 11px; color: var(--fg-3); margin-top: 3px; font-family: var(--mono); }
+.foot { display: flex; justify-content: space-between; padding: 6px 4px 0; }
+</style>
+</head>
+<body class="texture">
+<header class="topbar">
+  <div class="brand"><span class="brand-mark"><i></i><i></i><i></i></span>ChainLens<small>链镜</small></div>
+  <nav class="tnav"><a href="#">今日</a><a href="chain.html">产业链</a><a class="on" href="stock.html">行情</a><a href="#">日报</a><a href="#">订阅</a></nav>
+  <div class="cmdk" id="cmdk"></div>
+  <div class="clock"><i></i>美股已收盘 · 10-30 16:00 ET · 延迟数据</div>
+</header>
+<div class="tape"><div class="tape-track" id="tape"></div></div>
+
+<div class="wrap">
+  <section class="panel quote rise" id="quote" style="--i:0"></section>
+
+  <div class="main">
+    <section class="panel chart-panel rise" style="--i:1">
+      <div class="toolbar" id="toolbar">
+        <div class="seg" id="period"><button data-p="D" class="on">日K</button><button data-p="W">周K</button><button data-p="M">月K</button></div>
+        <span class="tb-sep"></span><span class="tb-label">主图</span>
+        <button class="chip on" data-main="MA">MA</button><button class="chip" data-main="BOLL">BOLL</button><button class="chip on" data-main="TGT">目标价区间</button>
+        <span class="tb-sep"></span><span class="tb-label">副图</span>
+        <button class="chip on" data-sub="VOL">VOL</button><button class="chip on" data-sub="MACD">MACD</button><button class="chip" data-sub="KDJ">KDJ</button><button class="chip" data-sub="RSI">RSI</button>
+        <span class="tb-sep"></span><span class="tb-label">事件</span>
+        <button class="chip ev-o on" data-ev="o"><span class="dot" style="background:var(--ev-option)"></span>期权</button>
+        <button class="chip ev-r on" data-ev="r"><span class="dot" style="background:var(--ev-report)"></span>研报</button>
+        <button class="chip ev-n on" data-ev="n"><span class="dot" style="background:var(--ev-news)"></span>新闻</button>
+      </div>
+      <div class="chart-wrap" id="chartWrap"><div id="chart"></div><div id="legends"></div></div>
+    </section>
+
+    <aside class="rail">
+      <section class="panel card rise" style="--i:2">
+        <div class="card-h"><h3>技术指标状态</h3><span class="eyebrow">规则计算</span></div>
+        <div id="ta"></div>
+        <div class="disclaimer" style="margin-top:10px">仅描述指标数值所处位置，不代表任何走势判断。</div>
+      </section>
+      <section class="panel card rise" style="--i:3">
+        <div class="card-h"><h3>区间位置</h3></div>
+        <div id="ranges"></div>
+      </section>
+      <section class="panel card rise" style="--i:4" id="profile"></section>
+    </aside>
+  </div>
+
+  <div class="bottom">
+    <section class="panel card rise" style="--i:5"><div class="card-h"><h3><span class="dot" style="background:var(--ev-report)"></span>研报时间线</h3><span class="ai-tag">AI 整理</span></div><div id="reports"></div></section>
+    <section class="panel card rise" style="--i:6"><div class="card-h"><h3><span class="dot" style="background:var(--ev-news)"></span>个股新闻</h3><span class="eyebrow">公开媒体</span></div><div id="news"></div></section>
+    <section class="panel card rise" style="--i:7"><div class="card-h"><h3>产业链位置</h3><a href="chain.html" class="eyebrow" style="color:var(--accent)">打开全景 →</a></div><div id="chainPos"></div>
+      <div style="margin-top:16px" class="card-h"><h3><span class="dot" style="background:var(--ev-option)"></span>CP 比 · 近 60 日</h3><span class="eyebrow">期权日报</span></div><div id="cp"></div></section>
+  </div>
+
+  <div class="foot disclaimer"><span>本站内容为公开信息整理，不构成任何投资建议。市场有风险，投资需谨慎。</span><span>行情、研报与新闻均为虚构示例数据 · 行情延迟 15 分钟以上 · 图表由 TradingView Lightweight Charts™ 提供</span></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@5.2.1/dist/lightweight-charts.standalone.production.js"></script>
+<script src="assets/icons.js"></script>
+<script src="assets/chain-data.js"></script>
+<script src="assets/indicators.js"></script>
+<script>
+(() => {
+const LC = window.LightweightCharts;
+const $ = s => document.querySelector(s);
+const T = (new URLSearchParams(location.search).get('t') || 'NVDA').toUpperCase();
+const node = CHAIN.byT[T] || CHAIN.byT.NVDA;
+const layer = CHAIN.layers.find(l => l.id === node.layer);
+const css = getComputedStyle(document.documentElement);
+const C = k => css.getPropertyValue(k).trim();
+const UP = C('--up'), DOWN = C('--down');
+const COL = { ma5: '#F5C451', ma10: '#3FD3FF', ma20: '#C38BFF', ma60: '#FF8AD8', mid: '#E9EEFF', band: '#6AB0FF', k: '#F5C451', d: '#3FD3FF', j: '#C38BFF' };
+const fmt = (v, d = 2) => v == null || isNaN(v) ? '—' : v.toFixed(d);
+const pct = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(2) + '%';
+const dir = v => v > 0 ? 'up' : v < 0 ? 'down' : 'flat';
+const big = v => v >= 1e12 ? (v / 1e12).toFixed(2) + '万亿' : v >= 1e8 ? (v / 1e8).toFixed(2) + '亿' : v >= 1e4 ? (v / 1e4).toFixed(1) + '万' : String(v);
+document.title = `${T} 专业行情 · ChainLens`;
+$('#cmdk').innerHTML = icon('search', 14) + '搜索代码 / 公司<kbd>⌘K</kbd>';
+
+// 跑马灯
+const tape = CHAIN.nodes.map(n => `<span class="tape-item"><b>${n.t}</b><span class="${dir(n.chg[6])}">${pct(n.chg[6])}</span></span>`).join('');
+$('#tape').innerHTML = tape + tape;
+
+// ---------- 数据 ----------
+const daily = IND.genDaily(T, 520, '2026-10-30');
+const last = daily[daily.length - 1], prev = daily[daily.length - 2];
+const chg = (last.close / prev.close - 1) * 100;
+const y1 = daily.slice(-252);
+const hi52 = Math.max(...y1.map(b => b.high)), lo52 = Math.min(...y1.map(b => b.low));
+
+// 事件（虚构）：按距今的交易日数挂靠
+const EV = [
+  { ago: 0, k: 'r', title: '机构 A 上调目标价', detail: '评级 中性 → 增持' },
+  { ago: 2, k: 'o', title: '期权异动', detail: 'CP 比处于自身分布 +2.4σ' },
+  { ago: 5, k: 'n', title: '新一代数据中心平台公布量产时间表', detail: '示例媒体' },
+  { ago: 23, k: 'r', title: '机构 E 维持评级', detail: '目标价小幅上调' },
+  { ago: 38, k: 'o', title: '期权异动', detail: 'CP 比处于自身分布 −2.0σ' },
+  { ago: 51, k: 'n', title: '季度业绩发布', detail: '示例媒体' },
+  { ago: 72, k: 'r', title: '机构 B 上调目标价', detail: '维持增持' },
+  { ago: 96, k: 'o', title: '期权异动', detail: 'CP 比处于自身分布 +2.1σ' },
+  { ago: 120, k: 'r', title: '机构 C 首次覆盖', detail: '评级 增持' },
+].map(e => ({ ...e, time: daily[daily.length - 1 - e.ago].time, price: daily[daily.length - 1 - e.ago].close }));
+const EVC = { o: C('--ev-option'), r: C('--ev-report'), n: C('--ev-news') };
+const EVL = { o: '期', r: '研', n: '闻' };
+
+// 研报目标价区间：每次研报更新后阶梯变化
+const reportEv = EV.filter(e => e.k === 'r').sort((a, b) => b.ago - a.ago);
+const tgt = []; let lv = null; let ri = 0;
+daily.forEach((b, i) => {
+  const ago = daily.length - 1 - i;
+  while (ri < reportEv.length && reportEv[ri].ago >= ago) { const p = reportEv[ri].price; lv = { lo: p * 0.96, avg: p * 1.12, hi: p * 1.3 }; ri++; }
+  if (lv) tgt.push({ time: b.time, ...lv });
+});
+const tgtLast = tgt[tgt.length - 1];
+
+// ---------- 报价头（数字从 0 滚动到位） ----------
+$('#quote').style.setProperty('--c', layer.color);
+$('#quote').innerHTML = `
+  <div class="idn"><div class="logo-tile">${icon(layer.icon, 24)}</div>
+    <div><div class="t">${T}</div><div class="n">${node.name}<span class="tagx">NASDAQ</span><span class="tagx" style="color:${layer.color};border-color:${layer.color}55">${layer.name}</span></div></div></div>
+  <div><div class="px" id="px">0.00</div>
+    <div class="pxc"><span class="badge ${dir(chg)}" style="background:${chg >= 0 ? 'var(--up-a)' : 'var(--down-a)'}">${pct(chg)}</span><span class="${dir(chg)}">${chg >= 0 ? '+' : '−'}${Math.abs(last.close - prev.close).toFixed(2)}</span><span style="color:var(--fg-3)">USD · 收盘</span></div></div>
+  <div class="stats">
+    <div>开盘<b>${fmt(last.open)}</b></div><div>最高<b class="up">${fmt(last.high)}</b></div><div>最低<b class="down">${fmt(last.low)}</b></div>
+    <div>昨收<b>${fmt(prev.close)}</b></div><div>成交量<b>${big(last.volume)}</b></div><div>成交额<b>${big(last.volume * last.close)}</b></div>
+    <div>市值<b>${big(node.cap * 1e9)}</b></div><div>市盈率 TTM<b>示意</b></div><div>52 周高<b>${fmt(hi52)}</b></div>
+    <div>52 周低<b>${fmt(lo52)}</b></div><div>振幅<b>${((last.high - last.low) / prev.close * 100).toFixed(2)}%</b></div><div>量比<b>${(last.volume / IND.sma(daily.map(b => b.volume), 5).at(-2)).toFixed(2)}</b></div>
+  </div>`;
+(function roll() {
+  const el = $('#px'), t0 = performance.now();
+  (function f(now) { const k = Math.min((now - t0) / 900, 1), e = 1 - Math.pow(1 - k, 4); el.textContent = (last.close * e).toFixed(2); if (k < 1) requestAnimationFrame(f); })(t0);
+})();
+
+// ---------- 图表 ----------
+const state = { period: 'D', main: new Set(['MA', 'TGT']), sub: ['VOL', 'MACD'], ev: new Set(['o', 'r', 'n']) };
+let chart = null, legendFns = [];
+const SUB_H = { VOL: 92, MACD: 108, KDJ: 100, RSI: 100 };
+
+function build(keepRange) {
+  const range = keepRange && chart ? chart.timeScale().getVisibleLogicalRange() : null;
+  if (chart) chart.remove();
+  const bars = state.period === 'D' ? daily : IND.aggregate(daily, state.period);
+  const X = IND.compute(bars);
+  const subs = ['VOL', 'MACD', 'KDJ', 'RSI'].filter(s => state.sub.includes(s));
+  const el = $('#chart');
+  const mainH = Math.max(el.clientHeight - subs.reduce((s, k) => s + SUB_H[k], 0), 300);
+  chart = LC.createChart(el, {
+    autoSize: true,
+    layout: { background: { type: 'solid', color: 'transparent' }, textColor: C('--fg-2'), fontFamily: 'Geist Mono Variable, ui-monospace, monospace', fontSize: 11,
+      panes: { separatorColor: 'rgba(160,180,220,.1)', separatorHoverColor: 'rgba(63,211,255,.25)', enableResize: true }, attributionLogo: true },
+    grid: { vertLines: { color: 'rgba(160,180,220,.05)' }, horzLines: { color: 'rgba(160,180,220,.05)' } },
+    crosshair: { mode: LC.CrosshairMode.Normal,
+      vertLine: { color: 'rgba(200,215,240,.35)', width: 1, style: LC.LineStyle.Dashed, labelBackgroundColor: '#1d2635' },
+      horzLine: { color: 'rgba(200,215,240,.35)', width: 1, style: LC.LineStyle.Dashed, labelBackgroundColor: '#1d2635' } },
+    rightPriceScale: { borderVisible: false, scaleMargins: { top: .08, bottom: .06 } },
+    timeScale: { borderVisible: false, rightOffset: 6, barSpacing: state.period === 'D' ? 7 : 10, minBarSpacing: 2 },
+  });
+  const line = (pane, color, data, extra) => {
+    const s = chart.addSeries(LC.LineSeries, { color, lineWidth: 1.4, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false, ...extra }, pane);
+    s.setData(data.map((v, i) => v == null ? { time: bars[i].time } : { time: bars[i].time, value: v }));
+    return s;
+  };
+  // 主图
+  const candle = chart.addSeries(LC.CandlestickSeries, { upColor: UP, downColor: DOWN, wickUpColor: UP, wickDownColor: DOWN, borderVisible: false, priceLineColor: 'rgba(200,215,240,.4)' });
+  candle.setData(bars);
+  if (state.main.has('MA')) { line(0, COL.ma5, X.ma5); line(0, COL.ma10, X.ma10); line(0, COL.ma20, X.ma20); line(0, COL.ma60, X.ma60); }
+  if (state.main.has('BOLL')) {
+    line(0, COL.band, X.boll.map(b => b && b.up), { lineWidth: 1 });
+    line(0, COL.mid, X.boll.map(b => b && b.mid), { lineWidth: 1, lineStyle: LC.LineStyle.Dotted });
+    line(0, COL.band, X.boll.map(b => b && b.dn), { lineWidth: 1 });
+  }
+  if (state.main.has('TGT') && state.period === 'D') {
+    const map = Object.fromEntries(tgt.map(t => [t.time, t]));
+    const mk = k => bars.map(b => map[b.time] ? map[b.time][k] : null);
+    const o = { lineWidth: 1, lineType: LC.LineType.WithSteps, lineStyle: LC.LineStyle.Dashed };
+    line(0, 'rgba(79,157,255,.55)', mk('hi'), o); line(0, 'rgba(79,157,255,.9)', mk('avg'), { ...o, lineStyle: LC.LineStyle.SparseDotted, lineWidth: 1.5 }); line(0, 'rgba(79,157,255,.55)', mk('lo'), o);
+  }
+  if (state.period === 'D') {
+    LC.createSeriesMarkers(candle, EV.filter(e => state.ev.has(e.k)).sort((a, b) => a.time.localeCompare(b.time)).map(e => ({
+      time: e.time, position: e.k === 'o' ? 'belowBar' : 'aboveBar', color: EVC[e.k], shape: 'circle', text: EVL[e.k], size: 1.2 })));
+  }
+  // 副图
+  let pane = 0;
+  const subSeries = {};
+  subs.forEach(s => {
+    pane++;
+    if (s === 'VOL') {
+      const v = chart.addSeries(LC.HistogramSeries, { priceFormat: { type: 'volume' }, priceLineVisible: false, lastValueVisible: false }, pane);
+      v.setData(bars.map(b => ({ time: b.time, value: b.volume, color: b.close >= b.open ? 'rgba(43,214,123,.45)' : 'rgba(255,77,94,.45)' })));
+      line(pane, COL.ma10, X.vma20, { lineWidth: 1 });
+    }
+    if (s === 'MACD') {
+      const h = chart.addSeries(LC.HistogramSeries, { priceLineVisible: false, lastValueVisible: false }, pane);
+      h.setData(X.macd.map((m, i) => ({ time: bars[i].time, value: m.hist, color: m.hist >= 0 ? (i && m.hist >= X.macd[i - 1].hist ? 'rgba(43,214,123,.8)' : 'rgba(43,214,123,.4)') : (i && m.hist <= X.macd[i - 1].hist ? 'rgba(255,77,94,.8)' : 'rgba(255,77,94,.4)') })));
+      line(pane, COL.d, X.macd.map(m => m.dif), { lineWidth: 1.2 }); line(pane, COL.k, X.macd.map(m => m.dea), { lineWidth: 1.2 });
+    }
+    if (s === 'KDJ') {
+      const k = line(pane, COL.k, X.kdj.map(m => m.k), { lineWidth: 1.2 }); line(pane, COL.d, X.kdj.map(m => m.d), { lineWidth: 1.2 }); line(pane, COL.j, X.kdj.map(m => m.j), { lineWidth: 1.2 });
+      [20, 80].forEach(p => k.createPriceLine({ price: p, color: 'rgba(160,180,220,.25)', lineStyle: LC.LineStyle.Dashed, lineWidth: 1, axisLabelVisible: false }));
+    }
+    if (s === 'RSI') {
+      const r = line(pane, COL.k, X.rsi6, { lineWidth: 1.2 }); line(pane, COL.d, X.rsi12, { lineWidth: 1.2 }); line(pane, COL.j, X.rsi24, { lineWidth: 1.2 });
+      [30, 70].forEach(p => r.createPriceLine({ price: p, color: 'rgba(160,180,220,.25)', lineStyle: LC.LineStyle.Dashed, lineWidth: 1, axisLabelVisible: false }));
+    }
+  });
+  const sizePanes = () => { const ps = chart.panes(); ps[0].setStretchFactor(mainH); subs.forEach((s, i) => ps[i + 1] && ps[i + 1].setStretchFactor(SUB_H[s])); };
+  sizePanes();
+
+  if (range) chart.timeScale().setVisibleLogicalRange(range);
+  else chart.timeScale().setVisibleLogicalRange({ from: bars.length - (state.period === 'D' ? 150 : 90), to: bars.length + 4 });
+
+  // ---------- 图例（随十字光标更新） ----------
+  const unit = { D: '日K', W: '周K', M: '月K' }[state.period];
+  const sp = (k, v, c, d) => `<span><span class="k">${k}</span><b style="color:${c}">${fmt(v, d)}</b></span>`;
+  function render(i) {
+    const b = bars[i], p = bars[i - 1] || b, ch = (b.close / p.close - 1) * 100, cc = b.close >= b.open ? UP : DOWN;
+    let html = `<div class="lg lg-main1" style="top:8px"><span class="sym">${T} · ${unit}</span><span style="color:var(--fg-2)">${b.time}</span>` +
+      sp('开', b.open, cc) + sp('高', b.high, cc) + sp('低', b.low, cc) + sp('收', b.close, cc) + `<span><b style="color:${ch >= 0 ? UP : DOWN}">${pct(ch)}</b></span></div>`;
+    let l2 = '';
+    if (state.main.has('MA')) l2 += sp('MA5', X.ma5[i], COL.ma5) + sp('MA10', X.ma10[i], COL.ma10) + sp('MA20', X.ma20[i], COL.ma20) + sp('MA60', X.ma60[i], COL.ma60);
+    if (state.main.has('BOLL') && X.boll[i]) l2 += sp('BOLL', X.boll[i].mid, COL.mid) + sp('UP', X.boll[i].up, COL.band) + sp('DN', X.boll[i].dn, COL.band);
+    if (state.main.has('TGT') && state.period === 'D') l2 += `<span><span class="k">研报目标价</span><b style="color:var(--ev-report)">${fmt(tgtLast.lo, 0)}–${fmt(tgtLast.hi, 0)}</b></span>`;
+    if (l2) html += `<div class="lg" style="top:28px">${l2}</div>`;
+    const wrapTop = $('#chartWrap').getBoundingClientRect().top;
+    const ps = chart.panes();
+    subs.forEach((s, si) => {
+      const pe = ps[si + 1] && ps[si + 1].getHTMLElement && ps[si + 1].getHTMLElement();
+      const top = pe ? pe.getBoundingClientRect().top - wrapTop : 0;
+      let t = '';
+      if (s === 'VOL') t = sp('VOL', b.volume / 1e6, 'var(--fg-1)', 2) + 'M' + sp('MA20', X.vma20[i] / 1e6, COL.ma10, 2);
+      if (s === 'MACD') t = `<span class="k">MACD(12,26,9)</span>` + sp('DIF', X.macd[i].dif, COL.d) + sp('DEA', X.macd[i].dea, COL.k) + sp('MACD', X.macd[i].hist, X.macd[i].hist >= 0 ? UP : DOWN);
+      if (s === 'KDJ') t = `<span class="k">KDJ(9,3,3)</span>` + sp('K', X.kdj[i].k, COL.k) + sp('D', X.kdj[i].d, COL.d) + sp('J', X.kdj[i].j, COL.j);
+      if (s === 'RSI') t = sp('RSI6', X.rsi6[i], COL.k) + sp('RSI12', X.rsi12[i], COL.d) + sp('RSI24', X.rsi24[i], COL.j);
+      html += `<div class="lg" style="top:${top + 6}px">${t}</div>`;
+    });
+    $('#legends').innerHTML = html;
+  }
+  render(bars.length - 1);
+  requestAnimationFrame(() => { sizePanes(); requestAnimationFrame(() => render(bars.length - 1)); });
+  const idx = Object.fromEntries(bars.map((b, i) => [b.time, i]));
+  chart.subscribeCrosshairMove(p => render(p.time && idx[p.time] != null ? idx[p.time] : bars.length - 1));
+  return { bars, X };
+}
+
+// 工具栏
+document.querySelectorAll('#period button').forEach(b => b.onclick = () => {
+  state.period = b.dataset.p; document.querySelectorAll('#period button').forEach(x => x.classList.toggle('on', x === b)); build(false);
+});
+document.querySelectorAll('[data-main]').forEach(b => b.onclick = () => { const k = b.dataset.main; state.main.has(k) ? state.main.delete(k) : state.main.add(k); b.classList.toggle('on'); build(true); });
+document.querySelectorAll('[data-sub]').forEach(b => b.onclick = () => { const k = b.dataset.sub; state.sub = state.sub.includes(k) ? state.sub.filter(x => x !== k) : [...state.sub, k]; b.classList.toggle('on'); build(true); });
+document.querySelectorAll('[data-ev]').forEach(b => b.onclick = () => { const k = b.dataset.ev; state.ev.has(k) ? state.ev.delete(k) : state.ev.add(k); b.classList.toggle('on'); build(true); });
+
+const { X } = build(false);
+
+// ---------- 技术指标状态 ----------
+const ta = IND.describe(daily, IND.compute(daily));
+$('#ta').innerHTML = ta.map(r => `<div class="ta-row"><div class="ta-top"><span class="k">${r.key}</span>
+  <span class="meter">${(r.zones || []).map(z => `<i class="z" style="left:${z * 100}%"></i>`).join('')}<i class="fill" data-w="${r.meter * 100}"></i><i class="m" data-l="${r.meter * 100}"></i></span>
+  <span class="v">${r.value}</span></div><div class="ta-text">${r.text}</div></div>`).join('');
+setTimeout(() => document.querySelectorAll('#ta .m').forEach(m => { m.style.left = m.dataset.l + '%'; m.previousElementSibling.style.width = m.dataset.l + '%'; }), 500);
+
+// ---------- 区间位置 ----------
+const rangeBar = (label, lo, hi, cur, min, max, color, sub) => {
+  const P = v => ((v - min) / (max - min) * 100).toFixed(1) + '%';
+  return `<div class="range"><div class="lab"><span>${label}</span><span>${sub}</span></div>
+    <div class="bar"><span class="seg" style="left:${P(lo)};width:calc(${P(hi)} - ${P(lo)});background:${color}"></span><span class="cur" style="left:${P(cur)}"><span>${fmt(cur)}</span></span></div>
+    <div class="lab" style="margin:24px 0 0"><b>${fmt(lo)}</b><b>${fmt(hi)}</b></div></div>`;
+};
+const mn = Math.min(lo52, tgtLast.lo, last.close) * 0.97, mx = Math.max(hi52, tgtLast.hi, last.close) * 1.03;
+$('#ranges').innerHTML =
+  rangeBar('52 周区间', lo52, hi52, last.close, mn, mx, 'linear-gradient(90deg, rgba(255,77,94,.5), rgba(43,214,123,.5))', `距高点 ${((last.close / hi52 - 1) * 100).toFixed(1)}%`) +
+  rangeBar('研报目标价区间', tgtLast.lo, tgtLast.hi, last.close, mn, mx, 'rgba(79,157,255,.45)', `均值 ${fmt(tgtLast.avg)} · 4 家机构`) +
+  `<div class="disclaimer">目标价区间按已收录研报统计，仅作信息展示。</div>`;
+
+// ---------- 公司概况 ----------
+const PROFILE = {
+  NVDA: { hq: '美国 · 圣克拉拉', founded: '1993', fy: '1 月底', ceo: '黄仁勋', mix: [['数据中心', 88, '#3FD3FF'], ['游戏', 8, '#C38BFF'], ['专业可视化', 2, '#F5C451'], ['汽车', 1, '#FF8AD8'], ['其他', 1, '#5a6376']] },
+};
+const pf = PROFILE[T];
+$('#profile').innerHTML = `<div class="card-h"><h3>公司概况</h3><span class="eyebrow">${T}</span></div>
+  <div style="font-size:12.5px;color:var(--fg-1);line-height:1.65">${node.desc}。</div>
+  ${pf ? `<div class="mix">${pf.mix.map(m => `<i style="flex:${m[1]};background:${m[2]}"></i>`).join('')}</div>
+    <div class="mix-lg">${pf.mix.map(m => `<span><i class="dot" style="background:${m[2]}"></i>${m[0]} ${m[1]}%</span>`).join('')}</div>
+    <div class="disclaimer" style="margin-top:6px">收入构成为示意</div>
+    <div class="facts"><div>总部<b>${pf.hq}</b></div><div>成立<b>${pf.founded}</b></div><div>CEO<b>${pf.ceo}</b></div><div>财年截止<b>${pf.fy}</b></div></div>` :
+    `<div class="disclaimer" style="margin-top:8px">详细概况待接入</div>`}`;
+
+// ---------- 研报 / 新闻 ----------
+const reps = [
+  { d: '2026-10-30', f: '机构 A', r: '中性 → 增持', tp: [tgtLast.avg * 0.9, tgtLast.avg * 1.04], pts: ['数据中心收入占比继续提升', '新平台量产节奏早于此前披露', '毛利率假设上调 1 个百分点'] },
+  { d: '2026-09-28', f: '机构 E', r: '维持 增持', tp: [tgtLast.avg * 0.95, tgtLast.avg * 0.98], pts: ['供应链交付周期缩短', '网络业务增速高于整体'] },
+  { d: '2026-07-21', f: '机构 B', r: '维持 增持', tp: [tgtLast.avg * 0.82, tgtLast.avg * 0.92], pts: ['云厂商资本开支指引上调', '库存周转天数下降'] },
+];
+$('#reports').innerHTML = reps.map(r => `<div class="rp"><span class="d">${r.d}</span><span><span class="f">${r.f}</span> <span class="r">${r.r}</span></span>
+  <span class="tp">${fmt(r.tp[0], 0)} → <b style="color:var(--fg-0)">${fmt(r.tp[1], 0)}</b></span><ul>${r.pts.map(p => `<li>${p}</li>`).join('')}</ul></div>`).join('');
+$('#news').innerHTML = [['新一代数据中心平台公布量产时间表', '10-30 08:42'], ['与亚洲代工厂扩大先进封装合作', '10-27 19:05'], ['季度业绩电话会要点', '08-27 21:30'], ['新产品发布会公布路线图', '08-12 10:00']]
+  .map(n => `<a class="nw" href="#"><div class="tt">${n[0]}</div><div class="m">示例媒体 · ${n[1]}</div></a>`).join('');
+
+// ---------- 产业链位置 ----------
+const ins = CHAIN.edges.filter(e => e[1] === node.t).slice(0, 4), outs = CHAIN.edges.filter(e => e[0] === node.t).slice(0, 4);
+const ch = t => { const n = CHAIN.byT[t]; return `<a href="stock.html?t=${t}"><span>${t}</span><span class="${dir(n.chg[6])}">${pct(n.chg[6])}</span></a>`; };
+$('#chainPos').innerHTML = `<div class="mini-chain" style="--c:${layer.color}"><div class="col"><span class="eyebrow">上游</span>${ins.map(e => ch(e[0])).join('') || '—'}</div>
+  <div class="self">${T}</div><div class="col"><span class="eyebrow">下游</span>${outs.map(e => ch(e[1])).join('') || '—'}</div></div>`;
+
+// ---------- CP 比 ----------
+(function () {
+  const n = 60, w = 320, h = 70; let s = 7; const r = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
+  const v = Array.from({ length: n }, (_, i) => 1.25 + Math.sin(i / 7) * .2 + (r() - .5) * .35); v[n - 3] = 2.31; v[22] = .58;
+  const Y = x => h - 6 - (x - .3) / 2.3 * (h - 12), X = i => i / (n - 1) * w;
+  const d = v.map((x, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(x).toFixed(1)).join('');
+  $('#cp').innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none">
+    <rect x="0" y="${Y(1.55)}" width="${w}" height="${Y(.95) - Y(1.55)}" fill="rgba(167,139,250,.1)"/>
+    <line x1="0" x2="${w}" y1="${Y(1.25)}" y2="${Y(1.25)}" stroke="rgba(167,139,250,.35)" stroke-dasharray="3 3"/>
+    <path d="${d}" fill="none" stroke="#a78bfa" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+    ${v.map((x, i) => Math.abs(x - 1.25) > .6 ? `<circle cx="${X(i)}" cy="${Y(x)}" r="3.5" fill="#05070b" stroke="#a78bfa" stroke-width="1.5" vector-effect="non-scaling-stroke"/>` : '').join('')}
+  </svg><div class="disclaimer" style="margin-top:6px;display:flex;justify-content:space-between"><span>色带 = 该股自身 ±1σ</span><span>最新 2.31 · +2.4σ</span></div>`;
+})();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 产业链全景 · ChainLens</title>
+<link rel="stylesheet" href="assets/theme.css">
+<style>
+body { overflow: hidden; }
+.app { position: relative; height: 100vh; display: flex; flex-direction: column; min-width: 1280px; }
+.stage { position: relative; flex: 1; min-height: 700px; overflow: hidden; z-index: 1; }
+.spot { position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background: radial-gradient(600px circle at var(--mx, 50%) var(--my, 40%), rgba(63, 211, 255, .045), transparent 60%); }
+canvas#flow { position: absolute; inset: 0; z-index: 1; }
+.cols, .nodes { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.nodes { z-index: 3; }
+
+/* ---------- 标题区 ---------- */
+.hero { position: absolute; left: 28px; top: 22px; z-index: 5; pointer-events: none; display: flex; align-items: flex-end; gap: 36px; }
+.hero h1 { margin: 6px 0 0; font-size: 30px; font-weight: 600; letter-spacing: -.025em; color: var(--fg-0); line-height: 1.1; }
+.hero h1 em { font-style: normal; background: linear-gradient(90deg, #FFB547, #3FD3FF 55%, #E9EEFF); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.kpis { display: flex; gap: 26px; padding-left: 30px; border-left: 1px solid var(--line-2); margin-bottom: 2px; }
+.kpi .v { font-family: var(--mono); font-size: 20px; color: var(--fg-0); letter-spacing: -.02em; }
+.kpi .l { font-size: 11px; color: var(--fg-3); margin-top: 2px; }
+.ctrls { position: absolute; right: 24px; top: 24px; z-index: 6; display: flex; gap: 10px; align-items: center; }
+.icon-btn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line-2); background: var(--bg-1); color: var(--fg-1); display: grid; place-items: center; cursor: pointer; transition: all .15s; }
+.icon-btn:hover { color: var(--fg-0); border-color: rgba(160,180,220,.35); }
+
+/* ---------- 列头 ---------- */
+.col-bg { position: absolute; top: 118px; bottom: 96px; width: 128px; margin-left: -64px; border-radius: 14px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 7%, transparent), transparent 70%);
+  border-top: 1px solid color-mix(in srgb, var(--c) 30%, transparent);
+  opacity: 0; transform: translateY(8px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
+.col-head { position: absolute; top: 128px; width: 150px; margin-left: -75px; text-align: center;
+  opacity: 0; transform: translateY(10px); transition: opacity .6s var(--ease), transform .6s var(--ease); }
+.in .col-bg, .in .col-head { opacity: 1; transform: none; }
+.col-icon { width: 34px; height: 34px; margin: 0 auto 8px; border-radius: 10px; display: grid; place-items: center; color: var(--c);
+  background: color-mix(in srgb, var(--c) 10%, var(--bg-1)); border: 1px solid color-mix(in srgb, var(--c) 35%, transparent);
+  box-shadow: 0 0 24px -6px color-mix(in srgb, var(--c) 60%, transparent); }
+.col-name { font-size: 12.5px; color: var(--fg-0); font-weight: 500; white-space: nowrap; }
+.col-en { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; color: var(--fg-3); margin-top: 2px; white-space: nowrap; }
+.col-chg { font-family: var(--mono); font-size: 11px; margin-top: 5px; transition: color .4s; }
+
+/* ---------- 节点 ---------- */
+.node { position: absolute; transform: translate(-50%, -50%) scale(.2); opacity: 0; pointer-events: auto; cursor: pointer;
+  transition: transform .7s var(--ease-spring), opacity .5s var(--ease), filter .3s; }
+.node.in { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+.orb { position: relative; border-radius: 50%; display: grid; place-items: center; background: var(--bg-1);
+  border: 1px solid color-mix(in srgb, var(--c) 55%, transparent);
+  box-shadow: inset 0 0 calc(var(--r) * 0.8px) var(--glow, transparent), 0 0 0 4px var(--bg-0);
+  transition: box-shadow .6s var(--ease), border-color .3s, transform .25s var(--ease); }
+.orb::before { content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, var(--fill, transparent), transparent 72%); transition: background .6s var(--ease); }
+.orb b { position: relative; font-family: var(--mono); font-weight: 600; color: var(--fg-0); letter-spacing: -.02em; }
+.node:hover .orb { transform: scale(1.08); border-color: var(--c); }
+.lbl { position: absolute; left: 50%; transform: translateX(-50%); text-align: center; white-space: nowrap; pointer-events: none; }
+.lbl .t { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--fg-0); }
+.lbl .p { font-family: var(--mono); font-size: 10.5px; transition: color .4s; }
+/* 信号脉冲环 */
+.ring { position: absolute; inset: -6px; border-radius: 50%; border: 1.5px solid var(--rc); opacity: 0; pointer-events: none; }
+.mode-signal .ring { animation: ping 2.2s var(--ease) infinite; }
+.ring:nth-of-type(2) { animation-delay: .7s !important; }
+@keyframes ping { 0% { transform: scale(.95); opacity: .9; } 100% { transform: scale(1.7); opacity: 0; } }
+.sig-dots { position: absolute; top: -3px; right: -3px; display: flex; gap: 2px; }
+.sig-dots i { width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--bg-0); }
+.mode-signal .node.nosig { filter: grayscale(1) brightness(.45); }
+/* 悬停聚焦：非路径节点压暗 */
+.focus .node:not(.path) { opacity: .16; filter: grayscale(.7); }
+.focus .node.self .orb { border-color: var(--c); box-shadow: 0 0 0 4px var(--bg-0), 0 0 32px -2px var(--c); }
+
+/* ---------- 浮层 ---------- */
+.tip { position: absolute; z-index: 20; width: 260px; padding: 12px 14px; border-radius: 12px; pointer-events: none;
+  background: rgba(12, 16, 24, .92); border: 1px solid var(--line-2); backdrop-filter: blur(16px);
+  box-shadow: 0 20px 50px -10px rgba(0,0,0,.6); opacity: 0; transform: translateY(4px); transition: opacity .15s, transform .15s; }
+.tip.show { opacity: 1; transform: none; }
+.tip .h { display: flex; align-items: baseline; gap: 8px; }
+.tip .h b { font-family: var(--mono); font-size: 15px; color: var(--fg-0); }
+.tip .h span { color: var(--fg-2); font-size: 12px; }
+.tip .h .p { margin-left: auto; font-family: var(--mono); font-size: 13px; }
+.tip .d { margin-top: 6px; color: var(--fg-1); font-size: 12px; line-height: 1.55; }
+.tip .f { margin-top: 9px; padding-top: 8px; border-top: 1px solid var(--line); display: flex; gap: 12px; font-size: 11px; color: var(--fg-2); }
+.tip .f em { font-style: normal; color: var(--fg-0); font-family: var(--mono); }
+.tip .hint { margin-left: auto; color: var(--fg-3); }
+
+/* ---------- 底部回放条 ---------- */
+.dock { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 14px;
+  padding: 8px 10px 8px 8px; border-radius: 14px; background: rgba(10, 14, 21, .82); border: 1px solid var(--line-2); backdrop-filter: blur(16px); }
+.days { display: flex; gap: 4px; }
+.day { width: 58px; padding: 6px 0 5px; border-radius: 8px; border: 0; background: transparent; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; transition: background .2s; }
+.day:hover { background: var(--bg-2); }
+.day.on { background: var(--bg-3); }
+.day .bars { display: flex; align-items: flex-end; gap: 1.5px; height: 18px; }
+.day .bars i { width: 5px; border-radius: 1.5px; }
+.day span { font-family: var(--mono); font-size: 10.5px; color: var(--fg-2); }
+.day.on span { color: var(--fg-0); }
+.legend { position: absolute; left: 28px; bottom: 26px; z-index: 5; display: flex; flex-direction: column; gap: 6px; font-size: 11px; color: var(--fg-2); }
+.legend div { display: flex; align-items: center; gap: 8px; }
+.legend .sw { width: 22px; display: flex; justify-content: center; }
+.foot-note { position: absolute; right: 28px; bottom: 26px; z-index: 5; text-align: right; line-height: 1.6; }
+
+/* ---------- 详情抽屉 ---------- */
+.drawer { position: absolute; top: 12px; right: 12px; bottom: 12px; width: 380px; z-index: 30; border-radius: 16px;
+  background: rgba(10, 14, 21, .94); border: 1px solid var(--line-2); backdrop-filter: blur(24px);
+  box-shadow: -30px 0 80px -20px rgba(0,0,0,.7); transform: translateX(110%); transition: transform .5s var(--ease); display: flex; flex-direction: column; overflow: hidden; }
+.drawer.open { transform: none; }
+.drawer::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 160px; pointer-events: none;
+  background: radial-gradient(400px 160px at 30% 0%, color-mix(in srgb, var(--c) 22%, transparent), transparent 70%); }
+.dw-head { position: relative; padding: 18px 20px 14px; }
+.dw-close { position: absolute; right: 14px; top: 14px; }
+.dw-layer { display: flex; align-items: center; gap: 7px; color: var(--c); font-size: 12px; }
+.dw-t { font-family: var(--mono); font-size: 34px; font-weight: 600; color: var(--fg-0); letter-spacing: -.03em; margin-top: 10px; line-height: 1; }
+.dw-name { color: var(--fg-1); font-size: 14px; margin-top: 6px; }
+.dw-chg { font-family: var(--mono); font-size: 15px; margin-top: 10px; display: flex; gap: 10px; align-items: baseline; }
+.dw-body { position: relative; flex: 1; overflow-y: auto; padding: 0 20px 20px; scrollbar-width: thin; scrollbar-color: var(--bg-3) transparent; }
+.dw-sec { padding: 14px 0; border-top: 1px solid var(--line); }
+.dw-sec .eyebrow { margin-bottom: 10px; display: flex; justify-content: space-between; }
+.dw-desc { color: var(--fg-1); line-height: 1.65; font-size: 13px; }
+.spark-bars { display: flex; align-items: center; gap: 6px; height: 74px; }
+.spark-bars div { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: center; position: relative; }
+.spark-bars i { width: 100%; border-radius: 3px; position: absolute; left: 0; }
+.spark-bars .zero { position: absolute; left: 0; right: 0; top: 50%; border-top: 1px dashed var(--line-2); }
+.spark-bars span { position: absolute; bottom: -16px; font-family: var(--mono); font-size: 9.5px; color: var(--fg-3); }
+.rel { display: flex; align-items: center; gap: 10px; padding: 7px 8px; margin: 0 -8px; border-radius: 8px; cursor: pointer; transition: background .15s; }
+.rel:hover { background: var(--bg-2); }
+.rel b { font-family: var(--mono); font-size: 12.5px; color: var(--fg-0); width: 48px; }
+.rel .n { color: var(--fg-2); font-size: 12px; }
+.rel .k { margin-left: auto; font-size: 11px; color: var(--fg-3); }
+.rel .p { font-family: var(--mono); font-size: 12px; width: 56px; text-align: right; }
+.sig { display: flex; gap: 10px; align-items: center; padding: 9px 10px; border-radius: 9px; background: var(--bg-2); margin-bottom: 6px; font-size: 12.5px; color: var(--fg-1); }
+.cta { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 14px 20px 18px; height: 40px; border-radius: 10px;
+  background: var(--fg-0); color: var(--bg-0); font-weight: 600; font-size: 13px; transition: transform .2s var(--ease); }
+.cta:hover { transform: translateY(-1px); }
+</style>
+</head>
+<body class="texture">
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark"><i></i><i></i><i></i></span>ChainLens<small>链镜</small></div>
+    <nav class="tnav"><a href="#">今日</a><a class="on" href="chain.html">产业链</a><a href="stock.html">行情</a><a href="#">日报</a><a href="#">订阅</a></nav>
+    <div class="cmdk" id="cmdk"></div>
+    <div class="clock"><i></i>美股已收盘 · 10-30 16:00 ET · 延迟数据</div>
+  </header>
+  <div class="tape"><div class="tape-track" id="tape"></div></div>
+
+  <main class="stage" id="stage">
+    <div class="spot" id="spot"></div>
+    <canvas id="flow"></canvas>
+    <div class="cols" id="cols"></div>
+    <div class="nodes" id="nodes"></div>
+
+    <section class="hero">
+      <div><div class="eyebrow">AI SUPPLY CHAIN · <span id="dayLabel">2026-10-30</span></div>
+      <h1><em>AI 产业链</em>全景</h1></div>
+      <div class="kpis">
+        <div class="kpi"><div class="v" data-count="42">0</div><div class="l">覆盖公司</div></div>
+        <div class="kpi"><div class="v" data-count="63">0</div><div class="l">供应关系</div></div>
+        <div class="kpi"><div class="v"><span class="up" id="kUp">0</span><span style="color:var(--fg-3)"> / </span><span class="down" id="kDown">0</span></div><div class="l">上涨 / 下跌</div></div>
+        <div class="kpi"><div class="v" style="color:var(--ev-option)" id="kSig">0</div><div class="l">当日有信号</div></div>
+      </div>
+    </section>
+
+    <div class="ctrls">
+      <div class="seg" id="modeSeg"><button data-mode="chg" class="on">涨跌热度</button><button data-mode="signal">信号</button></div>
+      <button class="icon-btn" id="replay" title="重放开场动画"></button>
+    </div>
+
+    <div class="legend">
+      <div><span class="sw"><svg width="22" height="10"><circle cx="4" cy="5" r="3" fill="none" stroke="#8a93a5"/><circle cx="15" cy="5" r="5" fill="none" stroke="#8a93a5"/></svg></span>节点大小 ≈ 市值（示意）</div>
+      <div><span class="sw"><svg width="22" height="10"><circle cx="6" cy="5" r="4" fill="#2bd67b" opacity=".7"/><circle cx="16" cy="5" r="4" fill="#ff4d5e" opacity=".7"/></svg></span>光晕 = 当日涨跌幅（绿涨红跌）</div>
+      <div><span class="sw"><svg width="22" height="10"><path d="M1 5h20" stroke="#3fd3ff" stroke-opacity=".4"/><circle cx="14" cy="5" r="2" fill="#3fd3ff"/></svg></span>流动方向 = 上游 → 下游</div>
+      <div style="color:var(--fg-3)">悬停查看上下游路径 · 点击查看详情</div>
+    </div>
+
+    <div class="dock" id="dock">
+      <button class="icon-btn" id="play" title="自动回放"></button>
+      <div class="days" id="days"></div>
+    </div>
+
+    <div class="foot-note disclaimer">公开信息整理，不构成任何投资建议<br>关系与市值为示意 · 涨跌为虚构示例数据</div>
+
+    <div class="tip" id="tip"></div>
+
+    <aside class="drawer" id="drawer"></aside>
+  </main>
+</div>
+
+<script src="assets/icons.js"></script>
+<script src="assets/chain-data.js"></script>
+<script>
+(() => {
+const { layers, nodes, edges, days, byT } = CHAIN;
+const $ = s => document.querySelector(s);
+const stage = $('#stage'), canvas = $('#flow'), ctx = canvas.getContext('2d');
+const colsEl = $('#cols'), nodesEl = $('#nodes'), tip = $('#tip'), drawer = $('#drawer');
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const layerIdx = Object.fromEntries(layers.map((l, i) => [l.id, i]));
+const layerOf = id => layers[layerIdx[id]];
+const pct = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(2) + '%';
+const dir = v => v > 0 ? 'up' : v < 0 ? 'down' : 'flat';
+let day = days.length - 1;
+let mode = 'chg';
+
+$('#cmdk').innerHTML = icon('search', 14) + '搜索公司 / 环节<kbd>⌘K</kbd>';
+$('#replay').innerHTML = icon('replay', 15);
+
+// ---------- 跑马灯 ----------
+const tapeHtml = nodes.map(n => `<span class="tape-item"><b>${n.t}</b><span class="${dir(n.chg[day])}">${pct(n.chg[day])}</span></span>`).join('');
+$('#tape').innerHTML = tapeHtml + tapeHtml;
+
+// ---------- 布局 ----------
+const edgeObjs = edges.map(([s, t, k]) => ({ s: byT[s], t: byT[t], k }));
+nodes.forEach(n => { n.r0 = 7 + Math.sqrt(n.cap) * 0.42; n.r = Math.round(n.r0); n.out = []; n.in = []; });
+edgeObjs.forEach(e => { e.s.out.push(e); e.t.in.push(e); });
+
+let W, H, dpr;
+function layout() {
+  const rect = stage.getBoundingClientRect();
+  W = rect.width; H = rect.height; dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = W * dpr; canvas.height = H * dpr; canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  const padX = 92, top = 226, bottom = H - 120;
+  // 屏幕矮时按最拥挤的一列等比缩小节点，保证每列都放得下
+  const need = Math.max(...layers.map(l => nodes.filter(n => n.layer === l.id).reduce((s, n) => s + n.r0 * 2 + 30, 0) + 12 * 7));
+  const k = Math.min(1, (bottom - top) / need);
+  nodes.forEach(n => { n.r = Math.max(5, Math.round(n.r0 * k)); });
+  layers.forEach((l, i) => {
+    l.x = padX + (W - padX * 2) * (i / (layers.length - 1));
+    // 大节点放中间，小节点向两侧排开
+    const list = nodes.filter(n => n.layer === l.id).sort((a, b) => b.cap - a.cap);
+    const order = [];
+    list.forEach((n, k) => (k % 2 ? order.push(n) : order.unshift(n)));
+    const totalR = order.reduce((s, n) => s + n.r * 2 + 30, 0);
+    const lh = 30;
+    const avail = bottom - top;
+    const gap = Math.max((avail - totalR) / (order.length + 1), 6);
+    let y = top + gap;
+    order.forEach(n => { n.x = l.x; n.y = y + n.r; y += n.r * 2 + 30 + gap; });
+  });
+  edgeObjs.forEach(buildCurve);
+}
+
+// 贝塞尔曲线采样：跨层越远，弧线越往下弯
+function buildCurve(e) {
+  const x1 = e.s.x + e.s.r + 2, y1 = e.s.y, x2 = e.t.x - e.t.r - 2, y2 = e.t.y;
+  const span = layerIdx[e.t.layer] - layerIdx[e.s.layer];
+  const dx = x2 - x1;
+  let c1 = [x1 + dx * .45, y1], c2 = [x2 - dx * .45, y2];
+  if (span > 2) {
+    const sag = Math.min(span * 34, H - 110 - Math.max(y1, y2));
+    c1 = [x1 + dx * .25, Math.max(y1, y2) + sag]; c2 = [x2 - dx * .25, Math.max(y1, y2) + sag];
+  }
+  const N = 64, pts = [];
+  for (let i = 0; i <= N; i++) {
+    const t = i / N, u = 1 - t;
+    pts.push([u*u*u*x1 + 3*u*u*t*c1[0] + 3*u*t*t*c2[0] + t*t*t*x2, u*u*u*y1 + 3*u*u*t*c1[1] + 3*u*t*t*c2[1] + t*t*t*y2]);
+  }
+  e.pts = pts; e.p0 = [x1, y1]; e.p1 = [x2, y2];
+}
+
+// ---------- 渲染 DOM ----------
+function renderCols() {
+  colsEl.innerHTML = layers.map((l, i) => `
+    <div class="col-bg" style="left:${l.x}px;--c:${l.color};transition-delay:${i * 90}ms"></div>
+    <div class="col-head" style="left:${l.x}px;--c:${l.color};transition-delay:${i * 90 + 80}ms">
+      <div class="col-icon">${icon(l.icon, 18)}</div>
+      <div class="col-name">${l.name}</div><div class="col-en">${l.en}</div>
+      <div class="col-chg" data-layer="${l.id}"></div>
+    </div>`).join('');
+}
+function renderNodes() {
+  nodesEl.innerHTML = '';
+  nodes.forEach(n => {
+    const l = layerOf(n.layer);
+    const inside = n.r >= 19;
+    const el = document.createElement('div');
+    el.className = 'node' + (n.signals.length ? '' : ' nosig');
+    el.style.cssText = `left:${n.x}px;top:${n.y}px;--c:${l.color};--r:${n.r}`;
+    const sigColor = { o: 'var(--ev-option)', r: 'var(--ev-report)', n: 'var(--ev-news)' };
+    el.innerHTML = `
+      <div class="orb" style="width:${n.r * 2}px;height:${n.r * 2}px">
+        ${n.signals.slice(0, 2).map(s => `<span class="ring" style="--rc:${sigColor[s]}"></span>`).join('')}
+        ${inside ? `<b style="font-size:${Math.min(13, 7 + n.r / 4)}px">${n.t}</b>` : ''}
+        ${n.signals.length ? `<span class="sig-dots">${n.signals.map(s => `<i style="background:${sigColor[s]}"></i>`).join('')}</span>` : ''}
+      </div>
+      <div class="lbl" style="top:${n.r * 2 + 5}px">${inside ? '' : `<div class="t">${n.t}</div>`}<div class="p" data-t="${n.t}"></div></div>`;
+    el.addEventListener('mouseenter', () => focusNode(n, el));
+    el.addEventListener('mouseleave', blur);
+    el.addEventListener('click', () => openDrawer(n));
+    n.el = el;
+    nodesEl.appendChild(el);
+  });
+}
+
+// 按当前交易日刷新颜色 / 数字（数字滚动过渡）
+function tween(el, from, to, fmt) {
+  const t0 = performance.now(), d = 600;
+  (function f(now) {
+    const k = Math.min((now - t0) / d, 1), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = fmt(from + (to - from) * e);
+    if (k < 1) requestAnimationFrame(f);
+  })(t0);
+}
+function applyDay(animate) {
+  $('#dayLabel').textContent = '2026-' + days[day];
+  let up = 0, down = 0, sig = 0;
+  nodes.forEach(n => {
+    const v = n.chg[day], a = Math.min(Math.abs(v) / 5, 1);
+    const col = v >= 0 ? '43,214,123' : '255,77,94';
+    const orb = n.el.querySelector('.orb');
+    orb.style.setProperty('--fill', `rgba(${col},${0.15 + a * 0.55})`);
+    orb.style.setProperty('--glow', `rgba(${col},${0.2 + a * 0.5})`);
+    const p = n.el.querySelector('.p');
+    p.className = 'p ' + dir(v);
+    const prev = n._shown == null ? 0 : n._shown;
+    if (animate) tween(p, prev, v, pct); else p.textContent = pct(v);
+    n._shown = v;
+    v > 0 ? up++ : down++;
+    if (n.signals.length) sig++;
+  });
+  layers.forEach(l => {
+    const list = nodes.filter(n => n.layer === l.id);
+    const avg = list.reduce((s, n) => s + n.chg[day], 0) / list.length;
+    const el = colsEl.querySelector(`[data-layer="${l.id}"]`);
+    el.className = 'col-chg ' + dir(avg);
+    el.textContent = '环节均值 ' + pct(avg);
+  });
+  tween($('#kUp'), +$('#kUp').textContent || 0, up, v => Math.round(v));
+  tween($('#kDown'), +$('#kDown').textContent || 0, down, v => Math.round(v));
+  tween($('#kSig'), +$('#kSig').textContent || 0, sig, v => Math.round(v));
+  document.querySelectorAll('.day').forEach((b, i) => b.classList.toggle('on', i === day));
+}
+
+// ---------- 底部回放 ----------
+$('#days').innerHTML = days.map((d, i) => {
+  const vals = layers.map(l => { const L = nodes.filter(n => n.layer === l.id); return L.reduce((s, n) => s + n.chg[i], 0) / L.length; });
+  return `<button class="day" data-i="${i}"><span class="bars">${vals.map(v => `<i style="height:${3 + Math.min(Math.abs(v), 4) * 3.6}px;background:${v >= 0 ? 'var(--up)' : 'var(--down)'};opacity:${.45 + Math.min(Math.abs(v), 3) / 6}"></i>`).join('')}</span><span>${d}</span></button>`;
+}).join('');
+document.querySelectorAll('.day').forEach(b => b.addEventListener('click', () => { stopPlay(); day = +b.dataset.i; applyDay(true); }));
+let playTimer = null;
+const playBtn = $('#play');
+const setPlayIcon = () => playBtn.innerHTML = icon(playTimer ? 'pause' : 'play', 14);
+function stopPlay() { clearInterval(playTimer); playTimer = null; setPlayIcon(); }
+playBtn.addEventListener('click', () => {
+  if (playTimer) return stopPlay();
+  day = 0; applyDay(true);
+  playTimer = setInterval(() => { if (day >= days.length - 1) return stopPlay(); day++; applyDay(true); }, 1500);
+  setPlayIcon();
+});
+setPlayIcon();
+
+// ---------- 模式 ----------
+document.querySelectorAll('#modeSeg button').forEach(b => b.addEventListener('click', () => {
+  mode = b.dataset.mode;
+  document.querySelectorAll('#modeSeg button').forEach(x => x.classList.toggle('on', x === b));
+  stage.classList.toggle('mode-signal', mode === 'signal');
+}));
+
+// ---------- 悬停：上下游路径 ----------
+let focus = null;
+function reach(n, key, end) {
+  const seen = new Set(), q = [n];
+  while (q.length) { const c = q.shift(); c[key].forEach(e => { const m = e[end]; if (!seen.has(m)) { seen.add(m); q.push(m); } }); }
+  return seen;
+}
+function focusNode(n, el) {
+  const U = reach(n, 'in', 's'), D = reach(n, 'out', 't');
+  const onPath = new Set([n, ...U, ...D]);
+  focus = { n, edges: new Set(edgeObjs.filter(e => (U.has(e.s) && (U.has(e.t) || e.t === n)) || ((D.has(e.t)) && (D.has(e.s) || e.s === n)))) };
+  stage.classList.add('focus');
+  nodes.forEach(m => { m.el.classList.toggle('path', onPath.has(m)); m.el.classList.toggle('self', m === n); });
+  const l = layerOf(n.layer), v = n.chg[day];
+  tip.innerHTML = `<div class="h"><b>${n.t}</b><span>${n.name}</span><span class="p ${dir(v)}">${pct(v)}</span></div>
+    <div class="d">${n.desc}</div>
+    <div class="f"><span style="color:${l.color}">${l.name}</span><span>上游 <em>${U.size}</em></span><span>下游 <em>${D.size}</em></span><span class="hint">点击查看</span></div>`;
+  let x = n.x + n.r + 16, y = n.y - 30;
+  if (x + 270 > W) x = n.x - n.r - 276;
+  tip.style.left = x + 'px'; tip.style.top = Math.max(y, 10) + 'px';
+  tip.classList.add('show');
+}
+function blur() { focus = null; stage.classList.remove('focus'); tip.classList.remove('show'); }
+
+// ---------- 抽屉 ----------
+function openDrawer(n) {
+  const l = layerOf(n.layer), v = n.chg[day];
+  const cum = n.chg.reduce((s, x) => s * (1 + x / 100), 1) * 100 - 100;
+  const max = Math.max(...n.chg.map(Math.abs), 1);
+  const sigText = { o: ['var(--ev-option)', '期权异动', 'CP 比处于该股自身分布 ±2σ 以外（来源：期权日报）'], r: ['var(--ev-report)', '研报调整', '有机构调整评级或目标价（来源：研报日报）'], n: ['var(--ev-news)', '重要新闻', '当日有重要个股新闻（来源：公开媒体）'] };
+  const relRow = (m, k) => `<div class="rel" data-t="${m.t}"><span class="dot" style="background:${layerOf(m.layer).color}"></span><b>${m.t}</b><span class="n">${m.name}</span><span class="k">${k}</span><span class="p ${dir(m.chg[day])}">${pct(m.chg[day])}</span></div>`;
+  drawer.style.setProperty('--c', l.color);
+  drawer.innerHTML = `
+    <div class="dw-head">
+      <button class="icon-btn dw-close" id="dwClose">${icon('close', 14)}</button>
+      <div class="dw-layer">${icon(l.icon, 15)}${l.name}</div>
+      <div class="dw-t">${n.t}</div>
+      <div class="dw-name">${n.name}</div>
+      <div class="dw-chg"><span class="${dir(v)}">${pct(v)}</span><span style="color:var(--fg-3);font-size:12px">2026-${days[day]} · 7 日累计 <span class="${dir(cum)}">${pct(cum)}</span></span></div>
+    </div>
+    <div class="dw-body">
+      <div class="dw-sec"><div class="eyebrow"><span>近 7 个交易日</span><span>日涨跌</span></div>
+        <div class="spark-bars" style="margin-bottom:18px"><span class="zero"></span>${n.chg.map((x, i) => `<div><i style="height:${Math.abs(x) / max * 34}px;${x >= 0 ? 'bottom:50%' : 'top:50%'};background:${x >= 0 ? 'var(--up)' : 'var(--down)'};opacity:${i === day ? 1 : .45}"></i><span>${days[i].slice(3)}</span></div>`).join('')}</div></div>
+      <div class="dw-sec"><div class="eyebrow">简介</div><div class="dw-desc">${n.desc}</div></div>
+      ${n.signals.length ? `<div class="dw-sec"><div class="eyebrow"><span>当日信号</span><span>${n.signals.length}</span></div>${n.signals.map(s => `<div class="sig"><span class="dot" style="background:${sigText[s][0]};box-shadow:0 0 8px ${sigText[s][0]}"></span><div><div style="color:var(--fg-0)">${sigText[s][1]}</div><div style="font-size:11.5px;color:var(--fg-2);margin-top:2px">${sigText[s][2]}</div></div></div>`).join('')}</div>` : ''}
+      <div class="dw-sec"><div class="eyebrow"><span>上游 · 供应方</span><span>${n.in.length}</span></div>${n.in.map(e => relRow(e.s, e.k)).join('') || '<div style="color:var(--fg-3)">—</div>'}</div>
+      <div class="dw-sec"><div class="eyebrow"><span>下游 · 客户</span><span>${n.out.length}</span></div>${n.out.map(e => relRow(e.t, e.k)).join('') || '<div style="color:var(--fg-3)">—</div>'}</div>
+      <div class="disclaimer">关系为示意；涨跌为虚构示例。公开信息整理，不构成任何投资建议。</div>
+    </div>
+    <a class="cta" href="stock.html?t=${n.t}">打开专业行情 ${icon('arrow', 15)}</a>`;
+  drawer.classList.add('open');
+  $('#dwClose').onclick = () => drawer.classList.remove('open');
+  drawer.querySelectorAll('.rel').forEach(r => r.onclick = () => openDrawer(byT[r.dataset.t]));
+}
+addEventListener('keydown', e => { if (e.key === 'Escape') drawer.classList.remove('open'); });
+
+// ---------- Canvas：连线 + 粒子 ----------
+const sprites = {};
+function sprite(color) {
+  if (sprites[color]) return sprites[color];
+  const s = document.createElement('canvas'); s.width = s.height = 32;
+  const g = s.getContext('2d'), gr = g.createRadialGradient(16, 16, 0, 16, 16, 16);
+  gr.addColorStop(0, '#fff'); gr.addColorStop(.18, color); gr.addColorStop(.45, color + '55'); gr.addColorStop(1, color + '00');
+  g.fillStyle = gr; g.fillRect(0, 0, 32, 32);
+  return (sprites[color] = s);
+}
+function posAt(pts, t) {
+  const f = t * (pts.length - 1), i = Math.floor(f), k = f - i, a = pts[i], b = pts[Math.min(i + 1, pts.length - 1)];
+  return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
+}
+let t0 = 0, particles = [];
+function seedParticles() {
+  particles = [];
+  edgeObjs.forEach((e, i) => {
+    const n = 2 + Math.round(Math.sqrt(e.s.cap + e.t.cap) / 30);
+    for (let k = 0; k < n; k++) particles.push({ e, t: Math.random(), v: 0.07 + Math.random() * 0.08 });
+  });
+}
+function edgeStart(e) { return 900 + layerIdx[e.s.layer] * 150; }
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min((now - last) / 1000, .05); last = now;
+  const el = now - t0;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.lineCap = 'round';
+  // 连线
+  edgeObjs.forEach(e => {
+    const p = Math.max(0, Math.min((el - edgeStart(e)) / 1100, 1));
+    e.prog = 1 - Math.pow(1 - p, 3);
+    if (e.prog <= 0) return;
+    const on = focus ? focus.edges.has(e) : true;
+    const a = focus ? (on ? .75 : .035) : .2;
+    const ca = layerOf(e.s.layer).color, cb = layerOf(e.t.layer).color;
+    const g = ctx.createLinearGradient(e.p0[0], e.p0[1], e.p1[0], e.p1[1]);
+    g.addColorStop(0, ca); g.addColorStop(1, cb);
+    ctx.globalAlpha = a; ctx.strokeStyle = g; ctx.lineWidth = focus && on ? 1.6 : 1;
+    ctx.beginPath();
+    const last = Math.max(1, Math.floor(e.prog * (e.pts.length - 1)));
+    ctx.moveTo(e.pts[0][0], e.pts[0][1]);
+    for (let i = 1; i <= last; i++) ctx.lineTo(e.pts[i][0], e.pts[i][1]);
+    ctx.stroke();
+    // 正在"生长"的线头
+    if (e.prog < 1) {
+      const h = posAt(e.pts, e.prog);
+      ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'lighter';
+      ctx.drawImage(sprite(cb), h[0] - 12, h[1] - 12, 24, 24);
+      ctx.globalCompositeOperation = 'source-over';
+    }
+  });
+  // 粒子
+  if (!reduce) {
+    ctx.globalCompositeOperation = 'lighter';
+    particles.forEach(p => {
+      const e = p.e;
+      if (e.prog < 1) return;
+      const on = focus ? focus.edges.has(e) : true;
+      if (focus && !on) return;
+      const mood = 1 + (e.t.chg[day] + e.s.chg[day]) * 0.05;
+      p.t += p.v * dt * Math.max(mood, .4) * (focus ? 1.8 : 1);
+      if (p.t > 1) p.t -= 1;
+      const [x, y] = posAt(e.pts, p.t);
+      const fade = Math.sin(p.t * Math.PI);
+      ctx.globalAlpha = (focus ? 1 : .75) * fade;
+      const s = focus ? 14 : 10;
+      ctx.drawImage(sprite(layerOf(e.t.layer).color), x - s / 2, y - s / 2, s, s);
+    });
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  ctx.globalAlpha = 1;
+  requestAnimationFrame(frame);
+}
+
+// ---------- 开场 ----------
+function intro() {
+  t0 = performance.now();
+  stage.classList.remove('in');
+  nodes.forEach(n => n.el.classList.remove('in'));
+  requestAnimationFrame(() => {
+    stage.classList.add('in');
+    nodes.forEach(n => {
+      const i = layerIdx[n.layer];
+      setTimeout(() => n.el.classList.add('in'), 300 + i * 150 + Math.random() * 160);
+    });
+  });
+  document.querySelectorAll('[data-count]').forEach(el => tween(el, 0, +el.dataset.count, v => Math.round(v)));
+}
+$('#replay').addEventListener('click', intro);
+
+stage.addEventListener('pointermove', e => {
+  const r = stage.getBoundingClientRect();
+  stage.style.setProperty('--mx', e.clientX - r.left + 'px');
+  stage.style.setProperty('--my', e.clientY - r.top + 'px');
+});
+
+function build() { layout(); renderCols(); renderNodes(); applyDay(false); }
+build(); seedParticles(); intro(); requestAnimationFrame(frame);
+let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { build(); nodes.forEach(n => n.el.classList.add('in')); stage.classList.add('in'); }, 120); });
+
+// 暴露给截图脚本
+window.__chain = { openDrawer: t => openDrawer(byT[t]), focus: t => focusNode(byT[t]), blur, setMode: m => document.querySelector(`#modeSeg [data-mode="${m}"]`).click() };
+})();
+</script>
+</body>
+</html>

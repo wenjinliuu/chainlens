@@ -1,0 +1,123 @@
+/* ChainLens v2 · 视觉 token（深色"控制室"方向） */
+@import url("https://cdn.jsdelivr.net/npm/@fontsource-variable/geist@5/index.css");
+@import url("https://cdn.jsdelivr.net/npm/@fontsource-variable/geist-mono@5/index.css");
+
+:root {
+  /* 底色：分 4 级，靠明度区分层级，不靠阴影 */
+  --bg-0: #05070b;
+  --bg-1: #0a0e15;
+  --bg-2: #0f141d;
+  --bg-3: #161d29;
+  --line: rgba(160, 180, 220, 0.09);
+  --line-2: rgba(160, 180, 220, 0.16);
+
+  /* 文字：4 级 */
+  --fg-0: #f2f5fb;
+  --fg-1: #c4cbd8;
+  --fg-2: #8a93a5;
+  --fg-3: #5a6376;
+
+  /* 方向色：绿涨红跌（只用于涨跌，不挪作他用） */
+  --up: #2bd67b;
+  --down: #ff4d5e;
+  --up-a: rgba(43, 214, 123, 0.14);
+  --down-a: rgba(255, 77, 94, 0.14);
+
+  /* 事件色 */
+  --ev-option: #a78bfa;
+  --ev-report: #4f9dff;
+  --ev-news: #ffb547;
+
+  /* 唯一品牌强调色 */
+  --accent: #3fd3ff;
+
+  --font: "Geist Variable", -apple-system, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  --mono: "Geist Mono Variable", "SF Mono", ui-monospace, Menlo, monospace;
+
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg-0);
+  color: var(--fg-1);
+  font-family: var(--font);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss01", "cv11";
+}
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; }
+.mono, .num { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.up { color: var(--up); }
+.down { color: var(--down); }
+.flat { color: var(--fg-2); }
+.ic { display: block; flex: none; }
+
+/* 噪点 + 点阵底纹：给深色背景一点"材质"，避免死黑 */
+.texture::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: radial-gradient(rgba(160, 180, 220, 0.07) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 85%);
+}
+.texture::after {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .05; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- 顶栏 ---------- */
+.topbar {
+  position: relative; z-index: 20; height: 52px; display: flex; align-items: center; gap: 22px; padding: 0 20px;
+  border-bottom: 1px solid var(--line); background: rgba(5, 7, 11, 0.7); backdrop-filter: blur(14px);
+}
+.brand { display: flex; align-items: center; gap: 9px; font-weight: 600; color: var(--fg-0); font-size: 14px; letter-spacing: -0.01em; }
+.brand-mark { width: 20px; height: 20px; position: relative; }
+.brand-mark i { position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid var(--accent); }
+.brand-mark i:nth-child(2) { inset: 5px; border-color: var(--fg-0); opacity: .9; }
+.brand-mark i:nth-child(3) { inset: 8.5px; background: var(--accent); border: 0; box-shadow: 0 0 10px var(--accent); }
+.brand small { color: var(--fg-3); font-weight: 500; font-size: 12px; }
+.tnav { display: flex; gap: 2px; }
+.tnav a { padding: 6px 11px; border-radius: 7px; color: var(--fg-2); font-size: 13px; transition: color .15s, background .15s; }
+.tnav a:hover { color: var(--fg-0); background: var(--bg-2); }
+.tnav a.on { color: var(--fg-0); background: var(--bg-3); }
+.cmdk {
+  margin-left: auto; display: flex; align-items: center; gap: 8px; height: 32px; width: 260px; padding: 0 10px;
+  border-radius: 8px; border: 1px solid var(--line-2); background: var(--bg-1); color: var(--fg-3); font-size: 12.5px;
+}
+.cmdk kbd { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--fg-2); border: 1px solid var(--line-2); border-radius: 4px; padding: 1px 5px; }
+.clock { font-family: var(--mono); font-size: 11.5px; color: var(--fg-2); display: flex; align-items: center; gap: 7px; }
+.clock i { width: 6px; height: 6px; border-radius: 50%; background: var(--fg-3); }
+
+/* ---------- 行情跑马灯 ---------- */
+.tape { position: relative; z-index: 19; height: 30px; overflow: hidden; border-bottom: 1px solid var(--line); background: var(--bg-0);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+.tape-track { display: flex; gap: 28px; white-space: nowrap; height: 100%; align-items: center; width: max-content; animation: tape 80s linear infinite; }
+.tape:hover .tape-track { animation-play-state: paused; }
+.tape-item { display: flex; gap: 7px; font-family: var(--mono); font-size: 11.5px; }
+.tape-item b { color: var(--fg-0); font-weight: 500; }
+@keyframes tape { to { transform: translateX(-50%); } }
+
+/* ---------- 通用面板 ---------- */
+.panel { background: var(--bg-1); border: 1px solid var(--line); border-radius: 12px; }
+.eyebrow { font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-3); }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 7px;
+  border: 1px solid var(--line-2); background: var(--bg-1); color: var(--fg-2); font-size: 12px; cursor: pointer;
+  transition: all .15s var(--ease);
+}
+.chip:hover { color: var(--fg-0); border-color: rgba(160, 180, 220, .3); }
+.chip.on { color: var(--fg-0); background: var(--bg-3); border-color: rgba(160, 180, 220, .32); }
+.dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex: none; }
+.seg { display: inline-flex; padding: 2px; border-radius: 8px; background: var(--bg-1); border: 1px solid var(--line); }
+.seg button { border: 0; background: transparent; color: var(--fg-2); padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all .15s; }
+.seg button:hover { color: var(--fg-0); }
+.seg button.on { background: var(--bg-3); color: var(--fg-0); }
+.ai-tag { font-family: var(--mono); font-size: 10px; letter-spacing: .06em; color: var(--ev-option); border: 1px solid rgba(167, 139, 250, .35); border-radius: 4px; padding: 1px 5px; }
+.disclaimer { font-size: 11px; color: var(--fg-3); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}

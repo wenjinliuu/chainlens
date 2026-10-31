@@ -20,7 +20,8 @@ ChainLens（链镜）：AI 产业链情报台。先读：
 - 任何面向用户的文案都要过 `docs/compliance.md` 的自检清单。
 
 ## 视觉
-- 浅色多彩、Apple 式高级感；**绿涨红跌**全站统一。
+- 以 `docs/design-direction.md` 为准：深色"控制室"方向（v2），**绿涨红跌**全站统一；颜色只表达语义，动效必须表达信息。
+- v1 浅色稿（`design/*.html`）已被 v2（`design/v2/`）取代，仅作对比保留。
 - 海报、设计稿类页面提供高清图下载按钮；设计稿习惯在一个页面里放多个版本对比。
 - 使用 Lightweight Charts 时保留 TradingView 署名。
 
