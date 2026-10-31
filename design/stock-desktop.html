@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>设计稿 · 个股页（电脑版）· ChainLens</title>
+<link rel="stylesheet" href="assets/base.css">
+<style>
+.page { width: 1440px; padding: 0 40px 36px; position: relative; overflow: hidden; }
+.top { display: flex; align-items: center; gap: 28px; height: 72px; position: relative; }
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; }
+.logo i { width: 28px; height: 28px; border-radius: 9px; display: inline-block; position: relative;
+  background: conic-gradient(from 210deg, #8b5cf6, #2f7bf6, #22c3a6, #f59e0b, #8b5cf6); }
+.logo i::after { content: ""; position: absolute; inset: 7px; border-radius: 50%; background: #fff; opacity: .9; }
+.crumb { font-size: 13px; color: var(--muted); }
+.crumb b { color: var(--ink); font-weight: 600; }
+.search { margin-left: auto; display: flex; align-items: center; gap: 8px; width: 300px; height: 38px; padding: 0 12px;
+  border-radius: 12px; background: var(--chip); color: var(--muted); font-size: 13px; }
+.search kbd { margin-left: auto; font-family: var(--font); font-size: 11px; padding: 2px 6px; border-radius: 6px; background: var(--card); border: 1px solid var(--line); }
+
+.card { background: var(--card); border-radius: var(--radius); padding: 20px 22px; position: relative; min-width: 0;
+  box-shadow: var(--shadow); border: 1px solid var(--card-line, transparent); }
+.card h3 { margin: 0 0 14px; font-size: 14px; font-weight: 650; display: flex; align-items: center; gap: 8px; }
+.card h3 .dot { width: 8px; height: 8px; border-radius: 50%; }
+.card h3 .more { margin-left: auto; font-size: 12px; font-weight: 500; color: var(--muted); }
+
+/* 头部 */
+.hero { display: flex; align-items: flex-end; gap: 28px; padding: 8px 0 22px; position: relative; }
+.hero .tkr { font-size: 40px; font-weight: 750; letter-spacing: -.01em; line-height: 1; }
+.hero .nm { font-size: 15px; color: var(--muted); margin-top: 8px; display: flex; gap: 10px; align-items: center; }
+.seg-chip { font-size: 12px; padding: 3px 9px; border-radius: 20px; background: var(--chip); color: var(--ink); }
+.hero .px { font-size: 40px; font-weight: 650; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.hero .chg { font-size: 16px; font-weight: 600; margin-top: 8px; font-variant-numeric: tabular-nums; }
+.hero .meta { margin-left: auto; text-align: right; font-size: 12px; color: var(--muted); line-height: 1.7; }
+.hero .facts { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 6px; }
+.fact { font-size: 12px; padding: 4px 10px; border-radius: 20px; font-weight: 600; }
+.fact.o { background: rgba(139,92,246,.1); color: var(--c-option); }
+.fact.r { background: rgba(47,123,246,.1); color: var(--c-report); }
+
+/* 主图工具条 */
+.chart-bar { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; font-size: 12px; color: var(--muted); }
+.seg-ctl { display: flex; background: var(--chip); border-radius: 9px; padding: 3px; }
+.seg-ctl span { padding: 4px 11px; border-radius: 7px; cursor: pointer; }
+.seg-ctl span.on { background: var(--card-solid, #fff); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.legend { display: flex; gap: 14px; margin-left: auto; align-items: center; }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.legend i { width: 14px; height: 14px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-style: normal; font-size: 8.5px; font-weight: 700; }
+.legend .bandk { width: 18px; height: 10px; border-radius: 3px; background: rgba(47,123,246,.15); border: 1px dashed rgba(47,123,246,.6); }
+.kbox { height: 440px; }
+.cpbox { height: 150px; }
+.chart-foot { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+/* 研报卡片 */
+.rcard { padding: 14px 16px; border-radius: calc(var(--radius) - 8px); background: var(--chip); }
+.rcard + .rcard { margin-top: 10px; }
+.rcard .h { display: flex; align-items: baseline; gap: 8px; }
+.rcard .firm { font-weight: 650; font-size: 14px; }
+.rcard .date { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.rcard .rate { margin-left: auto; font-size: 12px; }
+.rcard .tp { display: flex; align-items: baseline; gap: 6px; margin: 8px 0 6px; font-variant-numeric: tabular-nums; }
+.rcard .tp b { font-size: 20px; font-weight: 650; }
+.rcard .tp s { color: var(--muted); text-decoration: none; font-size: 13px; }
+.rcard ul { margin: 0; padding-left: 16px; font-size: 12.5px; line-height: 1.7; color: var(--ink2, #3d4556); }
+.rcard .foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.pill { font-size: 11px; padding: 2px 7px; border-radius: 6px; font-weight: 600; white-space: nowrap; }
+.pill.up { background: var(--up-soft); color: var(--up); }
+.pill.down { background: var(--down-soft); color: var(--down); }
+.pill.neu { background: rgba(0,0,0,.05); color: var(--muted); }
+
+/* 新闻 */
+.nrow { padding: 11px 0; border-top: 1px solid var(--line); font-size: 13.5px; }
+.nrow:first-child { border-top: 0; padding-top: 0; }
+.nrow .m { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+/* 上下游 */
+.chain { display: flex; align-items: center; gap: 10px; }
+.chain .col { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.chain .lab { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+.mini { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--chip); font-size: 13px; }
+.mini b { min-width: 46px; }
+.mini .rel { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.mini .c { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 12px; }
+.chain .self { padding: 16px 18px; border-radius: 16px; background: var(--ink); color: var(--card-solid, #fff); font-weight: 700; text-align: center; }
+.chain .self small { display: block; font-weight: 500; opacity: .7; font-size: 11px; }
+.chain .arr { color: var(--muted); font-size: 18px; }
+
+.footer { margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--line); display: flex; gap: 24px; font-size: 12px; color: var(--muted); line-height: 1.6; position: relative; }
+.footer .warn { color: var(--ink); font-weight: 500; }
+
+/* ============ A · 双栏（主图 + 右侧研报栏） ============ */
+.v-a { --ink: #1d2433; --muted: #7a8396; --card: rgba(255,255,255,.7); --card-solid: #fff; --chip: rgba(120,130,160,.08); --line: rgba(30,40,60,.07);
+  --radius: 24px; --shadow: 0 1px 2px rgba(20,30,60,.04), 0 12px 32px rgba(40,60,110,.07); --card-line: rgba(255,255,255,.85);
+  background: #f4f6fb; }
+.v-a::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(700px 420px at 12% 4%, rgba(34,197,94,.12), transparent 70%),
+              radial-gradient(600px 420px at 90% 10%, rgba(47,123,246,.13), transparent 70%),
+              radial-gradient(600px 500px at 40% 100%, rgba(139,92,246,.10), transparent 70%); }
+.v-a .card { backdrop-filter: blur(22px) saturate(1.4); }
+.v-a .layout { display: grid; grid-template-columns: 1fr 400px; gap: 18px; position: relative; }
+.v-a .left { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.v-a .right { display: flex; flex-direction: column; gap: 18px; }
+.v-a .bottom { display: grid; grid-template-columns: 1fr 1.2fr; gap: 18px; }
+.v-a .mini { padding: 8px 10px; gap: 6px; font-size: 12.5px; }
+.v-a .mini b { min-width: 40px; }
+.v-a .chain { gap: 6px; }
+.v-a .chain .self { padding: 14px 10px; }
+
+/* ============ B · 沉浸主图 + 统一时间线 ============ */
+.v-b { --ink: #1f2330; --ink2: #3d4150; --muted: #7d7f8a; --card: #fff; --card-solid: #fff; --chip: rgba(31,35,48,.05); --line: rgba(31,35,48,.07);
+  --radius: 28px; --shadow: none; background: #f6f3ee; }
+.v-b .hero-card { background: linear-gradient(120deg, #e3f7ea 0%, #e6efff 60%, #efe9ff 100%); border-radius: 32px; padding: 26px 30px 18px; margin-bottom: 16px; }
+.v-b .hero { padding: 0 0 18px; }
+.v-b .hero-card .seg-ctl { background: rgba(255,255,255,.6); }
+.v-b .hero-card .kbox { height: 480px; }
+.v-b .hero-card .k-tip { background: #fff; }
+.v-b .cp-strip { display: grid; grid-template-columns: 260px 1fr; gap: 20px; align-items: center; border-top: 1px solid rgba(31,35,48,.08); padding-top: 14px; margin-top: 10px; }
+.v-b .cp-strip .t { font-size: 13px; color: var(--muted); line-height: 1.7; }
+.v-b .cp-strip .t b { color: var(--ink); font-size: 14px; }
+.v-b .cp-strip .t .big { font-size: 26px; font-weight: 650; color: var(--c-option); font-variant-numeric: tabular-nums; display: block; }
+.v-b .cpbox { height: 110px; }
+.v-b .layout { display: grid; grid-template-columns: 1fr 380px; gap: 16px; }
+.v-b .tl-filter { display: flex; gap: 6px; margin-bottom: 18px; }
+.v-b .tl-filter span { font-size: 12.5px; padding: 6px 13px; border-radius: 20px; background: var(--chip); cursor: pointer; }
+.v-b .tl-filter span.on { background: var(--ink); color: #fff; font-weight: 600; }
+.v-b .tl { position: relative; padding-left: 26px; }
+.v-b .tl::before { content: ""; position: absolute; left: 7px; top: 6px; bottom: 6px; width: 2px; background: var(--line); border-radius: 1px; }
+.v-b .tli { position: relative; padding-bottom: 18px; }
+.v-b .tli::before { content: ""; position: absolute; left: -24px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 4px #fff; }
+.v-b .tli .d { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; display: flex; gap: 8px; align-items: center; }
+.v-b .tli .d em { font-style: normal; font-weight: 600; color: var(--c); }
+.v-b .tli .body { margin-top: 6px; padding: 14px 16px; border-radius: 18px; background: var(--chip); }
+.v-b .tli .body .tt { font-weight: 600; font-size: 14px; }
+.v-b .tli .body ul { margin: 6px 0 0; padding-left: 16px; font-size: 12.5px; line-height: 1.7; color: var(--ink2); }
+.v-b .tli .body .s { font-size: 11px; color: var(--muted); margin-top: 6px; }
+.v-b .side { display: flex; flex-direction: column; gap: 16px; }
+.v-b .side .tgt { background: #e5f0ff; }
+.v-b .tgt-box { position: relative; height: 70px; margin: 8px 6px 0; }
+.v-b .tgt-track { position: absolute; left: 0; right: 0; top: 30px; height: 8px; border-radius: 4px; background: rgba(255,255,255,.8); }
+.v-b .tgt-range { position: absolute; top: 30px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, rgba(47,123,246,.35), rgba(47,123,246,.75)); }
+.v-b .tgt-avg { position: absolute; top: 25px; width: 3px; height: 18px; margin-left: -1.5px; border-radius: 2px; background: var(--c-report); }
+.v-b .tgt-now { position: absolute; top: 22px; width: 3px; height: 24px; margin-left: -1.5px; border-radius: 2px; background: var(--ink); }
+.v-b .tgt-lab { position: absolute; transform: translateX(-50%); font-size: 11px; white-space: nowrap; color: var(--muted); font-variant-numeric: tabular-nums; }
+.v-b .tgt-lab.up1 { top: 6px; } .v-b .tgt-lab.dn1 { top: 50px; }
+.v-b .tgt-lab.avg { color: var(--c-report); font-weight: 600; } .v-b .tgt-lab.now { color: var(--ink); font-weight: 600; }
+.v-b .chain { flex-direction: column; align-items: stretch; }
+.v-b .chain .arr { text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="dk-bar">
+  <a class="dk-home" href="index.html">← 设计稿目录</a>
+  <span class="dk-title">个股页 · 电脑版 1440</span>
+  <div class="dk-tabs">
+    <button data-variant-tab="a">A · 双栏研报侧栏</button>
+    <button data-variant-tab="b">B · 沉浸主图 + 统一时间线</button>
+  </div>
+  <span class="dk-spacer"></span>
+  <span class="dk-note">示例数据均为虚构 · 悬停 K 线上的圆点看事件详情</span>
+  <button class="dk-btn" id="dl-current" data-download="#page-a" data-ratio="2">下载当前版本高清图</button>
+</div>
+
+<div class="dk-stage">
+  <div class="dk-caption" data-variant="a"><b>A · 双栏研报侧栏</b>：宽屏下主图与研报栏并排（设计文档 4. 电脑版）。主图下方是 CP 比副图，再往下新闻 + 上下游。适合"边看图边看研报"。</div>
+  <div class="page v-a" id="page-a" data-variant="a"></div>
+  <div class="dk-caption" data-variant="b"><b>B · 沉浸主图 + 统一时间线</b>：主图做成通栏彩色横幅，CP 比压成一条窄带；期权 / 研报 / 新闻合成一条时间线（可按类型筛选），右侧是目标价区间与上下游。更强调"时间轴叠加"的差异化。</div>
+  <div class="page v-b" id="page-b" data-variant="b"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
+<script src="assets/sample-data.js"></script>
+<script src="assets/common.js"></script>
+<script>
+const D = CL_DATA, S = D.stock;
+const lastBand = S.targetBand[S.targetBand.length - 1];
+const nOpt = S.events.filter(e => e.type === 'option' && e.i >= S.candles.length - 30).length;
+const nRep = S.events.filter(e => e.type === 'report' && e.i >= S.candles.length - 30).length;
+
+const topBar = () => `
+  <header class="top">
+    <div class="logo"><i></i>ChainLens</div>
+    <div class="crumb">产业链 / 算力芯片 / <b>${S.t}</b></div>
+    <div class="search">⌕ 搜索代码 / 公司 / 日期<kbd>⌘ K</kbd></div>
+  </header>`;
+
+const hero = () => `
+  <section class="hero">
+    <div><div class="tkr">${S.t}</div><div class="nm">${S.n}<span class="seg-chip">${S.seg}</span></div></div>
+    <div><div class="px">${CL.fmt(S.price)}</div><div class="chg ${CL.dirCls(S.chg)}">${CL.pct(S.chg)} · USD</div></div>
+    <div class="meta">
+      <div class="facts"><span class="fact o">近 30 日期权异动 ${nOpt} 次</span><span class="fact r">研报调整 ${nRep} 次</span></div>
+      更新于 ${S.updated} · ${S.delay}
+    </div>
+  </section>`;
+
+const chartBar = () => `
+  <div class="chart-bar">
+    <div class="seg-ctl"><span>1月</span><span>3月</span><span class="on">6月</span><span>1年</span></div>
+    <div class="seg-ctl"><span class="on">日K</span><span>周K</span></div>
+    <div class="legend">
+      <span><i style="background:var(--c-option)">期</i>期权异动</span>
+      <span><i style="background:var(--c-report)">研</i>研报调整</span>
+      <span><i style="background:var(--c-news)">闻</i>新闻</span>
+      <span><b class="bandk"></b>研报目标价区间（低 / 均 / 高）</span>
+    </div>
+  </div>`;
+
+const chartFoot = () => `<div class="chart-foot"><span>目标价区间由已收录研报的目标价计算，仅作信息展示</span>
+  <span class="tv-attr">Charts by <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a></span></div>`;
+
+const ratingPill = r => {
+  if (r.pOld == null) return '<span class="pill neu">首次覆盖</span>';
+  const d = (r.pNew / r.pOld - 1) * 100;
+  return `<span class="pill ${d >= 0 ? 'up' : 'down'}">目标价 ${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(0)}%</span>`;
+};
+
+const reportCards = () => S.reportCards.map(r => `
+  <div class="rcard">
+    <div class="h"><span class="firm">${r.firm}</span><span class="date">${r.date}</span>
+      <span class="rate">${r.rOld === r.rNew ? '维持 ' + r.rNew : r.rOld + ' → <b>' + r.rNew + '</b>'}</span></div>
+    <div class="tp"><s>${r.pOld == null ? '' : r.pOld + ' →'}</s><b>${r.pNew}</b><span style="font-size:12px;color:var(--muted)">USD</span>
+      <span style="margin-left:auto">${ratingPill(r)}</span></div>
+    <ul>${r.points.map(p => `<li>${p}</li>`).join('')}</ul>
+    <div class="foot"><span class="ai-tag">✦ AI 整理</span><span class="src">来源：${r.firm} 研报</span></div>
+  </div>`).join('');
+
+const newsList = () => S.newsList.map(n => `
+  <a class="nrow" href="#" style="display:block"><div>${n.title}</div><div class="m">${n.src} · ${n.time}</div></a>`).join('');
+
+const mini = x => `<a class="mini" href="#"><b>${x.t}</b><span class="rel">${x.rel}</span><span class="c ${CL.dirCls(x.chg)}">${CL.pct(x.chg)}</span></a>`;
+const chain = () => `
+  <div class="chain">
+    <div class="col"><div class="lab">上游</div>${S.upstream.map(mini).join('')}</div>
+    <div class="arr">→</div>
+    <div class="self">${S.t}<small>${S.seg}</small></div>
+    <div class="arr">→</div>
+    <div class="col"><div class="lab">下游</div>${S.downstream.map(mini).join('')}</div>
+  </div>`;
+
+const footer = () => `<footer class="footer"><div class="warn">${D.disclaimer}</div>
+  <div style="margin-left:auto;text-align:right">期权数据：期权日报 · 研报：研报日报（仅摘要）· 新闻：公开媒体<br>标注"AI 整理"的内容由 AI 摘要生成，可能存在偏差</div></footer>`;
+
+// ---------- A ----------
+document.getElementById('page-a').innerHTML = topBar() + hero() + `
+  <div class="layout">
+    <div class="left">
+      <section class="card">${chartBar()}<div class="kbox" id="k-a"></div>${chartFoot()}</section>
+      <section class="card">
+        <h3><span class="dot" style="background:var(--c-option)"></span>CP 比历史<span style="font-weight:400;font-size:12px;color:var(--muted)">紫线 CP 比 · 灰线 LEAP CP 比 · 色带为该股自身 ±1σ · 空心点为超出 ±2σ</span></h3>
+        <div class="cpbox" id="cp-a"></div>
+      </section>
+      <div class="bottom">
+        <section class="card"><h3><span class="dot" style="background:var(--c-news)"></span>新闻时间线<span class="more">全部 →</span></h3>${newsList()}</section>
+        <section class="card"><h3>上下游</h3>${chain()}</section>
+      </div>
+    </div>
+    <aside class="right">
+      <section class="card">
+        <h3><span class="dot" style="background:var(--c-report)"></span>研报时间线<span class="more">${S.reportCards.length} 篇</span></h3>
+        <div style="display:flex;gap:18px;margin:-2px 0 14px;font-size:12px;color:var(--muted)">
+          <div>当前区间<br><b class="num" style="font-size:18px;color:var(--ink)">${lastBand.lo} – ${lastBand.hi}</b></div>
+          <div>均值<br><b class="num" style="font-size:18px;color:var(--c-report)">${lastBand.avg}</b></div>
+        </div>
+        ${reportCards()}
+      </section>
+    </aside>
+  </div>` + footer();
+
+// ---------- B ----------
+const tlItems = [
+  { c: 'var(--c-report)', k: '研报', d: '2026-10-30', tt: '机构 A · 中性 → 增持 · 目标价 145 → 165', ul: S.reportCards[0].points, s: '来源：机构 A 研报 · ✦ AI 整理' },
+  { c: 'var(--c-option)', k: '期权', d: '2026-10-27', tt: 'CP 比 2.31，处于该股自身分布 +2.4σ', s: 'LEAP CP 比 1.80 · 来源：期权日报' },
+  { c: 'var(--c-news)', k: '新闻', d: '2026-10-30', tt: '新一代数据中心平台公布量产时间表', s: '示例媒体 · 08:42' },
+  { c: 'var(--c-news)', k: '新闻', d: '2026-10-27', tt: '与亚洲代工厂扩大先进封装合作', s: '示例媒体 · 19:05' },
+  { c: 'var(--c-report)', k: '研报', d: '2026-10-02', tt: '机构 E · 维持增持 · 目标价 150 → 155', ul: S.reportCards[1].points, s: '来源：机构 E 研报 · ✦ AI 整理' },
+  { c: 'var(--c-option)', k: '期权', d: '2026-09-08', tt: 'CP 比 0.58，处于该股自身分布 −2.0σ', s: 'LEAP CP 比 1.11 · 来源：期权日报' },
+].sort((a, b) => b.d.localeCompare(a.d));
+
+const tgtBar = () => {
+  const lo = 110, hi = 180, P = v => ((v - lo) / (hi - lo) * 100).toFixed(1) + '%';
+  const b = lastBand;
+  return `<div class="tgt-box">
+    <div class="tgt-track"></div>
+    <div class="tgt-range" style="left:${P(b.lo)};width:calc(${P(b.hi)} - ${P(b.lo)})"></div>
+    <i class="tgt-avg" style="left:${P(b.avg)}"></i>
+    <i class="tgt-now" style="left:${P(S.price)}"></i>
+    <span class="tgt-lab up1" style="left:${P(b.lo)}">低 ${b.lo}</span>
+    <span class="tgt-lab up1 avg" style="left:${P(b.avg)}">均 ${b.avg}</span>
+    <span class="tgt-lab up1" style="left:${P(b.hi)}">高 ${b.hi}</span>
+    <span class="tgt-lab dn1 now" style="left:${P(S.price)}">现价 ${CL.fmt(S.price)}</span>
+  </div>`;
+};
+
+const lastCp = S.cpHist[S.cpHist.length - 6];
+document.getElementById('page-b').innerHTML = topBar() + `
+  <section class="hero-card">
+    ${hero()}
+    ${chartBar()}
+    <div class="kbox" id="k-b"></div>
+    <div class="cp-strip">
+      <div class="t"><b>CP 比</b> · 该股自身 ±1σ 色带<span class="big">2.31 <span style="font-size:13px;color:var(--muted);font-weight:500">+2.4σ · 10-27</span></span></div>
+      <div class="cpbox" id="cp-b"></div>
+    </div>
+    ${chartFoot()}
+  </section>
+  <div class="layout">
+    <section class="card">
+      <h3>事件时间线<span class="more">按时间倒序</span></h3>
+      <div class="tl-filter"><span class="on">全部</span><span>期权</span><span>研报</span><span>新闻</span></div>
+      <div class="tl">
+        ${tlItems.map(t => `
+        <div class="tli" style="--c:${t.c}">
+          <div class="d"><em>${t.k}</em>${t.d}</div>
+          <div class="body"><div class="tt">${t.tt}</div>${t.ul ? `<ul>${t.ul.map(p => `<li>${p}</li>`).join('')}</ul>` : ''}<div class="s">${t.s}</div></div>
+        </div>`).join('')}
+      </div>
+    </section>
+    <aside class="side">
+      <section class="card tgt">
+        <h3><span class="dot" style="background:var(--c-report)"></span>研报目标价区间<span class="more">${S.reportCards.length} 家机构</span></h3>
+        ${tgtBar()}
+        <div style="font-size:11.5px;color:var(--muted);line-height:1.6;margin-top:6px">按已收录研报的最新目标价统计，仅作信息展示。</div>
+      </section>
+      <section class="card"><h3>上下游</h3>${chain()}</section>
+    </aside>
+  </div>` + footer();
+
+CL.initVariants();
+CL.onResize(() => {
+  ['a', 'b'].forEach(v => {
+    const k = document.getElementById('k-' + v);
+    if (!k.offsetParent) return;
+    CL.renderKline(k, S);
+    CL.renderCp(document.getElementById('cp-' + v), S);
+  });
+});
+const cur = document.getElementById('dl-current');
+cur.addEventListener('click', () => {
+  const v = (location.hash.slice(1) || 'a');
+  cur.dataset.download = '#page-' + v;
+  cur.dataset.filename = `chainlens-stock-desktop-${v}.png`;
+}, true);
+CL.initDownload();
+</script>
+</body>
+</html>

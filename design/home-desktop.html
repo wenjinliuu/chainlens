@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>设计稿 · 今日驾驶舱（电脑版）· ChainLens</title>
+<link rel="stylesheet" href="assets/base.css">
+<style>
+/* ============ 页面通用结构 ============ */
+.page { width: 1440px; padding: 0 40px 36px; position: relative; overflow: hidden; }
+.top { display: flex; align-items: center; gap: 28px; height: 76px; }
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; letter-spacing: .01em; }
+.logo i { width: 28px; height: 28px; border-radius: 9px; display: inline-block;
+  background: conic-gradient(from 210deg, #8b5cf6, #2f7bf6, #22c3a6, #f59e0b, #8b5cf6); position: relative; }
+.logo i::after { content: ""; position: absolute; inset: 7px; border-radius: 50%; background: #fff; opacity: .9; }
+.logo small { font-weight: 500; color: var(--muted); font-size: 13px; }
+.nav { display: flex; gap: 4px; font-size: 14px; }
+.nav a { padding: 7px 13px; border-radius: 10px; color: var(--muted); }
+.nav a.on { color: var(--ink); background: var(--chip); font-weight: 600; }
+.search { margin-left: auto; display: flex; align-items: center; gap: 8px; width: 300px; height: 38px; padding: 0 12px;
+  border-radius: 12px; background: var(--chip); color: var(--muted); font-size: 13px; }
+.search kbd { margin-left: auto; font-family: var(--font); font-size: 11px; padding: 2px 6px; border-radius: 6px; background: var(--card); border: 1px solid var(--line); }
+.stamp { font-size: 12px; color: var(--muted); text-align: right; line-height: 1.5; }
+
+.grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--gap); }
+.card { background: var(--card); border-radius: var(--radius); padding: 20px 22px; position: relative; min-width: 0;
+  box-shadow: var(--shadow); border: 1px solid var(--card-line, transparent);
+  transition: transform .2s ease, box-shadow .2s ease; }
+.card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover, var(--shadow)); }
+.card h3 { margin: 0 0 14px; font-size: 14px; font-weight: 650; display: flex; align-items: center; gap: 8px; color: var(--ink); }
+.card h3 .dot { width: 8px; height: 8px; border-radius: 50%; }
+.card h3 .more { margin-left: auto; font-size: 12px; font-weight: 500; color: var(--muted); }
+.card h3 .count { font-size: 12px; font-weight: 600; padding: 1px 7px; border-radius: 20px; background: var(--chip); color: var(--muted); }
+.a-brief { grid-area: brief; } .a-heat { grid-area: heat; } .a-opt { grid-area: opt; } .a-rep { grid-area: rep; }
+.a-news { grid-area: news; } .a-clus { grid-area: clus; } .a-poster { grid-area: poster; }
+
+/* 一句话 */
+.brief-text { font-size: 19px; line-height: 1.7; font-weight: 500; letter-spacing: .005em; color: var(--ink); margin: 0; }
+.brief-meta { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+.brief-stats { display: flex; gap: 26px; margin-top: 18px; }
+.brief-stats div { font-size: 12px; color: var(--muted); }
+.brief-stats b { display: block; font-size: 26px; font-weight: 650; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+
+/* 热力图 */
+.a-heat { display: flex; flex-direction: column; }
+.heat-box { flex: 1; min-height: 360px; }
+.heat-legend { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); margin-left: auto; font-weight: 500; }
+.heat-legend i { width: 90px; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #dc2626, #f1f5f9, #16a34a); }
+
+/* 列表 */
+.list { display: flex; flex-direction: column; }
+.row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.row:first-child { border-top: 0; padding-top: 2px; }
+.tk { font-weight: 650; min-width: 52px; letter-spacing: .02em; }
+.tk small { display: block; font-weight: 400; font-size: 11px; color: var(--muted); letter-spacing: 0; }
+.row .grow { flex: 1; min-width: 0; }
+.row .r { text-align: right; font-variant-numeric: tabular-nums; }
+.zbar { width: 70px; height: 6px; border-radius: 3px; background: var(--chip); position: relative; overflow: hidden; }
+.zbar i { position: absolute; top: 0; bottom: 0; left: 50%; border-radius: 3px; }
+.pill { font-size: 11px; padding: 2px 7px; border-radius: 6px; font-weight: 600; white-space: nowrap; }
+.pill.up { background: var(--up-soft); color: var(--up); }
+.pill.down { background: var(--down-soft); color: var(--down); }
+.pill.neu { background: var(--chip); color: var(--muted); }
+.arrow { color: var(--muted); margin: 0 3px; }
+.news-title { font-size: 13.5px; line-height: 1.45; color: var(--ink); }
+.news-meta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.imp { width: 6px; height: 6px; border-radius: 50%; background: var(--c-news); flex: none; margin-top: 7px; align-self: flex-start; }
+.imp.normal { background: var(--line); }
+
+/* 信息集中出现 */
+.clus { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.clus a { padding: 12px 14px; border-radius: calc(var(--radius) - 8px); background: var(--chip); display: block; }
+.clus .tk { display: flex; justify-content: space-between; align-items: baseline; }
+.clus .facts { font-size: 12px; color: var(--muted); margin-top: 6px; display: flex; gap: 10px; white-space: nowrap; }
+.clus .facts span::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; vertical-align: 1px; }
+.clus .facts .o::before { background: var(--c-option); }
+.clus .facts .r::before { background: var(--c-report); }
+.rule { font-size: 11px; color: var(--muted); margin-top: 12px; line-height: 1.5; }
+
+/* 海报缩略 */
+.poster { border-radius: 14px; overflow: hidden; padding: 18px; color: #1d2433; aspect-ratio: 3 / 4;
+  background: linear-gradient(160deg, #eef2ff 0%, #fdf2f8 45%, #ecfdf5 100%); display: flex; flex-direction: column; gap: 9px; }
+.poster .p-k { font-size: 10px; letter-spacing: .14em; color: #6b7385; }
+.poster .p-t { font-size: 22px; font-weight: 750; line-height: 1.2; }
+.poster .p-row { display: flex; justify-content: space-between; font-size: 11px; padding: 6px 9px; background: rgba(255,255,255,.7); border-radius: 8px; }
+.poster .p-bars { display: flex; align-items: flex-end; gap: 4px; height: 46px; margin-top: auto; }
+.poster .p-bars i { flex: 1; border-radius: 3px 3px 0 0; }
+.poster .p-foot { font-size: 9px; color: #8a93a6; }
+.dl { display: flex; gap: 8px; margin-top: 12px; }
+.dl button { flex: 1; border: 0; font: inherit; font-size: 12.5px; font-weight: 600; padding: 9px; border-radius: 10px; cursor: pointer;
+  background: var(--ink); color: var(--card); }
+.dl button.ghost { background: var(--chip); color: var(--ink); }
+
+.foot { margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--line); display: flex; gap: 24px; font-size: 12px; color: var(--muted); line-height: 1.6; }
+.foot .warn { color: var(--ink); font-weight: 500; }
+
+/* ============ 版本 A · 晨雾玻璃 ============ */
+.v-a { --ink: #1d2433; --muted: #7a8396; --card: rgba(255,255,255,.66); --chip: rgba(120,130,160,.09); --line: rgba(30,40,60,.07);
+  --radius: 24px; --gap: 18px; --shadow: 0 1px 2px rgba(20,30,60,.04), 0 12px 32px rgba(40,60,110,.07);
+  --shadow-hover: 0 1px 2px rgba(20,30,60,.04), 0 20px 44px rgba(40,60,110,.12); --card-line: rgba(255,255,255,.8);
+  background: #f4f6fb; }
+.v-a::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(600px 380px at 8% 6%, rgba(139,92,246,.16), transparent 70%),
+    radial-gradient(520px 420px at 88% 18%, rgba(47,123,246,.14), transparent 70%),
+    radial-gradient(560px 420px at 60% 92%, rgba(34,195,166,.14), transparent 70%),
+    radial-gradient(420px 300px at 20% 80%, rgba(245,158,11,.10), transparent 70%); }
+.v-a .card { backdrop-filter: blur(22px) saturate(1.4); -webkit-backdrop-filter: blur(22px) saturate(1.4); }
+.v-a .grid { position: relative; grid-template-areas:
+  "brief brief brief brief brief heat heat heat heat heat heat heat"
+  "clus  clus  clus  clus  clus  heat heat heat heat heat heat heat"
+  "opt   opt   opt   opt   rep   rep  rep  rep  news news poster poster"; }
+.v-a .top, .v-a .foot { position: relative; }
+.v-a .heat-box { min-height: 400px; }
+.v-a .a-poster { display: flex; flex-direction: column; }
+.v-a .poster { aspect-ratio: auto; flex: 1; padding: 14px; }
+.v-a .poster .p-t { font-size: 17px; }
+.v-a .dl { flex-direction: column; }
+
+/* ============ 版本 B · 彩釉 Bento ============ */
+.v-b { --ink: #1f2330; --muted: #7d7f8a; --card: #ffffff; --chip: rgba(31,35,48,.055); --line: rgba(31,35,48,.07);
+  --radius: 30px; --gap: 16px; --shadow: none; --shadow-hover: 0 18px 40px rgba(31,35,48,.08);
+  background: #f6f3ee; }
+.v-b .grid { grid-template-areas:
+  "brief brief brief brief brief brief brief brief poster poster poster poster"
+  "heat  heat  heat  heat  heat  heat  heat  heat poster poster poster poster"
+  "heat  heat  heat  heat  heat  heat  heat  heat clus   clus   clus   clus"
+  "opt   opt   opt   opt   rep   rep   rep   rep  news   news   news   news"; }
+.v-b .a-brief { background: linear-gradient(120deg, #e9e4ff 0%, #dff0ff 55%, #dcf7ec 100%); padding: 28px 32px; }
+.v-b .brief-text { font-size: 24px; font-weight: 600; line-height: 1.55; }
+.v-b .a-opt { background: #efeaff; } .v-b .a-rep { background: #e5f0ff; } .v-b .a-news { background: #fff1dc; }
+.v-b .a-clus { background: #dff6ea; }
+.v-b .a-opt .row, .v-b .a-rep .row, .v-b .a-news .row { border-color: rgba(31,35,48,.06); }
+.v-b .clus a { background: rgba(255,255,255,.7); }
+.v-b .card h3 { font-size: 15px; }
+.v-b .card h3 .count { background: rgba(255,255,255,.8); }
+.v-b .heat-box { min-height: 470px; }
+.v-b .a-poster { display: flex; flex-direction: column; }
+.v-b .a-poster .poster { aspect-ratio: auto; flex: 1; }
+.v-b .clus .facts { gap: 8px; font-size: 11.5px; }
+.v-b .zbar { background: rgba(255,255,255,.8); }
+.v-b .hm-cell { --hm-radius: 10px; }
+
+/* ============ 版本 C · 终端纸面 ============ */
+.v-c { --ink: #111318; --muted: #81848c; --card: #ffffff; --chip: #f3f4f6; --line: #eceef1;
+  --radius: 12px; --gap: 12px; --shadow: none; --card-line: #e6e8ec; --shadow-hover: 0 8px 22px rgba(17,19,24,.06);
+  background: #fafafa; }
+.v-c .top { height: 64px; border-bottom: 1px solid #e6e8ec; margin: 0 -40px 18px; padding: 0 40px; background: #fff; }
+.v-c .search { width: 440px; background: #fff; border: 1px solid #e0e2e7; box-shadow: 0 1px 0 rgba(0,0,0,.02); }
+.v-c .search::before { content: "›"; font-family: var(--mono); color: #111318; font-weight: 700; }
+.v-c .num, .v-c .r, .v-c .brief-stats b, .v-c .hm-cell span { font-family: var(--mono); }
+.v-c .tk { font-family: var(--mono); }
+.v-c .card { padding: 16px 18px; }
+.v-c .card h3 { font-size: 11.5px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 600; margin-bottom: 10px; }
+.v-c .grid { grid-template-areas:
+  "brief brief brief heat heat heat heat heat heat rep  rep  rep"
+  "clus  clus  clus  heat heat heat heat heat heat rep  rep  rep"
+  "clus  clus  clus  opt  opt  opt  opt  opt  opt  news news news"
+  "poster poster poster opt opt opt opt opt opt news news news"; }
+.v-c .brief-text { font-size: 15px; line-height: 1.75; }
+.v-c .brief-stats { gap: 16px; }
+.v-c .brief-stats div { white-space: nowrap; }
+.v-c .brief-stats b { font-size: 20px; }
+.v-c .heat-box { min-height: 380px; }
+.v-c .hm-cell { --hm-radius: 3px; }
+.v-c .clus { grid-template-columns: 1fr; }
+.v-c .clus a { border-radius: 8px; padding: 10px 12px; }
+.v-c .clus .facts { margin-top: 4px; }
+.v-c .poster { aspect-ratio: auto; height: 300px; }
+.v-c .opt-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.v-c .opt-table th { text-align: left; font-weight: 500; color: var(--muted); font-size: 11px; padding: 0 0 8px; border-bottom: 1px solid var(--line); }
+.v-c .opt-table td { padding: 9px 0; border-bottom: 1px solid var(--line); font-family: var(--mono); }
+.v-c .opt-table th.r, .v-c .opt-table td.r { text-align: right; }
+.v-c .opt-table tr:last-child td { border-bottom: 0; }
+</style>
+</head>
+<body>
+
+<div class="dk-bar">
+  <a class="dk-home" href="index.html">← 设计稿目录</a>
+  <span class="dk-title">今日驾驶舱 · 电脑版 1440</span>
+  <div class="dk-tabs">
+    <button data-variant-tab="a">A · 晨雾玻璃</button>
+    <button data-variant-tab="b">B · 彩釉 Bento</button>
+    <button data-variant-tab="c">C · 终端纸面</button>
+  </div>
+  <span class="dk-spacer"></span>
+  <span class="dk-note">示例数据均为虚构</span>
+  <button class="dk-btn" id="dl-current" data-download="#page-a" data-ratio="2">下载当前版本高清图</button>
+</div>
+
+<div class="dk-stage">
+  <div class="dk-caption" data-variant="a"><b>A · 晨雾玻璃</b>：淡雅渐变底 + 毛玻璃卡片，大圆角、柔和阴影，最接近 Apple 质感。热力图占右侧大格，一句话 + 信息集中出现在左侧。</div>
+  <div class="page v-a" id="page-a" data-variant="a"></div>
+
+  <div class="dk-caption" data-variant="b"><b>B · 彩釉 Bento</b>：暖白底，每类信息一种马卡龙底色（期权紫 / 研报蓝 / 新闻橙 / 集中出现绿），一句话做成横幅，海报竖条常驻右侧，多彩感最强。</div>
+  <div class="page v-b" id="page-b" data-variant="b"></div>
+
+  <div class="dk-caption" data-variant="c"><b>C · 终端纸面</b>：纯白、细线、等宽数字，信息密度最高；⌘K 搜索栏放大放在顶部中央，期权异动做成表格，偏"情报终端"感。</div>
+  <div class="page v-c" id="page-c" data-variant="c"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
+<script src="assets/sample-data.js"></script>
+<script src="assets/common.js"></script>
+<script>
+const D = CL_DATA;
+const N = D.names;
+
+function header(v) {
+  return `
+  <header class="top">
+    <div class="logo"><i></i>ChainLens <small>链镜</small></div>
+    <nav class="nav">
+      <a class="on" href="#">今日</a><a href="#">产业链</a><a href="stock-desktop.html">个股</a><a href="#">日报</a><a href="#">订阅</a>
+    </nav>
+    <div class="search">⌕ 搜索代码 / 公司 / 日期<kbd>⌘ K</kbd></div>
+    <div class="stamp num">${D.TODAY} 美股收盘<br>数据更新 16:20 ET · 行情延迟</div>
+  </header>`;
+}
+
+function briefCard() {
+  const up = D.segments.flatMap(s => s.stocks).filter(s => s.chg > 0).length;
+  const all = D.segments.flatMap(s => s.stocks).length;
+  return `
+  <section class="card a-brief">
+    <h3>今日一句话<span class="more">完整日报 →</span></h3>
+    <p class="brief-text">${D.brief.text}</p>
+    <div class="brief-stats">
+      <div><b><span class="up">${up}</span> / <span class="down">${all - up}</span></b>上涨 / 下跌</div>
+      <div><b style="color:var(--c-option)">${D.options.length}</b>期权异动</div>
+      <div><b style="color:var(--c-report)">9</b>研报调整</div>
+      <div><b style="color:var(--c-news)">${D.news.length}</b>重要新闻</div>
+    </div>
+    <div class="brief-meta"><span class="ai-tag">✦ AI 整理</span><span class="src">来源：${D.brief.source}</span></div>
+  </section>`;
+}
+
+function heatCard(v) {
+  return `
+  <section class="card a-heat">
+    <h3>产业链热力图<span class="heat-legend">−6%<i></i>+6% · 面积 ≈ 市值</span></h3>
+    <div class="heat-box" id="heat-${v}"></div>
+  </section>`;
+}
+
+function optCard(v) {
+  const max = 3.2;
+  if (v === 'c') {
+    return `
+    <section class="card a-opt">
+      <h3><span class="dot" style="background:var(--c-option)"></span>期权异动榜<span class="count">${D.options.length}</span><span class="more">按相对自身波动排序</span></h3>
+      <table class="opt-table">
+        <tr><th>代码</th><th>环节</th><th class="r">CP 比</th><th class="r">LEAP CP</th><th class="r">偏离</th><th class="r">当日</th></tr>
+        ${D.options.map(o => `<tr><td><b>${o.t}</b></td><td style="font-family:var(--font);color:var(--muted)">${N[o.t].seg}</td>
+          <td class="r">${CL.fmt(o.cp)}</td><td class="r">${CL.fmt(o.leap)}</td>
+          <td class="r ${o.z > 0 ? 'up' : 'down'}">${o.z > 0 ? '+' : '−'}${Math.abs(o.z).toFixed(1)}σ</td>
+          <td class="r ${CL.dirCls(N[o.t].chg)}">${CL.pct(N[o.t].chg)}</td></tr>`).join('')}
+      </table>
+    </section>`;
+  }
+  return `
+  <section class="card a-opt">
+    <h3><span class="dot" style="background:var(--c-option)"></span>期权异动榜<span class="count">${D.options.length}</span><span class="more">全部 →</span></h3>
+    <div class="list">
+      ${D.options.map(o => `
+      <a class="row" href="stock-desktop.html">
+        <div class="tk">${o.t}<small>${N[o.t].seg}</small></div>
+        <div class="grow r num" style="text-align:left">CP <b>${CL.fmt(o.cp)}</b></div>
+        <div class="zbar"><i style="${o.z > 0 ? 'left:50%' : 'right:50%;left:auto'};width:${Math.abs(o.z) / max * 50}%;background:${o.z > 0 ? 'var(--up)' : 'var(--down)'}"></i></div>
+        <div class="r num ${o.z > 0 ? 'up' : 'down'}" style="width:44px">${o.z > 0 ? '+' : '−'}${Math.abs(o.z).toFixed(1)}σ</div>
+      </a>`).join('')}
+    </div>
+  </section>`;
+}
+
+function repCard() {
+  return `
+  <section class="card a-rep">
+    <h3><span class="dot" style="background:var(--c-report)"></span>研报变动流<span class="count">${D.reports.length}</span><span class="more">全部 →</span></h3>
+    <div class="list">
+      ${D.reports.map(r => {
+        const dir = r.pOld == null ? 'neu' : r.pNew > r.pOld ? 'up' : 'down';
+        return `
+      <a class="row" href="stock-desktop.html">
+        <div class="tk">${r.t}<small>${r.firm}</small></div>
+        <div class="grow" style="font-size:12.5px">${r.rOld === r.rNew ? `维持 ${r.rNew}` : `${r.rOld}<span class="arrow">→</span>${r.rNew}`}</div>
+        <div class="r num" style="font-size:12.5px">${r.pOld == null ? '首次' : r.pOld}<span class="arrow">→</span><b>${r.pNew}</b></div>
+        <span class="pill ${dir}">${dir === 'neu' ? '首次覆盖' : (dir === 'up' ? '+' : '−') + Math.abs((r.pNew / r.pOld - 1) * 100).toFixed(0) + '%'}</span>
+      </a>`;
+      }).join('')}
+    </div>
+  </section>`;
+}
+
+function newsCard() {
+  return `
+  <section class="card a-news">
+    <h3><span class="dot" style="background:var(--c-news)"></span>个股新闻<span class="more">全部 →</span></h3>
+    <div class="list">
+      ${D.news.map(n => `
+      <a class="row" href="#">
+        <span class="imp ${n.imp}"></span>
+        <div class="grow"><div class="news-title"><b class="num">${n.t}</b> · ${n.title}</div>
+        <div class="news-meta">${n.src} · ${n.time}</div></div>
+      </a>`).join('')}
+    </div>
+  </section>`;
+}
+
+function clusCard() {
+  return `
+  <section class="card a-clus">
+    <h3>信息集中出现<span class="count">${D.clusters.length}</span></h3>
+    <div class="clus">
+      ${D.clusters.map(c => `
+      <a href="stock-desktop.html">
+        <div class="tk">${c.t}<span class="num ${CL.dirCls(N[c.t].chg)}" style="font-size:12px;font-weight:600">${CL.pct(N[c.t].chg)}</span></div>
+        <div class="facts"><span class="o">期权异动 ${c.opt} 次</span><span class="r">研报调整 ${c.rep} 次</span></div>
+      </a>`).join('')}
+    </div>
+    <div class="rule">规则：近 5 个交易日内同时出现 ≥1 次期权异动与 ≥1 次研报评级 / 目标价调整。仅陈述出现次数。</div>
+  </section>`;
+}
+
+function posterCard(v) {
+  const bars = [38, 62, 45, 80, 55, 92, 70, 48, 66, 84];
+  const cols = ['#8b5cf6', '#2f7bf6', '#22c3a6', '#f59e0b'];
+  return `
+  <section class="card a-poster">
+    <h3>今日海报<span class="more">归档 →</span></h3>
+    <div class="poster" id="poster-${v}">
+      <div class="p-k">CHAINLENS DAILY · ${D.TODAY.replace(/-/g, '.')}</div>
+      <div class="p-t">AI 产业链<br>今日信息一览</div>
+      <div class="p-row"><span>期权异动</span><b>${D.options.length} 只</b></div>
+      <div class="p-row"><span>研报调整</span><b>9 条</b></div>
+      <div class="p-row"><span>信息集中出现</span><b>${D.clusters.length} 只</b></div>
+      <div class="p-bars">${bars.map((b, i) => `<i style="height:${b}%;background:${cols[i % 4]};opacity:.75"></i>`).join('')}</div>
+      <div class="p-foot">公开信息整理，不构成投资建议</div>
+    </div>
+    <div class="dl"><button data-download="#poster-${v}" data-ratio="3" data-filename="chainlens-poster-${D.TODAY}.png">下载高清图</button><button class="ghost">复制链接</button></div>
+  </section>`;
+}
+
+function footer() {
+  return `
+  <footer class="foot">
+    <div class="warn">${D.disclaimer}</div>
+    <div style="margin-left:auto;text-align:right">数据来源：期权日报、研报日报、公开新闻 · 行情延迟 15 分钟以上<br>标注"AI 整理"的内容由 AI 摘要生成，可能存在偏差</div>
+  </footer>`;
+}
+
+['a', 'b', 'c'].forEach(v => {
+  document.getElementById('page-' + v).innerHTML = header(v) + `
+    <main class="grid">
+      ${briefCard()}${heatCard(v)}${optCard(v)}${repCard()}${newsCard()}${clusCard()}${posterCard(v)}
+    </main>` + footer();
+});
+
+CL.initVariants();
+CL.onResize(() => {
+  ['a', 'b', 'c'].forEach(v => {
+    const el = document.getElementById('heat-' + v);
+    if (el.offsetParent) CL.renderHeatmap(el, D.segments, { gap: v === 'c' ? 2 : 4 });
+  });
+});
+// 顶栏下载：导出当前显示的版本
+const cur = document.getElementById('dl-current');
+cur.addEventListener('click', () => {
+  const v = (location.hash.slice(1) || 'a');
+  cur.dataset.download = '#page-' + v;
+  cur.dataset.filename = `chainlens-home-desktop-${v}.png`;
+}, true);
+CL.initDownload();
+</script>
+</body>
+</html>

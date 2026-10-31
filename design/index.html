@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChainLens 设计稿目录</title>
+<link rel="stylesheet" href="assets/base.css">
+<style>
+body { background: #f4f6fb; }
+.wrap { max-width: 980px; margin: 0 auto; padding: 64px 24px; }
+h1 { font-size: 34px; margin: 0; letter-spacing: -.01em; }
+.sub { color: #7a8396; margin: 10px 0 36px; line-height: 1.7; }
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.cards a { background: #fff; border-radius: 22px; padding: 22px; box-shadow: 0 12px 32px rgba(40,60,110,.07); transition: transform .2s; display: block; }
+.cards a:hover { transform: translateY(-3px); }
+.cards .k { font-size: 12px; color: #7a8396; }
+.cards h2 { font-size: 18px; margin: 6px 0 10px; }
+.cards p { font-size: 13px; color: #4b5466; line-height: 1.7; margin: 0; }
+.cards .v { margin-top: 14px; display: flex; gap: 6px; flex-wrap: wrap; }
+.cards .v span { font-size: 11.5px; padding: 3px 9px; border-radius: 20px; background: #eef1f8; }
+.notes { margin-top: 36px; font-size: 13px; color: #4b5466; line-height: 1.9; background: #fff; border-radius: 18px; padding: 20px 24px; }
+.notes b { color: #1d2433; }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: -1px; margin: 0 3px 0 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ChainLens · 设计稿</h1>
+  <p class="sub">M0 设计稿：每页放 2~3 个风格对比，选定后再进入 M1 的 Astro 实现。<br>所有数据均为<b>虚构示例</b>，机构名一律为"机构 A/B/C"，不对应任何真实研报或行情。</p>
+  <div class="cards">
+    <a href="home-desktop.html"><div class="k">电脑版 · 1440</div><h2>今日驾驶舱</h2>
+      <p>Bento 布局：一句话、产业链热力图、期权异动榜、研报变动流、新闻、信息集中出现、今日海报。</p>
+      <div class="v"><span>A 晨雾玻璃</span><span>B 彩釉 Bento</span><span>C 终端纸面</span></div></a>
+    <a href="stock-desktop.html"><div class="k">电脑版 · 1440</div><h2>个股页</h2>
+      <p>K 线 + 事件标记 + 研报目标价区间带，CP 比副图（自身 ±1σ），研报 / 新闻时间线，上下游。</p>
+      <div class="v"><span>A 双栏研报侧栏</span><span>B 沉浸主图 + 统一时间线</span></div></a>
+    <a href="home-mobile.html"><div class="k">手机版 · 390</div><h2>首页</h2>
+      <p>重新排版，不是电脑版缩小：底部 Tab（今日 / 产业链 / 自选 / 日报），三种信息流形态。</p>
+      <div class="v"><span>A 竖向卡片流</span><span>B 双列瀑布</span><span>C 分组摘要</span></div></a>
+  </div>
+  <div class="notes">
+    <b>全站统一约定</b><br>
+    方向色：<span class="sw" style="background:#16a34a"></span>绿 = 涨　<span class="sw" style="background:#dc2626"></span>红 = 跌<br>
+    事件色：<span class="sw" style="background:#8b5cf6"></span>期权　<span class="sw" style="background:#2f7bf6"></span>研报　<span class="sw" style="background:#f59e0b"></span>新闻<br>
+    合规元素：页脚风险提示、数据来源与更新时间、行情延迟说明、AI 内容标注"✦ AI 整理"、研报只展示 ≤3 条要点。<br>
+    K 线在设计稿里用 SVG 手绘示意；正式版改用 TradingView Lightweight Charts，并保留 TradingView 署名。<br>
+    每个页面右上角 / 下方都有"下载高清图"按钮（2x / 3x PNG）。
+  </div>
+</div>
+</body>
+</html>

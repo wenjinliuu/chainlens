@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>设计稿 · 首页（手机版）· ChainLens</title>
+<link rel="stylesheet" href="assets/base.css">
+<style>
+.phones { display: flex; gap: 48px; justify-content: center; flex-wrap: wrap; padding: 0 20px; }
+.ph-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.ph-cap { width: 390px; font-size: 13px; color: #5b6476; line-height: 1.7; }
+.ph-cap b { color: #1d2433; font-size: 14px; }
+.ph-dl { border: 0; font: inherit; font-size: 12.5px; font-weight: 600; padding: 7px 14px; border-radius: 9px; cursor: pointer; background: #141821; color: #fff; }
+.phone { width: 390px; height: 844px; border-radius: 52px; padding: 11px; background: #111; box-shadow: 0 30px 60px rgba(20,30,50,.22); position: relative; }
+.screen { width: 100%; height: 100%; border-radius: 42px; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+.scroll { flex: 1; overflow-y: auto; scrollbar-width: none; }
+.scroll::-webkit-scrollbar { display: none; }
+.status { height: 50px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 30px 0 34px; font-size: 15px; font-weight: 600; }
+.island { position: absolute; top: 11px; left: 50%; width: 120px; height: 34px; margin-left: -60px; border-radius: 20px; background: #000; z-index: 10; }
+.tabbar { flex: none; height: 82px; display: flex; justify-content: space-around; padding-top: 10px; font-size: 10.5px; border-top: 1px solid var(--line); background: var(--bar); backdrop-filter: blur(20px); }
+.tabbar a { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--muted); }
+.tabbar a i { width: 24px; height: 24px; border-radius: 8px; background: currentColor; opacity: .25; }
+.tabbar a.on { color: var(--ink); font-weight: 600; }
+.tabbar a.on i { opacity: 1; background: linear-gradient(135deg, #8b5cf6, #2f7bf6); }
+.hd { padding: 4px 20px 12px; }
+.hd .d { font-size: 12px; color: var(--muted); }
+.hd h1 { margin: 2px 0 0; font-size: 30px; font-weight: 750; letter-spacing: -.01em; display: flex; align-items: center; }
+.hd h1 .s { margin-left: auto; width: 36px; height: 36px; border-radius: 50%; background: var(--chip); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 400; color: var(--muted); }
+.mfoot { padding: 16px 20px 24px; font-size: 10.5px; color: var(--muted); line-height: 1.6; text-align: center; }
+.tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 6px; }
+.tag.o { color: var(--c-option); background: rgba(139,92,246,.1); }
+.tag.r { color: var(--c-report); background: rgba(47,123,246,.1); }
+.tag.n { color: #c27803; background: rgba(245,158,11,.12); }
+.tag.c { color: #0f8a5f; background: rgba(34,195,166,.14); }
+.tkb { font-weight: 700; font-size: 17px; letter-spacing: .01em; }
+.chgb { font-weight: 600; font-size: 13px; font-variant-numeric: tabular-nums; }
+
+/* ===== A · 竖向卡片流 ===== */
+.m-a { --ink: #1d2433; --muted: #7a8396; --chip: rgba(120,130,160,.1); --line: rgba(30,40,60,.07); --bar: rgba(248,249,252,.85);
+  background: linear-gradient(180deg, #eef1fb 0%, #f6f7fb 40%); color: var(--ink); }
+.m-a .brief { margin: 0 16px 12px; padding: 16px 18px; border-radius: 22px; background: linear-gradient(135deg, #ede8ff, #e3efff 60%, #def7ee); }
+.m-a .brief p { margin: 8px 0 10px; font-size: 15px; line-height: 1.6; font-weight: 500; }
+.m-a .chips { display: flex; gap: 8px; padding: 0 16px 12px; overflow-x: auto; scrollbar-width: none; }
+.m-a .chips span { flex: none; font-size: 13px; padding: 7px 14px; border-radius: 20px; background: #fff; color: var(--muted); }
+.m-a .chips span.on { background: var(--ink); color: #fff; font-weight: 600; }
+.m-a .feed { display: flex; flex-direction: column; gap: 10px; padding: 0 16px; }
+.m-a .fc { background: #fff; border-radius: 22px; padding: 16px 18px; box-shadow: 0 1px 2px rgba(20,30,60,.04), 0 8px 24px rgba(40,60,110,.06); }
+.m-a .fc .row1 { display: flex; align-items: center; gap: 10px; }
+.m-a .fc .row1 .chgb { margin-left: auto; }
+.m-a .fc .nm { font-size: 12px; color: var(--muted); }
+.m-a .fc .body { margin-top: 10px; font-size: 14px; line-height: 1.55; }
+.m-a .fc .body b { font-variant-numeric: tabular-nums; }
+.m-a .fc .meta { margin-top: 8px; font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; }
+
+/* ===== B · 双列瀑布 ===== */
+.m-b { --ink: #1f2330; --muted: #7d7f8a; --chip: rgba(31,35,48,.06); --line: rgba(31,35,48,.07); --bar: rgba(246,243,238,.9);
+  background: #f6f3ee; color: var(--ink); }
+.m-b .segtab { display: flex; gap: 20px; padding: 0 20px 12px; font-size: 15px; color: var(--muted); }
+.m-b .segtab .on { color: var(--ink); font-weight: 700; position: relative; }
+.m-b .segtab .on::after { content: ""; position: absolute; left: 20%; right: 20%; bottom: -6px; height: 3px; border-radius: 2px; background: var(--ink); }
+.m-b .wf { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 10px; align-items: start; }
+.m-b .wf .col { display: flex; flex-direction: column; gap: 8px; }
+.m-b .wc { border-radius: 18px; padding: 14px; background: #fff; }
+.m-b .wc .cv { border-radius: 12px; height: var(--h, 90px); margin: -4px -4px 10px; display: flex; flex-direction: column; justify-content: flex-end; padding: 10px; color: #1f2330; }
+.m-b .wc .tt { font-size: 13.5px; font-weight: 600; line-height: 1.45; }
+.m-b .wc .ft { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--muted); }
+.m-b .big { font-size: 30px; font-weight: 750; font-variant-numeric: tabular-nums; letter-spacing: -.02em; line-height: 1; }
+
+/* ===== C · 分组摘要 + 横滑 ===== */
+.m-c { --ink: #111318; --muted: #81848c; --chip: #f1f2f4; --line: #eceef1; --bar: rgba(255,255,255,.92); background: #fff; color: var(--ink); }
+.m-c .srch { margin: 0 16px 14px; height: 40px; border-radius: 12px; background: var(--chip); display: flex; align-items: center; padding: 0 14px; font-size: 14px; color: var(--muted); gap: 8px; }
+.m-c .sec { padding: 6px 0 16px; border-bottom: 8px solid #f6f7f8; }
+.m-c .sec h2 { margin: 8px 20px 10px; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.m-c .sec h2 .dot { width: 8px; height: 8px; border-radius: 50%; }
+.m-c .sec h2 small { margin-left: auto; font-weight: 500; font-size: 12px; color: var(--muted); }
+.m-c .hm { height: 200px; margin: 0 16px; }
+.m-c .hm .hm-seg-label { display: none; }
+.m-c .hs { display: flex; gap: 10px; overflow-x: auto; padding: 0 16px; scrollbar-width: none; }
+.m-c .hs::-webkit-scrollbar { display: none; }
+.m-c .hc { flex: none; width: 150px; border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+.m-c .hc .tkb { font-family: var(--mono); font-size: 15px; }
+.m-c .hc .v { font-family: var(--mono); font-size: 20px; font-weight: 650; margin-top: 8px; }
+.m-c .hc .s { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.m-c .lst { padding: 0 20px; }
+.m-c .lst a { display: flex; gap: 12px; padding: 11px 0; border-top: 1px solid var(--line); font-size: 13.5px; align-items: center; }
+.m-c .lst a:first-child { border-top: 0; }
+.m-c .lst .tkb { font-family: var(--mono); font-size: 14px; min-width: 52px; }
+.m-c .lst .r { margin-left: auto; font-family: var(--mono); font-size: 13px; text-align: right; white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<div class="dk-bar">
+  <a class="dk-home" href="index.html">← 设计稿目录</a>
+  <span class="dk-title">首页 · 手机版 390 × 844</span>
+  <span class="dk-spacer"></span>
+  <span class="dk-note">示例数据均为虚构 · 每台手机内可滚动</span>
+</div>
+
+<div class="dk-stage">
+  <div class="phones">
+    <div class="ph-wrap">
+      <div class="ph-cap"><b>A · 竖向卡片流</b><br>一张卡片 = 一条信号，按时间排；顶部"今日一句话"渐变卡 + 类型筛选。最贴近设计文档描述。</div>
+      <div class="phone" id="ph-a"><div class="island"></div><div class="screen m-a" id="sc-a"></div></div>
+      <button class="ph-dl" data-download="#ph-a" data-ratio="3" data-filename="chainlens-home-mobile-a.png">下载高清图</button>
+    </div>
+    <div class="ph-wrap">
+      <div class="ph-cap"><b>B · 双列瀑布</b><br>类似小红书的双列瀑布，每张卡带马卡龙色封面（大数字），视觉冲击最强，适合分享截图。</div>
+      <div class="phone" id="ph-b"><div class="island"></div><div class="screen m-b" id="sc-b"></div></div>
+      <button class="ph-dl" data-download="#ph-b" data-ratio="3" data-filename="chainlens-home-mobile-b.png">下载高清图</button>
+    </div>
+    <div class="ph-wrap">
+      <div class="ph-cap"><b>C · 分组摘要</b><br>按板块分组：迷你热力图 + 期权异动横滑卡 + 研报 / 新闻列表。信息最全、最"工具化"。</div>
+      <div class="phone" id="ph-c"><div class="island"></div><div class="screen m-c" id="sc-c"></div></div>
+      <button class="ph-dl" data-download="#ph-c" data-ratio="3" data-filename="chainlens-home-mobile-c.png">下载高清图</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
+<script src="assets/sample-data.js"></script>
+<script src="assets/common.js"></script>
+<script>
+const D = CL_DATA, N = D.names;
+const status = `<div class="status"><span>9:41</span><span style="font-size:13px">●●● ▮</span></div>`;
+const tabbar = `<nav class="tabbar"><a class="on"><i></i>今日</a><a><i></i>产业链</a><a><i></i>自选</a><a><i></i>日报</a></nav>`;
+const mfoot = `<div class="mfoot">${D.disclaimer}<br>行情延迟 15 分钟以上 · 数据更新 ${D.TODAY} 16:20 ET</div>`;
+const hd = (title, extra) => `<div class="hd"><div class="d">10月30日 周五 · 美股收盘</div><h1>${title}${extra || ''}</h1></div>`;
+const optText = o => `CP 比 <b>${CL.fmt(o.cp)}</b>，处于该股自身分布 <b class="${o.z > 0 ? 'up' : 'down'}">${o.z > 0 ? '+' : '−'}${Math.abs(o.z).toFixed(1)}σ</b>`;
+const repText = r => `${r.firm}：${r.rOld === r.rNew ? '维持 ' + r.rNew : r.rOld + ' → ' + r.rNew}，目标价 ${r.pOld == null ? '' : r.pOld + ' → '}<b>${r.pNew}</b>`;
+
+// ---------- A ----------
+const feedA = [
+  { k: 'c', t: 'NVDA', txt: '近 5 个交易日：期权异动 <b>2</b> 次，研报调整 <b>1</b> 次', meta: '信息集中出现' },
+  { k: 'o', t: 'LITE', txt: optText(D.options[0]), meta: '来源：期权日报' },
+  { k: 'r', t: 'NVDA', txt: repText(D.reports[0]), meta: '来源：机构 A 研报 · ✦ AI 整理' },
+  { k: 'n', t: 'MU', txt: D.news[2].title, meta: D.news[2].src + ' · ' + D.news[2].time },
+  { k: 'o', t: 'SMCI', txt: optText(D.options[3]), meta: '来源：期权日报' },
+  { k: 'r', t: 'ANET', txt: repText(D.reports[2]), meta: '来源：机构 C 研报 · ✦ AI 整理' },
+  { k: 'n', t: 'NVDA', txt: D.news[0].title, meta: D.news[0].src + ' · ' + D.news[0].time },
+];
+const tagName = { c: '信息集中出现', o: '期权异动', r: '研报调整', n: '新闻' };
+document.getElementById('sc-a').innerHTML = status + `<div class="scroll">
+  ${hd('今日', '<span class="s">⌕</span>')}
+  <div class="brief"><span class="ai-tag">✦ AI 整理</span><p>${D.brief.text}</p>
+    <div style="display:flex;gap:16px;font-size:12px;color:var(--muted)"><span><b class="up" style="font-size:16px">14</b> 涨</span><span><b class="down" style="font-size:16px">10</b> 跌</span><span><b style="font-size:16px;color:var(--c-option)">6</b> 期权</span><span><b style="font-size:16px;color:var(--c-report)">9</b> 研报</span></div></div>
+  <div class="chips"><span class="on">全部</span><span>期权异动</span><span>研报调整</span><span>新闻</span><span>集中出现</span></div>
+  <div class="feed">${feedA.map(f => `
+    <div class="fc">
+      <div class="row1"><span class="tkb">${f.t}</span><span class="tag ${f.k}">${tagName[f.k]}</span><span class="chgb ${CL.dirCls(N[f.t].chg)}">${CL.pct(N[f.t].chg)}</span></div>
+      <div class="nm">${N[f.t].n} · ${N[f.t].seg}</div>
+      <div class="body">${f.txt}</div>
+      <div class="meta"><span>${f.meta}</span><span>›</span></div>
+    </div>`).join('')}</div>
+  ${mfoot}</div>` + tabbar;
+
+// ---------- B ----------
+const cards = [
+  { cv: 'linear-gradient(150deg,#e9e4ff,#d9e8ff)', h: 150, big: '+3.1σ', bigc: 'var(--c-option)', sub: 'LITE · CP 3.42', tt: 'LITE 期权 CP 比处于自身分布高位', tag: 'o' },
+  { cv: 'linear-gradient(150deg,#dcf7ea,#e9f7d9)', h: 100, big: '14 / 10', bigc: 'var(--ink)', sub: '上涨 / 下跌', tt: '今日 AI 产业链概览', tag: 'c', ai: true },
+  { cv: 'linear-gradient(150deg,#dfeeff,#e8e4ff)', h: 120, big: '145→165', bigc: 'var(--c-report)', sub: 'NVDA · 机构 A', tt: 'NVDA 评级 中性 → 增持', tag: 'r' },
+  { cv: 'linear-gradient(150deg,#fff0d9,#ffe6e0)', h: 80, big: 'HBM', bigc: '#c27803', sub: 'MU · 新闻', tt: D.news[2].title, tag: 'n' },
+  { cv: 'linear-gradient(150deg,#dcf7ea,#dff1ff)', h: 130, big: '2 + 1', bigc: '#0f8a5f', sub: 'NVDA · 近 5 日', tt: 'NVDA 期权异动 2 次、研报调整 1 次', tag: 'c' },
+  { cv: 'linear-gradient(150deg,#ffe4e6,#f3e8ff)', h: 110, big: '−2.6σ', bigc: 'var(--down)', sub: 'SMCI · CP 0.41', tt: 'SMCI 期权 CP 比处于自身分布低位', tag: 'o' },
+  { cv: 'linear-gradient(150deg,#e3efff,#e0f7f1)', h: 90, big: '128', bigc: 'var(--c-report)', sub: 'ANET · 机构 C', tt: 'ANET 评级 增持 → 中性', tag: 'r' },
+  { cv: 'linear-gradient(150deg,#eef2ff,#fdf2f8)', h: 170, big: '10.30', bigc: 'var(--ink)', sub: '今日海报', tt: 'AI 产业链今日信息一览 · 点开可下载高清图', tag: 'c' },
+];
+const wc = c => `<div class="wc"><div class="cv" style="background:${c.cv};--h:${c.h}px"><div class="big" style="color:${c.bigc}">${c.big}</div><div style="font-size:11px;color:var(--muted);margin-top:4px">${c.sub}</div></div>
+  <div class="tt">${c.tt}</div><div class="ft"><span class="tag ${c.tag}">${tagName[c.tag]}</span>${c.ai ? '<span class="ai-tag">✦ AI</span>' : '<span>10-30</span>'}</div></div>`;
+document.getElementById('sc-b').innerHTML = status + `<div class="scroll">
+  ${hd('链镜', '<span class="s">⌕</span>')}
+  <div class="segtab"><span class="on">全部</span><span>期权</span><span>研报</span><span>新闻</span><span>自选</span></div>
+  <div class="wf"><div class="col">${cards.filter((_, i) => i % 2 === 0).map(wc).join('')}</div><div class="col">${cards.filter((_, i) => i % 2 === 1).map(wc).join('')}</div></div>
+  ${mfoot}</div>` + tabbar;
+
+// ---------- C ----------
+document.getElementById('sc-c').innerHTML = status + `<div class="scroll">
+  ${hd('今日驾驶舱')}
+  <div class="srch">⌕ 搜索代码 / 公司 / 日期</div>
+  <div class="sec"><h2>产业链热力图<small>面积 ≈ 市值</small></h2><div class="hm" id="hm-c"></div></div>
+  <div class="sec"><h2><span class="dot" style="background:var(--c-option)"></span>期权异动<small>${D.options.length} 只 ›</small></h2>
+    <div class="hs">${D.options.map(o => `<div class="hc"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="tkb">${o.t}</span><span class="chgb ${CL.dirCls(N[o.t].chg)}" style="font-size:11px">${CL.pct(N[o.t].chg)}</span></div>
+      <div class="v ${o.z > 0 ? 'up' : 'down'}">${o.z > 0 ? '+' : '−'}${Math.abs(o.z).toFixed(1)}σ</div><div class="s">CP ${CL.fmt(o.cp)} · LEAP ${CL.fmt(o.leap)}</div>
+      <div style="margin-top:8px">${CL.sparkline(o.t.charCodeAt(0) + o.t.length, 124, 26, N[o.t].chg > 0)}</div></div>`).join('')}</div></div>
+  <div class="sec"><h2><span class="dot" style="background:var(--c-report)"></span>研报变动<small>全部 ›</small></h2>
+    <div class="lst">${D.reports.slice(0, 4).map(r => `<a><span class="tkb">${r.t}</span><span style="color:var(--muted);font-size:12.5px">${r.firm}<br>${r.rOld === r.rNew ? '维持 ' + r.rNew : r.rOld + ' → ' + r.rNew}</span>
+      <span class="r">${r.pOld == null ? '首次' : r.pOld} → <b>${r.pNew}</b><br><span class="${r.pOld == null ? 'flat' : r.pNew > r.pOld ? 'up' : 'down'}" style="font-size:11px">${r.pOld == null ? '首次覆盖' : CL.pct((r.pNew / r.pOld - 1) * 100)}</span></span></a>`).join('')}</div></div>
+  <div class="sec"><h2><span class="dot" style="background:var(--c-news)"></span>个股新闻<small>全部 ›</small></h2>
+    <div class="lst">${D.news.slice(0, 4).map(n => `<a><span class="tkb">${n.t}</span><span style="flex:1">${n.title}<br><span style="font-size:11px;color:var(--muted)">${n.src} · ${n.time}</span></span></a>`).join('')}</div></div>
+  ${mfoot}</div>` + tabbar;
+
+CL.onResize(() => CL.renderHeatmap(document.getElementById('hm-c'), D.segments, { gap: 2, segLabel: false }));
+CL.initDownload();
+</script>
+</body>
+</html>
