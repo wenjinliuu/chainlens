@@ -18,7 +18,7 @@
       <svg class="brand-mark" viewBox="0 0 32 32"><path d="M16 2.5 28 9.4v10.2L16 26.5 4 19.6V9.4Z" fill="#c9c3ff"/><path d="M16 2.5 28 9.4 16 16.3 4 9.4Z" fill="#efedff"/><path d="M16 16.3 28 9.4v10.2L16 26.5Z" fill="#5b4cff"/><path d="M16 16.3v10.2L4 19.6V9.4Z" fill="#8f84ff"/><path d="M2.5 25.5c2.2-2.4 4.4-2.4 6.6 0s4.4 2.4 6.6 0 4.4-2.4 6.6 0 4.4 2.4 6.6 0" fill="none" stroke="#1296f0" stroke-width="2.6" stroke-linecap="round"/></svg>
       潮信<span class="pro">AI 产业链情报</span>
     </a>
-    <nav class="nav-links"><a href="#columns">三个栏目</a><a href="#island">产业镇</a><a href="#research">研报</a><a href="#inside">拆开日报</a><a href="#board">3D 盘面</a><a href="#how">怎么生成</a><a href="#faq">常见问题</a><a href="stock.html">看盘</a></nav>
+    <nav class="nav-links"><a href="#columns">三个栏目</a><a href="#island">产业镇</a><a href="#research">研报</a><a href="#inside">拆开日报</a><a href="#board">3D 盘面</a><a href="#how">怎么生成</a><a href="#faq">常见问题</a><a href="stock.html">看盘</a><a href="daily.html">归档</a></nav>
     <div class="nav-right">
       <a class="btn ghost" href="company.html">公司档案</a>
       <a class="btn accent" href="#subscribe">免费订阅</a>
@@ -143,11 +143,11 @@
 
     <!-- ================= 样张 ================= -->
     <section class="section" id="samples">
-      <div class="sec-head reveal"><div class="sec-no">07</div><div><h2>每天收到的，<em>长这样</em></h2><p>海报适合扫一眼和转发；文字版适合细读；研报只放摘要，不放原文。</p></div></div>
+      <div class="sec-head reveal"><div class="sec-no">07</div><div><h2>每天收到的，<em>长这样</em></h2><p>海报适合扫一眼和转发；文字版适合细读；研报只放摘要，不放原文。点任一张进归档翻以前的。</p></div><a class="btn ghost right" href="daily.html">翻翻以前的日报 →</a></div>
       <div class="samples three reveal">
-        <div class="sample" id="sampleA"><div class="cap"><span class="tag">期权日报 · 海报</span><b>一张图看完今天</b><span>可下载高清图</span></div></div>
-        <div class="sample" id="sampleB"><div class="cap"><span class="tag" style="--tc-deep:#4b3ed1;--tc-bg:#efedff">期权日报 · 文字版</span><b>📊 期权概览</b><span>复制即可转发</span></div></div>
-        <div class="sample" id="sampleC"><div class="cap"><span class="tag" style="--tc-deep:#0b77c0;--tc-bg:#e7f4fe">研报日报</span><b>今天谁被上调了</b><span>每篇不超过 3 条要点</span></div></div>
+        <a class="sample" id="sampleA" href="daily.html?col=eve&d=2026-10-30"><div class="cap"><span class="tag">期权日报 · 海报</span><b>一张图看完今天</b><span>可下载高清图</span></div></a>
+        <a class="sample" id="sampleB" href="daily.html?col=eve&d=2026-10-30&v=text"><div class="cap"><span class="tag" style="--tc-deep:#4b3ed1;--tc-bg:#efedff">期权日报 · 文字版</span><b>📊 期权概览</b><span>复制即可转发</span></div></a>
+        <a class="sample" id="sampleC" href="daily.html?col=rr&d=2026-10-30"><div class="cap"><span class="tag" style="--tc-deep:#0b77c0;--tc-bg:#e7f4fe">研报日报</span><b>今天谁被上调了</b><span>每篇不超过 3 条要点</span></div></a>
       </div>
     </section>
 
@@ -191,6 +191,7 @@
 <script src="../v3/assets/iso.js"></script>
 <script src="../v3/assets/data.js"></script>
 <script src="assets/poster.js"></script>
+<script src="assets/archive.js"></script>
 <script src="assets/landing.js"></script>
 <script src="assets/quality.js"></script>
 <script src="assets/clay.js"></script>

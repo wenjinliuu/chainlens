@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>日报归档 · 潮信</title>
+<meta name="description" content="潮信日报归档：按日历翻看过去的期权日报、研报日报和周报，拖动时间轴回放环节热度的变化。">
+<link rel="stylesheet" href="../v3/assets/brand.css">
+<link rel="stylesheet" href="assets/landing.css">
+<link rel="stylesheet" href="assets/daily.css">
+</head>
+<body>
+<header class="nav scrolled" id="nav">
+  <a class="brand" href="index.html">
+    <svg class="brand-mark" viewBox="0 0 32 32"><path d="M16 2.5 28 9.4v10.2L16 26.5 4 19.6V9.4Z" fill="#c9c3ff"/><path d="M16 2.5 28 9.4 16 16.3 4 9.4Z" fill="#efedff"/><path d="M16 16.3 28 9.4v10.2L16 26.5Z" fill="#5b4cff"/><path d="M16 16.3v10.2L4 19.6V9.4Z" fill="#8f84ff"/><path d="M2.5 25.5c2.2-2.4 4.4-2.4 6.6 0s4.4 2.4 6.6 0 4.4-2.4 6.6 0 4.4 2.4 6.6 0" fill="none" stroke="#1296f0" stroke-width="2.6" stroke-linecap="round"/></svg>
+    潮信<span class="pro">AI 产业链情报</span>
+  </a>
+  <nav class="nav-links"><a href="index.html">首页</a><a href="index.html#island">产业镇</a><a href="company.html">公司档案</a><a href="stock.html">看盘</a><a class="on" href="daily.html">日报归档</a></nav>
+  <div class="nav-right"><a class="btn accent" href="index.html#subscribe">免费订阅</a></div>
+</header>
+
+<div class="ar">
+  <aside class="ar-side">
+    <div class="seg-ctl ar-cols" id="colSeg">
+      <button data-col="eve" class="on">期权日报</button><button data-col="rr">研报日报</button><button data-col="week">周报</button><button data-col="morn">盘前汇总<em>即将上线</em></button>
+    </div>
+    <section class="card ar-cal">
+      <div class="cal-h"><button type="button" id="calPrev" title="上个月">‹</button><b id="calTitle"></b><button type="button" id="calNext" title="下个月">›</button></div>
+      <div class="cal-g" id="calGrid"></div>
+      <div class="cal-legend" id="calLegend"></div>
+    </section>
+    <section class="card ar-replay">
+      <div class="rp-h"><b>时间回放</b><span id="rpDate"></span></div>
+      <div class="rp-bars" id="rpBars"></div>
+      <input type="range" id="rpRange" min="0" max="0" value="0" aria-label="选择日期">
+      <div class="rp-ctl"><button class="btn accent" type="button" id="rpPlay">▶ 播放</button>
+        <div class="seg-ctl sm" id="rpSpeed"><button data-s="1" class="on">1×</button><button data-s="2">2×</button><button data-s="4">4×</button></div>
+        <span class="disclaimer">每格一个交易日，右边的内容和环节热度会跟着翻页；← → 也能翻</span></div>
+    </section>
+    <section class="card ar-stat" id="rpStat"></section>
+  </aside>
+
+  <main class="ar-main">
+    <section class="card ar-head" id="arHead"></section>
+    <section class="card ar-heat" id="arHeat"></section>
+    <section id="arBody"></section>
+    <footer class="footer">
+      <div><div class="warn">本站内容为公开信息整理，不构成任何投资建议。市场有风险，投资需谨慎。</div>期权日报署名 KZG 期权 Pro · 研报日报只放摘要，不放原文 · 周报的方向与"持续信号"按固定规则由代码汇总</div>
+      <div style="margin-left:auto;text-align:right">设计稿：归档里的所有日期、数字和公司动态均为虚构示例<br>正式版由每日 pipeline 生成静态 JSON</div>
+    </footer>
+  </main>
+</div>
+
+<script src="../v3/assets/iso.js"></script>
+<script src="../v3/assets/data.js"></script>
+<script src="assets/poster.js"></script>
+<script src="assets/archive.js"></script>
+<script src="assets/daily.js"></script>
+</body>
+</html>
