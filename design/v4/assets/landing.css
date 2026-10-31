@@ -1,5 +1,6 @@
 /* 潮信 · 订阅落地页 */
 .wrap { max-width: 1320px; margin: 0 auto; padding: 0 32px; }
+.page { overflow-x: clip; } /* 首屏舞台向右多伸 70px、通栏区用 100vw：都在这里裁掉，clip 不会像 hidden 那样打断 sticky 导航 */
 .page-bg { position: absolute; inset: 0 0 auto 0; height: 1200px; z-index: -1;
   background: radial-gradient(900px 520px at 78% 30%, var(--accent-soft), transparent 70%), linear-gradient(180deg, var(--bg), var(--bg-2)); }
 
