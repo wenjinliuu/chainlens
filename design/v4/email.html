@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>邮件模板 · 期权日报 · 潮信</title>
+<link rel="stylesheet" href="../v3/assets/brand.css">
+<link rel="stylesheet" href="assets/landing.css">
+<style>
+/* 页面外壳（设计稿展示用） */
+.em-wrap { max-width: 1180px; margin: 0 auto; padding: 26px 24px 60px; display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
+.em-side { position: sticky; top: 90px; display: flex; flex-direction: column; gap: 14px; }
+.em-side .card { padding: 18px 20px; font-size: 13.5px; color: var(--ink2); line-height: 1.7; }
+.em-side h3 { margin: 0 0 6px; font-size: 15px; font-weight: 800; color: var(--ink); }
+.em-side ul { margin: 6px 0 0; padding-left: 18px; }
+.em-client { border-radius: 22px; border: 1.5px solid var(--line); background: #f3f4f8; padding: 14px; min-width: 0; overflow: hidden; }
+.em-client .hd { display: flex; gap: 10px; align-items: center; padding: 6px 8px 14px; font-size: 13px; color: var(--ink3); }
+.em-client .hd b { color: var(--ink); } .em-client .hd .av { width: 34px; height: 34px; border-radius: 50%; background: #5b4cff; display: grid; place-items: center; color: #fff; font-weight: 900; }
+.em-client .sub { font-size: 15px; font-weight: 800; color: var(--ink); }
+/* ===== 邮件本体：600 宽、表格思维、内联样式风格（设计稿用 class，实现时转内联） ===== */
+.email { width: 100%; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 18px; overflow: hidden; font-family: -apple-system, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif; color: #16172a; }
+.e-top { padding: 22px 28px 0; display: flex; align-items: center; gap: 10px; font-size: 13px; color: #8e91a7; }
+.e-top .brand { font-size: 16px; } .e-top .r { margin-left: auto; }
+.e-title { padding: 18px 28px 0; }
+.e-title .t1 { font-size: 22px; font-weight: 900; margin: 0; } .e-title .t2 { font-size: 30px; font-weight: 900; color: #5b4cff; margin: 2px 0 0; letter-spacing: -.02em; } .e-title .t3 { font-size: 14px; color: #444760; margin: 8px 0 0; line-height: 1.6; }
+.e-poster { margin: 18px 28px 0; border-radius: 14px; overflow: hidden; border: 1.5px solid #eceef5; position: relative; }
+.e-poster .kp { transform: scale(.505); transform-origin: 0 0; width: 1080px; }
+.e-poster .clip { height: 300px; overflow: hidden; }
+.e-poster .more { position: absolute; left: 0; right: 0; bottom: 0; padding: 48px 0 14px; text-align: center; background: linear-gradient(rgba(255,255,255,0), #fff 60%); }
+.e-btn { display: inline-block; background: #5b4cff; color: #fff !important; font-weight: 800; font-size: 14px; padding: 11px 22px; border-radius: 999px; text-decoration: none; }
+.e-sec { padding: 20px 28px 0; }
+.e-sec h3 { margin: 0 0 10px; font-size: 15px; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+.e-sec h3 i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.e-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1.5px solid #eceef5; font-size: 14px; }
+.e-row:first-of-type { border-top: 0; padding-top: 0; }
+.e-row .av { width: 30px; height: 30px; border-radius: 50%; flex: none; display: grid; place-items: center; font-weight: 800; font-size: 13px; background: #efedff; color: #4b3ed1; }
+.e-row b { font-family: var(--num); font-weight: 800; min-width: 54px; } .e-row .d { flex: 1; color: #444760; font-size: 13px; }
+.e-pill { font-size: 12px; font-weight: 800; border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
+.e-pill.b { background: #e2f6ef; color: #0c9465; } .e-pill.r { background: #fce7e9; color: #be2c3d; } .e-pill.n { background: #eef0f4; color: #6f7487; }
+.e-kpi { display: flex; gap: 10px; margin-top: 4px; }
+.e-kpi div { flex: 1; background: #f7f8fb; border-radius: 12px; padding: 10px 12px; } .e-kpi span { font-size: 12px; color: #8e91a7; display: block; } .e-kpi b { font-family: var(--num); font-weight: 800; font-size: 20px; }
+.e-watch { margin: 18px 28px 0; padding: 12px 14px; border-radius: 12px; background: #fff7ea; border: 1.5px solid #ffe6bf; font-size: 13.5px; color: #7a4a05; }
+.e-watch b { color: #16172a; }
+.e-foot { margin-top: 22px; padding: 18px 28px 24px; background: #f7f8fb; font-size: 12px; color: #8e91a7; line-height: 1.7; }
+.e-foot a { color: #4b3ed1; font-weight: 700; } .e-foot .warn { color: #444760; font-weight: 600; }
+.e-foot .links { margin-top: 10px; display: flex; gap: 14px; flex-wrap: wrap; }
+@media (max-width: 900px) { .em-wrap { grid-template-columns: 1fr; padding: 16px 12px 40px; } .em-side { position: static; } .em-client { padding: 8px; } .em-client .hd { font-size: 12px; } .em-client .sub { font-size: 13px; } .e-top, .e-title, .e-sec { padding-left: 16px; padding-right: 16px; } .e-poster, .e-watch { margin-left: 16px; margin-right: 16px; } .e-foot { padding-left: 16px; padding-right: 16px; } .e-poster .kp { transform: scale(.3); } .e-poster .clip { height: 190px; } .e-kpi { flex-direction: column; } }
+</style>
+</head>
+<body>
+<header class="nav scrolled">
+  <a class="brand" href="index.html">
+    <svg class="brand-mark" viewBox="0 0 32 32"><path d="M16 2.5 28 9.4v10.2L16 26.5 4 19.6V9.4Z" fill="#c9c3ff"/><path d="M16 2.5 28 9.4 16 16.3 4 9.4Z" fill="#efedff"/><path d="M16 16.3 28 9.4v10.2L16 26.5Z" fill="#5b4cff"/><path d="M16 16.3v10.2L4 19.6V9.4Z" fill="#8f84ff"/><path d="M2.5 25.5c2.2-2.4 4.4-2.4 6.6 0s4.4 2.4 6.6 0 4.4-2.4 6.6 0 4.4 2.4 6.6 0" fill="none" stroke="#1296f0" stroke-width="2.6" stroke-linecap="round"/></svg>
+    潮信<span class="pro">AI 产业链情报</span>
+  </a>
+  <nav class="nav-links"><a href="index.html">首页</a><a href="subscribe.html">订阅流程</a><a class="on" href="email.html">邮件模板</a></nav>
+  <div class="nav-right"><span class="disclaimer">设计稿 · 期权日报邮件</span></div>
+</header>
+
+<div class="em-wrap">
+  <div class="em-client">
+    <div class="hd"><span class="av">潮</span><div><b>潮信</b> &lt;mail@chaoxin.example&gt;<br><span class="sub">📊 期权日报 10月30日 · 大盘偏乐观，光模块 Call 集中放量</span></div><span style="margin-left:auto">15:41</span></div>
+    <div class="email" id="email">
+      <div class="e-top"><span class="brand" style="font-weight:900;color:#16172a">潮信</span><span>期权日报</span><span class="r">2026-10-30 · 美股收盘</span></div>
+      <div class="e-title"><p class="t1">10月30日 · 大盘偏乐观</p><p class="t2">光模块 Call 集中放量</p><p class="t3">全市场 CP 高于常态 15%，资金集中在网络与光、芯片两层；LITE、COHR 成交量超过常态 2 倍。</p></div>
+      <div class="e-poster"><div class="clip" id="posterClip"></div><div class="more"><a class="e-btn" href="index.html#inside">查看完整海报 →</a></div></div>
+      <div class="e-sec"><h3><i style="background:#5b4cff"></i>今天 3 条要点</h3>
+        <div class="e-kpi"><div><span>全市场 CP</span><b>0.90</b></div><div><span>最热环节</span><b style="color:#4b3ed1">光模块 2.3x</b></div><div><span>最强信号</span><b>LITE</b></div></div></div>
+      <div class="e-sec"><h3><i style="background:#5b4cff"></i>AI 链重点</h3>
+        <div class="e-row"><span class="av">L</span><b>LITE</b><span class="d">量 2.8x · CP 高于常态 68% · 光模块龙头上调季度指引</span><span class="e-pill b">偏多 · 可信度高</span></div>
+        <div class="e-row"><span class="av">N</span><b>NVDA</b><span class="d">量 1.4x · CP +22% · 新平台量产时间表公布</span><span class="e-pill b">偏多 · 可信度中</span></div>
+        <div class="e-row"><span class="av">S</span><b>SMCI</b><span class="d">量 2.1x · CP −35% · 财报前 Put 放大</span><span class="e-pill r">偏空 · 可信度中</span></div></div>
+      <div class="e-watch">⭐ <b>你关注的 MU</b>：今天期权异动 1 次、研报上调目标价 1 次。<a href="company.html?t=MU" style="color:#4b3ed1;font-weight:700">看公司档案 →</a></div>
+      <div class="e-sec"><h3><i style="background:#1296f0"></i>研报日报 · 今日 9 条调整，摘 2 条</h3>
+        <div class="e-row"><span class="av" style="background:#e7f4fe;color:#0b77c0">A</span><b>NVDA</b><span class="d">机构 A：中性 → 增持 · 目标价 145 → 165</span><span class="e-pill b">+14%</span></div>
+        <div class="e-row"><span class="av" style="background:#e7f4fe;color:#0b77c0">C</span><b>ANET</b><span class="d">机构 C：增持 → 中性 · 目标价 140 → 128</span><span class="e-pill r">−9%</span></div></div>
+      <div class="e-sec" style="text-align:center;padding-top:22px"><a class="e-btn" href="index.html#inside">在网页上看完整版</a><div style="font-size:12px;color:#8e91a7;margin-top:8px">文字版、全市场分时和观察名单都在网页里</div></div>
+      <div class="e-foot">
+        <div class="warn">本邮件为公开信息整理，"偏多 / 偏空"是期权成交结构的数据面倾向，不构成任何投资建议。市场有风险，投资需谨慎。</div>
+        <div>期权数据：每日成交前 100 · 研报：机构公开报告摘要 · 消息：公司公告与主流媒体 · 徽标仅用于识别 · 海报署名 KZG 期权 Pro</div>
+        <div class="links"><a href="subscribe.html?state=prefs">管理偏好</a><a href="unsubscribe.html">一键退订</a><a href="index.html">chaoxin.example</a></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="em-side">
+    <div class="card"><h3>邮件设计约定</h3><ul><li>宽 600px，单列，表格布局，样式内联（实现时转换）</li><li>缩略海报只截前 300px，点进网页看完整版；不放整张长图</li><li>3～5 条要点 + AI 链重点 + 关注的公司，一屏读完</li><li>图片托管在 R2；logo 用首字母徽章，不依赖外链图片</li><li>底部固定：风险提示、来源、管理偏好、一键退订</li></ul></div>
+    <div class="card"><h3>主题行</h3>📊 期权日报 10月30日 · 大盘偏乐观，光模块 Call 集中放量<br><span class="disclaimer">= 日期 + 大盘情绪 + 当天最重要的一件事，≤ 30 字</span></div>
+    <div class="card"><h3>发送</h3>Resend 免费额度（每天 100 封）· 自有域名 SPF / DKIM / DMARC · 上线前用 QQ、163、Gmail 各测一次到达率<br><a href="subscribe.html" style="font-weight:800;color:var(--accent-deep)">订阅流程页 →</a></div>
+  </aside>
+</div>
+
+<script src="../v3/assets/iso.js"></script>
+<script src="../v3/assets/data.js"></script>
+<script src="assets/poster.js"></script>
+<script>document.getElementById('posterClip').innerHTML = renderPoster();</script>
+</body>
+</html>

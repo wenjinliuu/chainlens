@@ -60,7 +60,48 @@
       <div class="col-when">${c.when}</div>
       <p>${c.desc}</p>
       <ul>${c.items.map(x => `<li>${x}</li>`).join('')}</ul>
-    </div>`).join('') + `<div class="col-week card"><b>周报</b><span>每周日上午：本周大盘方向、最热和最冷的环节、持续出现的信号、下周看点。订阅任何一个栏目都会收到。</span></div>`;
+      <button type="button" class="col-peek" data-peek="${c.id}">看样张 ↓</button>
+    </div>`).join('') + `<div class="col-week card"><b>周报</b><span>每周日上午：本周大盘方向、最热和最冷的环节、持续出现的信号、下周看点。订阅任何一个栏目都会收到。</span><button type="button" class="col-peek" data-peek="week">看样张 ↓</button></div>
+    <div class="peek-wrap" id="peekWrap"><div class="peek card" id="peek"></div></div>`;
+
+  // ---------- 样张（虚构）：盘前汇总 / 期权日报 / 研报日报 / 周报 ----------
+  const PEEK = {
+    morn: () => `<div class="pk-h"><span class="tag" style="--tc-deep:#b45309;--tc-bg:#fff4dc">盘前汇总 · 样张</span><b>🌅 盘前汇总 · 10月31日 周五</b><span class="pk-t">美东 09:00 送达 · 即将上线</span></div>
+      <div class="pk-cols">
+        <div><h4>隔夜要闻</h4><ol><li><b>台积电</b>公布 10 月营收，同比增长，先进制程占比提升 <span class="src">公司公告</span></li><li><b>美光</b>HBM 产能扩建项目获地方审批 <span class="src">示例媒体</span></li><li>美联储官员讲话：对通胀回落的信心增强 <span class="src">示例媒体</span></li></ol></div>
+        <div><h4>盘前异动 · AI 链</h4><div class="pk-list">${[['LITE', 4.2], ['MU', 2.1], ['COHR', 1.8], ['SMCI', -3.4], ['ANET', -1.2]].map(([t, v]) => { const c = CL.byT[t]; return `<div class="pk-row">${badge(c, 26, CL.layers[c.li].color)}<b class="num">${t}</b><small>${c.name}</small><span class="pill ${v >= 0 ? 'bull' : 'bear'}">${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(1)}%</span></div>`; }).join('')}</div></div>
+        <div><h4>今日日程</h4><ul class="pk-cal"><li><b>08:30</b> 美国 10 月 CPI</li><li><b>盘前</b> 财报：AMD、SMCI</li><li><b>盘后</b> 财报：AAPL、AMZN</li><li><b>全天</b> 韩国 10 月出口（含芯片）</li></ul></div>
+      </div>
+      <div class="pk-f">隔夜要闻来自公司公告与主流媒体，盘前涨跌为延迟数据 · 不构成投资建议</div>`,
+    eve: () => `<div class="pk-h"><span class="tag">期权日报 · 样张</span><b>📊 期权概览 · 10月30日</b><span class="pk-t">北京时间 15:40 送达 · 海报署名 KZG 期权 Pro</span></div>
+      <div class="pk-cols">
+        <div><h4>大盘情绪</h4><div class="pk-big"><b class="num">0.90</b><span class="pill bull">偏乐观</span></div><p>全市场 CP 对比 20 日常态 0.78，<b class="up">+15%</b>。资金集中在网络与光、芯片两层。</p></div>
+        <div><h4>AI 链重点</h4><div class="pk-list">${[['LITE', '偏多', '高', 'bull'], ['NVDA', '偏多', '中', 'bull'], ['SMCI', '偏空', '中', 'bear']].map(([t, d, cf, k]) => { const c = CL.byT[t]; return `<div class="pk-row">${badge(c, 26, CL.layers[c.li].color)}<b class="num">${t}</b><small>可信度${cf}</small><span class="pill ${k}">${d}</span></div>`; }).join('')}</div></div>
+        <div><h4>最热环节</h4><div class="pk-big"><b class="num" style="color:#4b3ed1">2.3x</b><span class="pk-sub">光模块</span></div><p>在榜 3 只：LITE、COHR、CIEN。热度 = 成员量倍数中位数。</p></div>
+      </div>
+      <div class="pk-f">"偏多 / 偏空"是期权成交结构的数据面倾向 · 不构成投资建议</div>`,
+    rr: () => `<div class="pk-h"><span class="tag" style="--tc-deep:#0b77c0;--tc-bg:#e7f4fe">研报日报 · 样张</span><b>📑 研报日报 · 10月30日</b><span class="pk-t">每个交易日 · 只放摘要，不放原文</span></div>
+      <div class="pk-cols">
+        ${[['NVDA', '机构 A', '中性 → 增持', 145, 165, ['数据中心收入占比继续提升', '新平台量产节奏早于此前披露']], ['MU', '机构 B', '维持 增持', 135, 160, ['HBM 产能扩建进度加快', '存储价格环比回升']], ['ANET', '机构 C', '增持 → 中性', 140, 128, ['估值已反映多数预期']]].map(([t, f, rt, a, b, pts]) => { const c = CL.byT[t], up = b >= a; return `<div><div class="pk-row">${badge(c, 26, CL.layers[c.li].color)}<b class="num">${t}</b><small>${f}</small><span class="pill ${up ? 'bull' : 'bear'}">${a} → ${b}</span></div><div class="pk-rt">${rt}</div><ul>${pts.map(x => `<li>${x}</li>`).join('')}</ul></div>`; }).join('')}
+      </div>
+      <div class="pk-f">摘要整理自机构公开报告，每篇不超过 3 条要点 · 不构成投资建议</div>`,
+    week: () => `<div class="pk-h"><span class="tag" style="--tc-deep:#7a3ec9;--tc-bg:#f3e8ff">周报 · 样张</span><b>📆 10月第 5 周 · 期权周报</b><span class="pk-t">周日上午送达</span></div>
+      <div class="pk-cols">
+        <div><h4>本周方向</h4><div class="pk-kv"><span>全市场</span><span class="pill bull">偏多</span></div><div class="pk-kv"><span>最偏多环节</span><b>光模块</b></div><div class="pk-kv"><span>最偏空环节</span><b>AI 服务器</b></div><div class="pk-kv"><span>方向最强个股</span><b class="num">LITE</b></div></div>
+        <div><h4>环节轮动</h4><div class="pk-bars">${[['光模块', 2.3, '#00a8c6'], ['存储', 1.7, '#5b4cff'], ['GPU', 1.6, '#1296f0'], ['电力/散热', 1.4, '#2b6cf2'], ['AI 服务器', 1.1, '#ff6b2c']].map(([n, v, c]) => `<div><span>${n}</span><i style="width:${v / 2.3 * 100}%;background:${c}"></i><b class="num">${v.toFixed(1)}x</b></div>`).join('')}</div></div>
+        <div><h4>下周看点</h4><ul class="pk-cal"><li><b>周三</b> 美联储议息结果</li><li><b>周四</b> 财报：NVDA（盘后）</li><li><b>周五</b> 美国 10 月非农</li><li><b>持续信号</b> LITE 连续 3 天偏多</li></ul></div>
+      </div>
+      <div class="pk-f">本周方向按周汇总期权成交结构，不拆到每一天 · 不构成投资建议</div>`,
+  };
+  let peekOpen = null;
+  document.querySelectorAll('.col-peek').forEach(b => b.onclick = () => {
+    const id = b.dataset.peek, wrap = $('#peekWrap'), box = $('#peek');
+    if (peekOpen === id) { wrap.classList.remove('open'); peekOpen = null; document.querySelectorAll('.col-peek').forEach(x => x.textContent = '看样张 ↓'); return; }
+    peekOpen = id; box.innerHTML = PEEK[id]() + `<button type="button" class="pk-x">收起</button>`; wrap.classList.add('open');
+    document.querySelectorAll('.col-peek').forEach(x => x.textContent = x.dataset.peek === id ? '收起样张 ↑' : '看样张 ↓');
+    box.querySelector('.pk-x').onclick = () => { wrap.classList.remove('open'); peekOpen = null; document.querySelectorAll('.col-peek').forEach(x => x.textContent = '看样张 ↓'); };
+    wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
 
   // ---------- AI 产业镇 UI ----------
   LP.island = initIsland => {

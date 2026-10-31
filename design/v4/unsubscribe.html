@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>退订潮信</title>
+<link rel="stylesheet" href="../v3/assets/brand.css">
+<link rel="stylesheet" href="assets/landing.css">
+<link rel="stylesheet" href="assets/subscribe.css">
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }</script>
+</head>
+<body>
+<header class="nav scrolled">
+  <a class="brand" href="index.html">
+    <svg class="brand-mark" viewBox="0 0 32 32"><path d="M16 2.5 28 9.4v10.2L16 26.5 4 19.6V9.4Z" fill="#c9c3ff"/><path d="M16 2.5 28 9.4 16 16.3 4 9.4Z" fill="#efedff"/><path d="M16 16.3 28 9.4v10.2L16 26.5Z" fill="#5b4cff"/><path d="M16 16.3v10.2L4 19.6V9.4Z" fill="#8f84ff"/><path d="M2.5 25.5c2.2-2.4 4.4-2.4 6.6 0s4.4 2.4 6.6 0 4.4-2.4 6.6 0 4.4 2.4 6.6 0" fill="none" stroke="#1296f0" stroke-width="2.6" stroke-linecap="round"/></svg>
+    潮信<span class="pro">AI 产业链情报</span>
+  </a>
+  <div class="nav-right"><span class="disclaimer">设计稿 · 流程演示</span></div>
+</header>
+
+<main class="sb">
+  <section class="sb-card card" id="ask">
+    <div class="sb-art"><canvas id="mascotU"></canvas></div>
+    <div class="sb-body">
+      <span class="tag" style="--tc-deep:#6f7487;--tc-bg:#eef0f4">退订</span>
+      <h1>要停掉所有潮信吗？</h1>
+      <p><b>you@example.com</b> 目前订阅了：期权日报、研报日报、周报。点一下就退订，不需要登录，也不用填原因。</p>
+      <div class="un-alt"><b>或者只减少一点：</b>
+        <button type="button" class="chip">只保留周报</button><button type="button" class="chip">只保留期权日报</button><button type="button" class="chip">暂停 30 天</button></div>
+      <div class="sb-actions"><button class="btn" type="button" id="unsubBtn">退订全部</button><a class="btn ghost" href="subscribe.html">改为管理偏好</a></div>
+    </div>
+  </section>
+
+  <section class="sb-card card" id="done" hidden>
+    <div class="sb-art"><canvas id="mascotV"></canvas></div>
+    <div class="sb-body">
+      <span class="tag" style="--tc-deep:#6f7487;--tc-bg:#eef0f4">已退订</span>
+      <h1>好的，不打扰了</h1>
+      <p><b>you@example.com</b> 已从全部栏目退订，生效立即。你的邮箱和关注列表会在 30 天后删除。</p>
+      <p class="disclaimer">改变主意的话，随时在<a href="index.html#subscribe">首页</a>重新订阅；30 天内重新订阅会保留原来的偏好。</p>
+      <div class="sb-actions"><a class="btn ghost" href="index.html">回到首页</a></div>
+    </div>
+  </section>
+
+  <footer class="footer"><div><div class="warn">本站内容为公开信息整理，不构成任何投资建议。市场有风险，投资需谨慎。</div></div></footer>
+</main>
+
+<script src="../v3/assets/iso.js"></script>
+<script src="../v3/assets/data.js"></script>
+<script src="assets/quality.js"></script>
+<script src="assets/clay.js"></script>
+<script src="assets/scene.js"></script>
+<script src="assets/subscribe.js"></script>
+</body>
+</html>
