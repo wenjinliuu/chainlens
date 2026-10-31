@@ -9,11 +9,13 @@
   const mix = (a, b, t) => '#' + hex2rgb(a).map((v, i) => Math.round(v + (hex2rgb(b)[i] - v) * t).toString(16).padStart(2, '0')).join('');
 
   class Iso {
-    constructor() { this.s = []; this.tf = { x: 0, y: 0, z: 0, k: 1 }; }
+    constructor() { this.s = []; this.tf = { x: 0, y: 0, z: 0, k: 1 }; this.b = [1e9, 1e9, -1e9, -1e9]; }
     at(x, y, z, k) { this.tf = { x, y, z, k: k == null ? 1 : k }; return this; }
     proj(x, y, z) {
       const t = this.tf, wx = x * t.k + t.x, wy = y * t.k + t.y, wz = z * t.k + t.z;
-      return [(wx - wy) * 0.866, (wx + wy) * 0.5 - wz];
+      const X = (wx - wy) * 0.866, Y = (wx + wy) * 0.5 - wz, b = this.b;
+      b[0] = Math.min(b[0], X); b[1] = Math.min(b[1], Y); b[2] = Math.max(b[2], X); b[3] = Math.max(b[3], Y);
+      return [X, Y];
     }
     poly(pts, fill) {
       this.s.push('<polygon points="' + pts.map(q => this.proj(q[0], q[1], q[2]).map(v => v.toFixed(1)).join(',')).join(' ') + '" fill="' + fill + '"/>');
@@ -24,6 +26,8 @@
       this.poly([[x, y, z + h], [x + w, y, z + h], [x + w, y + d, z + h], [x, y + d, z + h]], c.t);
     }
     out() { const s = this.s.join(''); this.s = []; return s; }
+    // 已绘制内容的投影边界，方便生成紧贴的 viewBox
+    viewBox(pad) { const [a, b, c, d] = this.b, p = pad || 0; return `${(a - p).toFixed(1)} ${(b - p).toFixed(1)} ${(c - a + 2 * p).toFixed(1)} ${(d - b + 2 * p).toFixed(1)}`; }
   }
   Iso.proj = (x, y, z) => [(x - y) * 0.866, (x + y) * 0.5 - z];
 

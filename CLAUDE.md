@@ -20,10 +20,10 @@ ChainLens（链镜）：AI 产业链情报台。先读：
 - 任何面向用户的文案都要过 `docs/compliance.md` 的自检清单。
 
 ## 视觉
-- 以 `docs/design-direction.md` 为准：深色"控制室"方向（v2），**绿涨红跌**全站统一；颜色只表达语义，动效必须表达信息。
-- v1 浅色稿（`design/*.html`）已被 v2（`design/v2/`）取代，仅作对比保留。
-- 海报、设计稿类页面提供高清图下载按钮；设计稿习惯在一个页面里放多个版本对比。
-- 使用 Lightweight Charts 时保留 TradingView 署名。
+- 以 `docs/design-direction.md` 为准：**浅色"雾彩·清透"**，与期权日报海报同源（`kzg-option-brief/docs/poster-style.md`）；可切换深色但以浅色为主；**绿涨红跌**全站统一。
+- 首页是日报订阅落地页（`design/v4/`），看盘工具（K 线、产业链图）是二级页面。
+- 共用资源在 `design/v3/assets/`（brand.css、iso.js、data.js）；v1、v2 稿仅作历史参考。
+- 海报、设计稿类页面提供高清图下载按钮；使用 Lightweight Charts 时保留 TradingView 署名。
 
 ## 下一步
 从 `docs/roadmap.md` 的 M0 剩余项（`design/` 设计稿）或 M1 开始。
