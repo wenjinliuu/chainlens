@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>公司档案 · 潮信</title>
+<link rel="stylesheet" href="../v3/assets/brand.css">
+<link rel="stylesheet" href="assets/landing.css">
+<link rel="stylesheet" href="assets/company.css">
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }</script>
+</head>
+<body>
+<header class="nav scrolled" id="nav">
+  <a class="brand" href="index.html">
+    <svg class="brand-mark" viewBox="0 0 32 32"><path d="M16 2.5 28 9.4v10.2L16 26.5 4 19.6V9.4Z" fill="#c9c3ff"/><path d="M16 2.5 28 9.4 16 16.3 4 9.4Z" fill="#efedff"/><path d="M16 16.3 28 9.4v10.2L16 26.5Z" fill="#5b4cff"/><path d="M16 16.3v10.2L4 19.6V9.4Z" fill="#8f84ff"/><path d="M2.5 25.5c2.2-2.4 4.4-2.4 6.6 0s4.4 2.4 6.6 0 4.4-2.4 6.6 0 4.4 2.4 6.6 0" fill="none" stroke="#1296f0" stroke-width="2.6" stroke-linecap="round"/></svg>
+    潮信<span class="pro">AI 产业链情报</span>
+  </a>
+  <nav class="nav-links"><a href="index.html">首页</a><a href="index.html#island">产业岛</a><a class="on" href="company.html">公司档案</a><a href="stock.html">看盘</a></nav>
+  <div class="nav-right"><a class="btn accent" href="index.html#subscribe">免费订阅</a></div>
+</header>
+
+<div class="co">
+  <aside class="co-side">
+    <div class="co-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="coSearch" placeholder="搜索代码或公司名"></div>
+    <div class="co-legend"><span><i style="background:var(--violet)"></i>晚潮信号</span><span><i style="background:var(--sky)"></i>研报</span><span><i style="background:var(--amber)"></i>新闻</span></div>
+    <div class="co-list" id="coList"></div>
+  </aside>
+
+  <main class="co-main">
+    <section class="card co-head" id="coHead"></section>
+
+    <section class="co-3d">
+      <div class="card star"><canvas id="starCanvas"></canvas><div class="st-labels" id="starLabels"></div>
+        <div class="c3-cap"><b>信息星图</b>拖动旋转 · 鼠标放上去看详情 · 点上下游公司可以跳转</div></div>
+    </section>
+
+    <section class="card line-wrap">
+      <div class="ph"><h3>近 60 日：行情 + 事件</h3><span class="disclaimer">紫色管子 = CP 比 · 蓝色半透明带 = 研报目标价区间 · 小旗：<b style="color:var(--violet)">期</b> 晚潮 <b style="color:var(--sky)">研</b> 研报 <b style="color:var(--amber)">闻</b> 新闻</span></div>
+      <div class="line"><canvas id="lineCanvas"></canvas></div>
+    </section>
+
+    <section class="co-grid">
+      <div class="card pane" id="pOpt"></div>
+      <div class="card pane" id="pRep"></div>
+      <div class="card pane" id="pNews"></div>
+      <div class="card pane" id="pSeen"></div>
+      <div class="card pane wide" id="pChain"></div>
+    </section>
+
+    <footer class="footer">
+      <div><div class="warn">本站内容为公开信息整理，不构成任何投资建议。市场有风险，投资需谨慎。</div>期权数据：每日成交前 100 · 研报：机构公开报告摘要 · 消息：公司公告、主流媒体 · 行情延迟 · 徽标仅用于识别</div>
+      <div style="margin-left:auto;text-align:right">本页所有数字均为虚构示例<br>上下游关系为示意</div>
+    </footer>
+  </main>
+</div>
+<div class="card pop" id="coTip" style="position:fixed;width:auto;max-width:300px;padding:10px 14px;pointer-events:none;font-size:13px;line-height:1.6"></div>
+
+<script src="../v3/assets/iso.js"></script>
+<script src="../v3/assets/data.js"></script>
+<script src="assets/company.js"></script>
+<script src="assets/clay.js"></script>
+<script src="assets/company3d.js"></script>
+<script>
+(async () => { const { initStar, initLine } = await COMPANY3D; CO.start(initStar, initLine); })();
+</script>
+</body>
+</html>

@@ -413,3 +413,6 @@
 .rs-stage .drag-hint { bottom: 14px; }
 @media (max-width: 1100px) { .rs { grid-template-columns: 1fr; } .rs-stage { min-height: 520px; } }
 @media (max-width: 640px) { .rs-text h2 { font-size: 32px; } .rs-stage { min-height: 460px; border-radius: 28px; } }
+
+.ip-logos a { transition: transform .2s var(--spring); } .ip-logos a:hover { transform: translateY(-3px) scale(1.08); }
+.ip-more { margin-top: 8px; font-size: 12px; font-weight: 700; color: var(--accent-deep); }

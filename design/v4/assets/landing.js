@@ -53,7 +53,7 @@
       document.querySelectorAll('.isle-chip').forEach(c => c.classList.toggle('on', +c.dataset.i === i));
       if (i < 0) {
         panel.style.setProperty('--c', '#5b4cff');
-        panel.innerHTML = `<div class="ip-k">AI 产业岛 · 全景</div><h3>8 个环节 · 52 家公司</h3>
+        panel.innerHTML = `<div class="ip-k">AI 产业岛 · 全景</div><h3>8 个环节 · 58 家公司</h3>
           <p>从矿石、电力，到芯片、光模块、服务器，再到云和机器人。潮信每天沿着这条链，看哪里在放量、谁被调评级、发生了什么。</p>
           <div class="ip-leg"><span><i class="lg-pod"></i>底座越高 = 当天期权成交越热</span><span><i class="lg-cube"></i>方块 = 产业链流向</span><span><i class="lg-coin"></i>硬币 = 成员公司</span></div>
           <button class="btn accent" id="ipStart">从「原材料」开始导览 →</button>`;
@@ -69,7 +69,8 @@
         <div class="ip-row"><span class="ip-c" style="--k:#5b4cff">晚潮</span><div>期权热度 <b class="num">${l.heat[6].toFixed(1)}x</b> · 信号 ${tks(o)}</div></div>
         <div class="ip-row"><span class="ip-c" style="--k:#1296f0">研报</span><div>今日评级 / 目标价调整：${tks(r)}</div></div>
         <div class="ip-row"><span class="ip-c" style="--k:#f5a314">早潮</span><div>盘前要闻：${tks(n)} <em>即将上线</em></div></div>
-        <div class="ip-logos">${l.members.slice().sort((a, b) => b.cap - a.cap).slice(0, 8).map(c => `<span title="${c.name}">${badge(c, 34, l.color)}</span>`).join('')}</div>`;
+        <div class="ip-logos">${l.members.slice().sort((a, b) => b.cap - a.cap).slice(0, 8).map(c => `<a href="company.html?t=${c.t}" title="${c.t} ${c.name} · 公司档案">${badge(c, 34, l.color)}</a>`).join('')}</div>
+        <div class="ip-more">点 logo 打开公司档案 →</div>`;
     }
     const isl = initIsland($('#isleCanvas'), { labels: [...document.querySelectorAll('.isle-label')], select: render });
     document.querySelectorAll('.isle-label, .isle-chip').forEach(b => b.onclick = () => isl.go(+b.dataset.i));

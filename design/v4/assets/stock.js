@@ -301,8 +301,12 @@
   }
   function markWatch() {
     $$('.wl-row').forEach(a => a.classList.toggle('on', a.dataset.t === S.t));
+    // 让当前公司所在的那一组从列表顶部开始；组太长放不下时再把当前行居中
     const on = $('.wl-row.on'), list = $('#wlList');
-    if (on && list) list.scrollTop = Math.max(0, on.offsetTop - list.clientHeight / 2 + on.offsetHeight / 2);
+    if (!on || !list) return;
+    let y = on.closest('.wl-g').offsetTop;
+    if (on.offsetTop + on.offsetHeight - y > list.clientHeight) y = on.offsetTop - list.clientHeight / 2 + on.offsetHeight / 2;
+    list.scrollTop = Math.max(0, y);
   }
 
   // ---------------------------------------------------------------- 面包屑与报价区
