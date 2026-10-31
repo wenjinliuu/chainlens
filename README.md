@@ -22,11 +22,22 @@ ChainLens 只做**公开信息的整理与可视化**，不提供任何投资建
 | [docs/data-sources.md](docs/data-sources.md) | 数据来源与数据模型（JSON 结构） |
 | [docs/compliance.md](docs/compliance.md) | 合规原则（必读） |
 | [docs/roadmap.md](docs/roadmap.md) | 分阶段路线图 |
+| [docs/m1-plan.md](docs/m1-plan.md) | M1 工程化方案、静态 JSON 契约、与上游字段映射 |
 | [CLAUDE.md](CLAUDE.md) | 给 AI 编程助手的交接说明 |
 
 ## 状态
 
-设计阶段。代码尚未开始，见 [docs/roadmap.md](docs/roadmap.md) 的 M1。
+M0 设计稿已完成（`design/v4/`，浏览器直接打开 HTML 即可看，不需要构建），下一步按 [docs/m1-plan.md](docs/m1-plan.md) 进入 M1 工程化。
+
+| 设计稿 | 内容 |
+|---|---|
+| `design/v4/index.html` | 首页：全屏 3D AI 产业镇 + 悬浮手机与飞出卡片、三个栏目与样张、产业镇导览（可点车辆 / 行人 / 公司楼）、研报卡片环、拆开日报、3D 盘面、生成流程、订阅、FAQ |
+| `design/v4/daily.html` | 日报归档：月历 + 时间回放，期权日报海报（高清下载 / 文字版）、研报日报、周报 |
+| `design/v4/company.html` | 公司档案：3D 信息星图、近 60 日行情 + 事件、街区 3D、期权 / 研报 / 新闻、出现记录 |
+| `design/v4/stock.html` | 看盘：Lightweight Charts 多窗格指标 + 财报日、最热合约、研报目标价区间 |
+| `design/v4/subscribe.html` `unsubscribe.html` `email.html` | 订阅确认 / 偏好 / 退订流程，邮件模板 |
+
+所有页面支持 ⌘K 全局搜索；数据全部为虚构示例。辅助脚本：`node scripts/compliance-scan.mjs`（文案合规扫描）、`node scripts/export-samples.mjs`（导出示例 JSON 到 `data/samples/`）。
 
 ## 关联项目
 

@@ -144,8 +144,16 @@
       <div class="rel-wrap">${rel(D.ups, '上游 · 供应方')}<div class="rel-me">${badge(c, 44, L.color)}<b class="num">${c.t}</b><small>${L.name}</small></div>${rel(D.downs, '下游 · 客户')}</div>`;
     document.querySelectorAll('#pChain .rel').forEach(a => a.onclick = e => { e.preventDefault(); go(a.dataset.t); });
     // 出现记录
+    // 归档里的记录（archive.js 有时）：进过哪几天的期权日报重点、哪几天的研报日报
+    let arch = '';
+    if (window.ARCHIVE) {
+      const A = window.ARCHIVE, days = A.days.filter(d => d.picks.some(x => x.t === c.t)).slice(-5).reverse();
+      const rrs = A.DATES.slice(-15).filter(dt => A.rr(dt).items.some(i => i.t === c.t)).slice(-4).reverse();
+      arch = `<div class="seen-arch"><div class="sa-h">期权日报重点 <a href="daily.html?col=eve">翻归档 →</a></div>${days.length ? days.map(d => { const p = d.picks.find(x => x.t === c.t); return `<a class="sa" href="daily.html?col=eve&d=${d.date}"><span class="num">${d.date.slice(5)}</span><span class="pill ${A.pillK(p.dir)}">${p.dir}</span><small>可信度${p.conf} · 量 ${p.vx}x</small></a>`; }).join('') : '<small class="sa-none">近 30 个交易日没进过重点</small>'}
+        <div class="sa-h">研报日报 <a href="daily.html?col=rr">翻归档 →</a></div>${rrs.length ? rrs.map(dt => { const i = A.rr(dt).items.find(x => x.t === c.t); return `<a class="sa" href="daily.html?col=rr&d=${dt}"><span class="num">${dt.slice(5)}</span><span class="pill ${i.to > i.from ? 'bull' : i.to < i.from ? 'bear' : 'flat'}">${i.from} → ${i.to}</span><small>${i.firm} · ${i.act}</small></a>`; }).join('') : '<small class="sa-none">近 15 个交易日没有研报摘录</small>'}</div>`;
+    }
     $('#pSeen').innerHTML = `<div class="ph"><h3>在潮信里出现过</h3></div>
-      ${D.events.slice().reverse().slice(0, 8).map(e => `<div class="seen" data-di="${e.di}"><span class="seen-k" style="--k:${SIG[e.k][0]}">${SIG[e.k][1]}</span><span class="num">${e.d}</span><b>${e.title}</b><small>${e.sub}</small></div>`).join('')}`;
+      ${D.events.slice().reverse().slice(0, 8).map(e => `<div class="seen" data-di="${e.di}"><span class="seen-k" style="--k:${SIG[e.k][0]}">${SIG[e.k][1]}</span><span class="num">${e.d}</span><b>${e.title}</b><small>${e.sub}</small></div>`).join('')}${arch}`;
   }
 
   let star = null, line = null, block = null;

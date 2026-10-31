@@ -362,7 +362,8 @@
     const el = $('#hotStrip'); if (!el) return;
     el.innerHTML = `<div class="hs-h"><b>最热合约</b><span>近 60 日期权成交最大的 6 天 · 当天成交最多的那张合约 · 示例</span></div><div class="hs-row">` + days.map(({ i, v }) => {
       const h = S.hot[i], tier = h.dte <= 7 ? ['短线', 'flat'] : h.dte <= 30 ? [h.call ? 'Call' : 'Put', h.call ? 'bull' : 'bear'] : [(h.call ? 'Call' : 'Put') + ' · 远月', h.call ? 'bull' : 'bear'];
-      return `<div class="hs-c"><span class="d num">${md(S.daily[i].time)}</span><b class="num">${h.call ? 'Call' : 'Put'} ${h.k}</b><span class="x">${h.exp} 到期 · ${h.dte} 天</span><span class="pill ${tier[1]}">${tier[0]}</span><span class="s">成交 ${big(v)} 张 · 占 ${(h.share * 100).toFixed(0)}%</span></div>`;
+      const dt = S.daily[i].time, link = window.ARCHIVE && ARCHIVE.byDate[dt];
+      return `<${link ? `a href="daily.html?col=eve&d=${dt}" title="看 ${md(dt)} 的期权日报"` : 'div'} class="hs-c${link ? ' link' : ''}"><span class="d num">${md(dt)}${link ? ' ↗' : ''}</span><b class="num">${h.call ? 'Call' : 'Put'} ${h.k}</b><span class="x">${h.exp} 到期 · ${h.dte} 天</span><span class="pill ${tier[1]}">${tier[0]}</span><span class="s">成交 ${big(v)} 张 · 占 ${(h.share * 100).toFixed(0)}%</span></${link ? 'a' : 'div'}>`;
     }).join('') + `</div>`;
   }
   function renderQuote() {

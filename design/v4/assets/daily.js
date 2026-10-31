@@ -102,7 +102,9 @@
     else if (S.col === 'rr') { const R = A.rr(S.date); tag = '<span class="tag" style="--tc-deep:#0b77c0;--tc-bg:#e7f4fe">研报日报</span>'; h2 = `${d.md} <small>${d.wd}</small>`; sub = `今日 ${R.total} 条评级 / 目标价调整，摘录 ${R.items.length} 条 · 只放摘要，不放原文`; }
     else if (S.col === 'week') { tag = '<span class="tag" style="--tc-deep:#7a3ec9;--tc-bg:#f3e8ff">期权周报</span>'; h2 = `${wk.label} <small>${wk.range}</small><span class="pill ${A.pillK(wk.dir)}">本周${wk.dir}</span>`; sub = `${A.md(wk.sun)}（周日）上午送达 · 汇总 ${wk.days.length} 个交易日`; }
     else { tag = '<span class="tag" style="--tc-deep:#b45309;--tc-bg:#fff4dc">盘前汇总</span>'; h2 = `即将上线`; sub = '上线后每个交易日美东 09:00 送达，这里会按日归档'; }
-    $('#arHead').innerHTML = `<div class="t">${tag}<h2>${h2}</h2><div class="sub">${sub}</div></div><div class="act">${act}${nav}</div>`;
+    const share = `<button class="btn ghost" type="button" id="shareBtn" title="复制这一天的链接">分享</button>${S.col === 'eve' ? '' : '<span class="ar-msg" id="msg"></span>'}`;
+    $('#arHead').innerHTML = `<div class="t">${tag}<h2>${h2}</h2><div class="sub">${sub}</div></div><div class="act">${act}${share}${nav}</div>`;
+    $('#shareBtn').onclick = async () => { try { await navigator.clipboard.writeText(location.href); flash('已复制链接'); } catch { flash('浏览器不允许复制，请手动复制地址栏'); } };
     $('#prevD').onclick = () => step(-1); $('#nextD').onclick = () => step(1);
     $$('#viewSeg button').forEach(b => b.onclick = () => { S.view = b.dataset.v; renderHead(); renderBody(); pushURL(); });
     const copy = $('#copyBtn'); if (copy) copy.onclick = async () => { const el = document.createElement('div'); el.innerHTML = A.text(S.date); try { await navigator.clipboard.writeText(el.innerText.trim()); flash('已复制文字版'); } catch { flash('浏览器不允许复制，请手动选择'); } };

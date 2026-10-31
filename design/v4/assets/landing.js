@@ -79,7 +79,7 @@
   document.querySelectorAll('.col-peek').forEach(b => b.onclick = () => {
     const id = b.dataset.peek, wrap = $('#peekWrap'), box = $('#peek');
     if (peekOpen === id) { wrap.classList.remove('open'); peekOpen = null; document.querySelectorAll('.col-peek').forEach(x => x.textContent = '看样张 ↓'); return; }
-    peekOpen = id; box.innerHTML = PEEK[id]() + `<button type="button" class="pk-x">收起</button>`; wrap.classList.add('open');
+    peekOpen = id; box.innerHTML = PEEK[id]() + `<a class="pk-more" href="daily.html?col=${id}">翻以前的 →</a><button type="button" class="pk-x">收起</button>`; wrap.classList.add('open');
     document.querySelectorAll('.col-peek').forEach(x => x.textContent = x.dataset.peek === id ? '收起样张 ↑' : '看样张 ↓');
     box.querySelector('.pk-x').onclick = () => { wrap.classList.remove('open'); peekOpen = null; document.querySelectorAll('.col-peek').forEach(x => x.textContent = '看样张 ↓'); };
     wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
