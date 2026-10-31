@@ -10,7 +10,8 @@ const { RoundedBoxGeometry } = await import('three/addons/geometries/RoundedBoxG
 const { RoomEnvironment } = await import('three/addons/environments/RoomEnvironment.js');
 
 
-const { buildObject, buildCoin, mix } = await window.CLAY;
+const { buildObject, buildCoin, mix, buildRobin, mat } = await window.CLAY;
+const { RoundedBoxGeometry: RBG } = await import('three/addons/geometries/RoundedBoxGeometry.js');
 const W = '#ffffff';
 
 function buildCandles() {
@@ -61,6 +62,19 @@ function initHeroScene(canvas, opts) {
   const coinSpots = [['NVDA', -180, 300, 120, '#1296f0'], ['MU', -335, 40, 100, '#5b4cff'], ['TSM', 330, 10, 140, '#5b4cff']];
   const coins = coinSpots.map(([t, x, y, z, col], i) => add(buildCoin(CL.byT[t], col), x, y, z, 1, 0, 0, 480 + i * 90));
 
+  // 小更的飞行路线（单位≈像素，相对手机中心；手机左上角约在 (-165, 345)）
+  const robin = buildRobin(); robin.group.scale.setScalar(1.7); root.add(robin.group);
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  const PERCH = V(-385, 215, 200);
+  const FLY = [
+    { c: new THREE.CubicBezierCurve3(V(-900, 480, 120), V(-700, 560, 260), V(-480, 260, 260), PERCH), d: 2.6 },
+    { at: PERCH, d: 1.4, face: .5, deliver: true },
+    { c: new THREE.CubicBezierCurve3(PERCH, V(-200, 470, 260), V(300, 520, 140), V(900, 470, -40)), d: 2.8 },
+    { at: V(900, 470, -40), d: 5.5, face: 0 },
+  ];
+  const fly = { i: 0, t: 0 };
+  robin.group.position.copy(FLY[0].c.getPoint(0));
+
   // ---------- 交互 ----------
   const ptr = { x: 0, y: 0, tx: 0, ty: 0 }, drag = { on: false, x0: 0, spin: 0, v: 0, t: 0 };
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
@@ -106,6 +120,17 @@ function initHeroScene(canvas, opts) {
       it.children[0].rotation.y = u.ry + Math.sin(t * .4 + u.phase) * .12 + drag.spin * .02;
       if (u.flip) { u.flip = Math.max(u.flip - dt * 1.4, 0); it.children[0].rotation.y = u.ry + (1 - u.flip) * Math.PI * 2; }
     });
+    // 小更：飞来 → 在手机左上角悬停投信（触发推送）→ 飞走 → 过一会儿再来
+    robin.tick(t, dt);
+    fly.t += dt;
+    const seg = FLY[fly.i], k = Math.min(fly.t / seg.d, 1), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+    if (seg.c) { const p = seg.c.getPoint(e); robin.group.position.copy(p); const q = seg.c.getPoint(Math.min(e + .03, 1)); if (q.distanceTo(p) > .5) robin.group.lookAt(q.x, p.y, q.z); }
+    else { robin.group.position.copy(seg.at); robin.group.position.y += Math.sin(t * 3) * 4; robin.group.rotation.y += (seg.face - robin.group.rotation.y) * .1; }
+    robin.flying = !!seg.c; robin.envelope.visible = fly.i < 2;
+    if (k >= 1) {
+      if (seg.deliver && opts.onDeliver) { const v = robin.group.getWorldPosition(new THREE.Vector3()).project(camera); opts.onDeliver((v.x + 1) / 2 * canvas.clientWidth, (1 - v.y) / 2 * canvas.clientHeight); }
+      fly.i = (fly.i + 1) % FLY.length; fly.t = 0;
+    }
     renderer.render(scene, camera);
     if (visible) requestAnimationFrame(tick);
   }
@@ -113,5 +138,46 @@ function initHeroScene(canvas, opts) {
   return { resize };
 }
 
-return { initHeroScene };
+// ---------- 订阅区：小更和邮筒；订阅成功后衔信飞走 ----------
+function initMascot(canvas) {
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NeutralToneMapping;
+  const scene = new THREE.Scene();
+  scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), .04).texture;
+  scene.add(new THREE.HemisphereLight('#ffffff', '#d9d4ff', 1.1));
+  const key = new THREE.DirectionalLight('#ffffff', 1.5); key.position.set(-200, 400, 300); scene.add(key);
+  const camera = new THREE.PerspectiveCamera(30, 1, 10, 4000); camera.position.set(-140, 170, 600); camera.lookAt(10, 70, 0);
+  const g = new THREE.Group(); scene.add(g);
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(150, 160, 22, 64), mat('#efedff')); base.position.y = -11; g.add(base);
+  // 邮筒：柱子 + 圆顶信箱 + 投信口 + 小旗
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 80, 16), mat('#c9c3ff')); post.position.set(60, 40, -20); g.add(post);
+  const box = new THREE.Mesh(new RBG(80, 56, 58, 4, 16), mat('#5b4cff')); box.position.set(60, 104, -20); g.add(box);
+  const slot = new THREE.Mesh(new RBG(40, 6, 4, 2, 2), mat('#2b2d5c')); slot.position.set(60, 112, 10); g.add(slot);
+  const flag = new THREE.Group(); flag.position.set(102, 104, -20); g.add(flag);
+  const pole = new THREE.Mesh(new THREE.BoxGeometry(4, 50, 4), mat('#ff6b2c')); pole.position.y = 22; flag.add(pole);
+  const cloth = new THREE.Mesh(new RBG(22, 14, 3, 2, 1), mat('#ff6b2c')); cloth.position.set(11, 40, 0); flag.add(cloth);
+  const robin = buildRobin(); robin.group.scale.setScalar(1.75); robin.group.position.set(-40, 62, 30); robin.group.rotation.y = .5; g.add(robin.group);
+  let away = 0, t0 = performance.now(), last = t0, visible = false;
+  addEventListener('cl-subscribed', () => { away = .001; });
+  function resize() { const w = canvas.clientWidth, h = canvas.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+  resize(); addEventListener('resize', resize);
+  new IntersectionObserver(es => { const v = es[0].isIntersecting; if (v && !visible) { visible = true; last = performance.now(); requestAnimationFrame(tick); } visible = v; }).observe(canvas);
+  function tick(now) {
+    const dt = Math.max(0, Math.min((now - last) / 1000, .05)); last = now; const t = (now - t0) / 1000;
+    robin.tick(t, dt);
+    g.rotation.y = Math.sin(t * .4) * .25;
+    flag.rotation.z = away ? Math.max(flag.rotation.z - dt * 2, -1.4) : 0;
+    if (away) { // 起飞，绕一圈飞出画面，3 秒后回到原位
+      away += dt; robin.flying = true;
+      const k = away / 2.6;
+      robin.group.position.set(-40 + Math.sin(k * 3) * 160 + k * 220, 62 + k * 260, 30 - k * 120);
+      robin.group.rotation.y = .5 + k * 2;
+      if (away > 4.2) { away = 0; robin.flying = false; robin.group.position.set(-40, 62, 30); robin.group.rotation.y = .5; }
+    }
+    renderer.render(scene, camera);
+    if (visible) requestAnimationFrame(tick);
+  }
+}
+
+return { initHeroScene, initMascot };
 })();

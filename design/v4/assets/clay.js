@@ -162,5 +162,101 @@ const STATIONS = {
   },
 };
 
-return { THREE, RoundedBoxGeometry, mat, claySet, fromDraw, buildObject, buildCoin, logoTexture, STATIONS, mix };
+// ---------- 吉祥物：小更（知更鸟，叼着"潮信"信封） ----------
+function envelopeTexture() {
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 176;
+  const g = cv.getContext('2d');
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, 256, 176);
+  g.strokeStyle = '#d9dcea'; g.lineWidth = 6; g.beginPath(); g.moveTo(0, 0); g.lineTo(128, 96); g.lineTo(256, 0); g.stroke();
+  g.strokeStyle = '#1296f0'; g.lineWidth = 9; g.lineCap = 'round'; g.beginPath();
+  for (let x = 40; x <= 216; x += 2) g.lineTo(x, 140 + Math.sin((x - 40) / 176 * Math.PI * 4) * 9); g.stroke();
+  g.fillStyle = '#5b4cff'; g.beginPath(); g.arc(128, 96, 22, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#fff'; g.font = '900 26px "Noto Sans SC", "PingFang SC", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('潮', 128, 97);
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+function buildRobin() {
+  const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  const back = mat('#9a8f9e', { roughness: .7 }), dark = mat('#7c7183', { roughness: .7 }), orange = mat('#ff8a55', { roughness: .6 }), cream = mat('#fff6ee', { roughness: .7 });
+  const amber = mat('#f5a314', { roughness: .45 }), eye = mat('#16172a', { roughness: .15 }), shine = mat('#ffffff', { roughness: .1 });
+  const sph = (r, m, x, y, z, sx, sy, sz) => { const o = new THREE.Mesh(new THREE.SphereGeometry(r, 32, 24), m); o.position.set(x, y, z); o.scale.set(sx || 1, sy || 1, sz || 1); return o; };
+  body.add(sph(22, back, 0, 0, 0, 1, .95, 1.08));
+  body.add(sph(17, orange, 0, -2, 10, 1, 1, .8));
+  body.add(sph(11, cream, 0, -14, 9, 1, .8, .8));
+  const tail = rbox(14, 4, 22, dark); tail.position.set(0, -4, -24); tail.rotation.x = -.55; body.add(tail);
+  const wings = [-1, 1].map(sd => { const w = new THREE.Group(); w.position.set(sd * 17, 7, -2); const m = sph(15, dark, sd * 4, -6, -2, .32, .78, 1.05); w.add(m); body.add(w); w.userData.sd = sd; return w; });
+  [-1, 1].forEach(sd => { const leg = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.4, 11, 8), amber); leg.position.set(sd * 6, -25, 3); body.add(leg); const foot = rbox(6, 2, 8, amber); foot.position.set(sd * 6, -30.5, 5); body.add(foot); });
+  const head = new THREE.Group(); head.position.set(0, 19, 4); body.add(head);
+  head.add(sph(15, back, 0, 0, 0)); head.add(sph(11.5, orange, 0, -3, 7.5, 1, 1, .8));
+  const eyes = [-1, 1].map(sd => { const e = sph(3.1, eye, sd * 6.2, 3, 11.6); head.add(e); head.add(sph(1, shine, sd * 6.2 + .9, 4.2, 14.3)); return e; });
+  const beak = new THREE.Mesh(new THREE.ConeGeometry(3.2, 9, 16), amber); beak.rotation.x = Math.PI / 2; beak.position.set(0, -1, 16.5); head.add(beak);
+  const env = new THREE.Group(); env.position.set(0, -5, 23); env.rotation.set(.25, 0, -.12); head.add(env);
+  const envMat = [mat('#ffffff'), mat('#ffffff'), mat('#ffffff', { map: envelopeTexture() }), mat('#ffffff'), mat('#ffffff'), mat('#ffffff')];
+  const envMesh = new THREE.Mesh(new RoundedBoxGeometry(30, 2.4, 21, 2, 1), envMat); env.add(envMesh);
+  let blink = 2;
+  return {
+    group: root, head, envelope: env, flying: false,
+    tick(t, dt) {
+      const f = this.flying;
+      wings.forEach(w => { w.rotation.z = w.userData.sd * (f ? Math.sin(t * 22) * .9 + .3 : Math.sin(t * 2) * .05); w.rotation.x = f ? -.2 : 0; });
+      body.position.y = f ? Math.sin(t * 11) * 2 : Math.abs(Math.sin(t * 2.2)) * 1.5;
+      head.rotation.z = f ? 0 : Math.sin(t * .9) * .14;
+      head.rotation.x = f ? -.1 : Math.sin(t * .6) * .06;
+      blink -= dt; const closed = blink < .12; eyes.forEach(e => { e.scale.y = closed ? .15 : 1; }); if (blink < 0) blink = 2.5 + Math.random() * 2.5;
+    },
+  };
+}
+
+// ---------- 产业链货物：逐站变形（矿石 → 金属锭 → 芯片 → 光模块 → 服务器 → GPU → 云 → 应用） ----------
+const CARGO = (() => {
+  const L = CL.layers, t = [];
+  const add = (fn) => { const g = new THREE.Group(); fn(g); g.traverse(o => { if (o.isMesh) o.castShadow = true; }); t.push(g); };
+  const c = i => L[i].color;
+  add(g => { const m = new THREE.Mesh(new THREE.DodecahedronGeometry(13, 0), mat(mix(c(0), '#8e91a7', .35), { flatShading: true, roughness: .8 })); m.position.y = 11; g.add(m); });
+  add(g => { const m = rbox(32, 12, 15, mat('#f5c451', { roughness: .3, metalness: .35 })); m.position.y = 6; g.add(m); });
+  add(g => { const b = rbox(26, 5, 26, mat(mix(c(2), W, .45))); b.position.y = 3; g.add(b); const k = rbox(14, 3, 14, mat(mix(c(2), W, .1))); k.position.y = 7; g.add(k);
+    for (let i = 0; i < 4; i++) { const p = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 30), mat(mix(c(2), INK, .1))); p.position.set(-9 + i * 6, 2, 0); g.add(p); } });
+  add(g => { const b = rbox(30, 10, 15, mat(mix(c(3), W, .35))); b.position.y = 5; g.add(b); const l = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 3.4, 4, 16), mat('#ffffff', { emissive: c(3), emissiveIntensity: .9 })); l.rotation.z = Math.PI / 2; l.position.set(17, 5, 0); g.add(l); });
+  add(g => { const b = rbox(30, 9, 24, mat(mix(c(4), W, .3))); b.position.y = 5; g.add(b); for (let i = 0; i < 3; i++) { const d = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.4, 1), mat('#ffffff', { emissive: '#34d399', emissiveIntensity: 1.2 })); d.position.set(-8 + i * 5, 6, 12.4); g.add(d); } });
+  add(g => { const b = rbox(32, 9, 18, mat(mix(c(5), W, .35))); b.position.y = 5; g.add(b); const f = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 2, 20), mat(mix(c(5), W, .7))); f.position.set(-5, 10, 0); g.add(f); });
+  add(g => { const m = mat('#ffffff', { roughness: .9 }); [[0, 10, 0, 10], [9, 8, 0, 7], [-9, 8, 0, 7], [0, 14, 3, 7]].forEach(([x, y, z, r]) => { const s = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), m); s.position.set(x, y, z); g.add(s); }); });
+  add(g => { const b = rbox(22, 22, 6, mat(mix(c(7), W, .25))); b.position.y = 12; g.add(b); const d = new THREE.Mesh(new THREE.SphereGeometry(4.5, 16, 12), mat('#ffffff')); d.position.set(0, 12, 3.5); g.add(d); });
+  return i => t[i].clone();
+})();
+
+// ---------- 灯塔、货船、树 ----------
+function buildLighthouse() {
+  const g = new THREE.Group();
+  const rock = mat('#c9cad8', { flatShading: true, roughness: .9 });
+  [[0, 0, 0, 90], [70, -10, 30, 50], [-60, -14, 20, 46], [20, -8, -60, 52]].forEach(([x, y, z, r]) => { const m = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 1), rock); m.position.set(x, y - r * .45, z); m.scale.y = .6; g.add(m); });
+  const pts = []; for (let i = 0; i <= 10; i++) pts.push(new THREE.Vector2(26 - i * 1.0, i * 22));
+  const tower = new THREE.Mesh(new THREE.LatheGeometry(pts, 32), mat('#ffffff')); tower.position.y = 20; g.add(tower);
+  [70, 140].forEach(y => { const b = new THREE.Mesh(new THREE.CylinderGeometry(25.5 - y / 22 + .6, 26 - y / 22 + .6, 22, 32), mat('#5b4cff')); b.position.y = 20 + y; g.add(b); });
+  const deck = new THREE.Mesh(new THREE.CylinderGeometry(26, 26, 6, 32), mat('#e9e7ff')); deck.position.y = 244; g.add(deck);
+  const lamp = new THREE.Mesh(new THREE.CylinderGeometry(13, 13, 26, 24), mat('#fff6d8', { emissive: '#ffd27a', emissiveIntensity: 1.1 })); lamp.position.y = 260; g.add(lamp);
+  const cap = new THREE.Mesh(new THREE.ConeGeometry(18, 22, 24), mat('#5b4cff')); cap.position.y = 284; g.add(cap);
+  const beam = new THREE.Mesh(new THREE.ConeGeometry(60, 520, 32, 1, true), new THREE.MeshBasicMaterial({ color: '#fff3c4', transparent: true, opacity: .16, side: THREE.DoubleSide, depthWrite: false }));
+  beam.geometry.translate(0, -260, 0); beam.rotation.z = Math.PI / 2; const pivot = new THREE.Group(); pivot.position.y = 260; pivot.add(beam); g.add(pivot);
+  return { group: g, top: new THREE.Vector3(0, 300, 0), tick(t) { pivot.rotation.y = t * .9; lamp.material.emissiveIntensity = 1 + Math.sin(t * 3) * .25; } };
+}
+function buildShip() {
+  const g = new THREE.Group();
+  const hull = rbox(170, 30, 52, mat('#2b6cf2', { roughness: .5 })); hull.position.y = 4; g.add(hull);
+  const deck = rbox(176, 6, 56, mat('#ffffff')); deck.position.y = 22; g.add(deck);
+  const cab = rbox(30, 34, 40, mat('#ffffff')); cab.position.set(-62, 42, 0); g.add(cab);
+  const win = rbox(31, 6, 34, mat('#bfe2ff', { roughness: .2 })); win.position.set(-62, 50, 0); g.add(win);
+  const stack = new THREE.Mesh(new THREE.CylinderGeometry(6, 7, 22, 16), mat('#ff6b2c')); stack.position.set(-70, 68, 0); g.add(stack);
+  CL.layers.forEach((L, i) => { const c = rbox(26, 18, 20, mat(mix(L.color, W, .25))); c.position.set(-28 + (i % 4) * 28, 34 + Math.floor(i / 4) * 19, i % 2 ? 10 : -10); g.add(c); });
+  g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  return g;
+}
+function buildTree(scale) {
+  const g = new THREE.Group();
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(4, 6, 30, 10), mat('#c9b8a6')); trunk.position.y = 15; g.add(trunk);
+  const leaf = mat('#a8e6cf', { roughness: .8 }), leaf2 = mat('#8fd8c8', { roughness: .8 });
+  [[0, 44, 0, 26, leaf], [12, 36, 6, 18, leaf2], [-12, 38, -4, 18, leaf2], [0, 60, 2, 16, leaf]].forEach(([x, y, z, r, m]) => { const s = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 14), m); s.position.set(x, y, z); g.add(s); });
+  g.scale.setScalar(scale || 1); g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  return g;
+}
+
+return { THREE, RoundedBoxGeometry, mat, claySet, fromDraw, buildObject, buildCoin, logoTexture, STATIONS, mix, buildRobin, CARGO, buildLighthouse, buildShip, buildTree };
 })();

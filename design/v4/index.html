@@ -138,7 +138,7 @@
             <div class="sub-ok">✓ 已发送确认邮件（设计稿演示）</div>
           </div>
         </div>
-        <div class="art" id="ctaArt"></div>
+        <div class="art mascot"><canvas id="mascot"></canvas><div class="mascot-cap"><b>我是小更</b>每天替潮信送信。订阅后，我第一个出发。</div></div>
       </div>
     </section>
 
@@ -174,8 +174,15 @@
 <script>
 (async () => {
   const rig = document.getElementById('rig'), tip = document.getElementById('coinTip');
-  const { initHeroScene } = await HERO;
+  const { initHeroScene, initMascot } = await HERO;
   initHeroScene(document.getElementById('scene'), {
+    onDeliver(x, y) { // 小更投信：在它身边弹出气泡（气泡在 3D 结构之外）
+      const st = document.getElementById('stage'), cv = document.getElementById('scene');
+      const b = document.createElement('div'); b.className = 'deliver';
+      b.innerHTML = '<span>📮</span>新潮信已送达';
+      b.style.left = (x + cv.offsetLeft + 60) + 'px'; b.style.top = (y + cv.offsetTop - 60) + 'px';
+      st.appendChild(b); setTimeout(() => b.remove(), 2600);
+    },
     host: document.getElementById('stage'),
     offsetX: () => 40,
     onTilt(x, y, spin) { rig.style.setProperty('--ry', (-18 + x * 10 + spin * .5) + 'deg'); rig.style.setProperty('--rx', (7 - y * 6) + 'deg'); },
@@ -185,6 +192,7 @@
       tip.style.left = (e.clientX + 16) + 'px'; tip.style.top = (e.clientY - 46) + 'px'; tip.classList.add('show');
     },
   });
+  if (!window.__noMascot) initMascot(document.getElementById('mascot'));
   const { initIsland } = await ISLAND;
   window.LP.island(initIsland);
   const { initBoard } = await BOARD;

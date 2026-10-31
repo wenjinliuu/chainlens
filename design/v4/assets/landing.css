@@ -101,9 +101,9 @@
 .phone .island { position: absolute; top: 10px; left: 50%; width: 96px; height: 28px; margin-left: -48px; border-radius: 20px; background: #0d0f1c; z-index: 3; }
 .phone .status { position: absolute; top: 0; left: 0; right: 0; height: 46px; z-index: 2; display: flex; align-items: center; justify-content: space-between; padding: 0 26px 0 30px;
   font-family: var(--num); font-weight: 800; font-size: 13px; color: #16172a; background: linear-gradient(#fff 60%, rgba(255,255,255,0)); }
-.phone .feed { position: absolute; left: 0; top: 0; animation: feed 26s cubic-bezier(.45, 0, .55, 1) 1.6s infinite alternate; }
+.phone .feed { position: absolute; inset: 0; overflow: hidden; scrollbar-width: none; } /* 用 JS 改 scrollTop 自动滚动，比在 3D 变换里做平移动画更稳 */
+.phone .feed::-webkit-scrollbar { display: none; }
 .phone .feed-z { zoom: .287; }
-.phone:hover .feed { animation-play-state: paused; }
 @keyframes feed { 0%, 8% { translate: 0 0; } 92%, 100% { translate: 0 calc(-1 * var(--travel, 2400px)); } }
 .toast { position: absolute; left: -150px; top: 64px; width: 330px; padding: 12px 14px; border-radius: 22px; display: flex; gap: 11px; align-items: center;
   background: rgba(255, 255, 255, .9); border: 1.5px solid var(--line); box-shadow: 0 24px 50px -16px rgba(60, 50, 160, .3); backdrop-filter: blur(14px);
@@ -380,3 +380,16 @@
   .ip-row { padding: 6px 0; font-size: 12.5px; }
   .samples.three .sample .kp { transform: translateX(-50%) scale(.3); }
 }
+
+/* 小更投信时的气泡 */
+.deliver { position: absolute; z-index: 6; transform: translate(-50%, -100%); display: flex; align-items: center; gap: 6px; white-space: nowrap; padding: 7px 13px 7px 9px;
+  border-radius: 999px; background: #fff; border: 1.5px solid var(--line); box-shadow: 0 14px 30px -14px rgba(60,50,160,.35); font-size: 13px; font-weight: 800; color: var(--accent-deep);
+  animation: deliver 2.6s var(--ease) forwards; pointer-events: none; }
+.deliver span { font-size: 16px; }
+@keyframes deliver { 0% { opacity: 0; translate: 0 10px; scale: .7; } 12% { opacity: 1; translate: 0 0; scale: 1.05; } 20% { scale: 1; } 80% { opacity: 1; translate: 0 -8px; } 100% { opacity: 0; translate: 0 -22px; } }
+/* 订阅区的小更 */
+.cta .art.mascot { position: relative; width: 420px; height: 360px; justify-self: end; }
+.cta .art.mascot canvas { position: absolute; inset: -20px; width: calc(100% + 40px); height: calc(100% + 40px); }
+.mascot-cap { position: absolute; left: 10px; bottom: 0; padding: 10px 14px; border-radius: 18px; background: var(--card); border: 1.5px solid var(--line); font-size: 13px; color: var(--ink2); max-width: 240px; line-height: 1.6; }
+.mascot-cap b { display: block; font-family: var(--title); font-weight: 900; font-size: 16px; color: var(--ink); }
+@media (max-width: 1100px) { .cta .art.mascot { justify-self: center; width: 320px; height: 300px; } }

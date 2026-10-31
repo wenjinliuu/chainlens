@@ -4,7 +4,7 @@
   const LP = window.LP = {};
 
   // ---------- 订阅（设计稿演示：只切换状态，不发送） ----------
-  LP.subscribe = form => { form.closest('.sub-wrap').classList.add('sub-done'); return false; };
+  LP.subscribe = form => { form.closest('.sub-wrap').classList.add('sub-done'); dispatchEvent(new Event('cl-subscribed')); return false; };
   addEventListener('scroll', () => $('#nav').classList.toggle('scrolled', scrollY > 10), { passive: true });
   const { mix } = ISO;
   const deep = c => mix(c, '#000000', .18);
@@ -83,9 +83,19 @@
   // ---------- 手机里自动滚动的日报 ----------
   const feed = $('#feed');
   feed.innerHTML = `<div class="feed-z">${renderPoster()}</div>`;
-  const fitFeed = () => feed.style.setProperty('--travel', Math.max(feed.offsetHeight - feed.parentElement.clientHeight + 24, 0) + 'px');
-  requestAnimationFrame(fitFeed);
-  document.fonts && document.fonts.ready.then(fitFeed);
+  // 手机里的海报：在容器里来回慢慢滚动（停 2 秒 → 13 秒滚到底 → 停 2 秒 → 滚回），鼠标放上去暂停
+  let fT = 0, fLast = performance.now(), fHover = false;
+  feed.parentElement.addEventListener('pointerenter', () => fHover = true);
+  feed.parentElement.addEventListener('pointerleave', () => fHover = false);
+  (function scrollFeed(now) {
+    const dt = Math.max(0, Math.min((now - fLast) / 1000, .05)); fLast = now;
+    if (!fHover) fT += dt;
+    const max = feed.scrollHeight - feed.clientHeight, cyc = 30, k = fT % cyc;
+    const ph = k < 2 ? 0 : k < 15 ? (k - 2) / 13 : k < 17 ? 1 : 1 - (k - 17) / 13;
+    const e = ph < .5 ? 2 * ph * ph : 1 - Math.pow(-2 * ph + 2, 2) / 2;
+    if (max > 0) feed.scrollTop = Math.round(max * e);
+    requestAnimationFrame(scrollFeed);
+  })(fLast);
 
   // ---------- 拆开日报 ----------
   const STEPS = [
@@ -176,8 +186,6 @@
     ${RR.map(([t, f, rt, a, b, pts]) => { const c = CL.byT[t], col = CL.layers[c.li].color, up = b >= a; return `<div class="rr-item"><div class="rr-h">${badge(c, 30, col)}<b class="num">${t}</b><span>${f} · ${rt}</span><span class="pill ${up ? 'bull' : 'bear'}">${a} → ${b}</span></div><ul>${pts.map(x => `<li>${x}</li>`).join('')}</ul></div>`; }).join('')}
     <div class="rr-f">摘要整理自机构公开报告，不构成投资建议</div></div>`);
 
-  // ---------- 订阅区插画 ----------
-  (() => { const B = new ISO.Iso(); ISO.DRAW.robot.fn(B, ISO.palette('#5b4cff', 'light')); $('#ctaArt').innerHTML = `<svg viewBox="-170 -260 360 360" width="380">${B.out()}</svg>`; })();
 
   // ---------- 进入视口时淡入 ----------
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); if (e.target.id === 'flow') e.target.style.setProperty('--p', 1); } }), { threshold: .2 });
