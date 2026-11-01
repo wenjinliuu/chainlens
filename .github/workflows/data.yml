@@ -1,10 +1,10 @@
 # 潮信 · 每日数据更新：拉 kzg 的最新期权日报 → 汇总静态 JSON → 提交回仓库 → 触发 deploy 工作流重新构建
 # 需要 Secrets：KZG_BASE（期权日报 Worker 地址）、KZG_KEY（访问密钥）。没配时整条跳过，不报错。
-# 周一到周五北京时间 16:10（UTC 08:10）跑一次，比期权日报 15:40 送达晚半小时；也可手动触发并指定日期。
+# 周二到周六北京时间 16:10（UTC 08:10）跑一次——期权日报在北京时间周二至周六 15:40 送达（分析美东前一个交易日）；也可手动触发并指定日期。
 name: data
 on:
   schedule:
-    - cron: '10 8 * * 1-5'
+    - cron: '10 8 * * 2-6'
   workflow_dispatch:
     inputs:
       date: { description: '交易日 YYYY-MM-DD（留空 = 最新）', required: false, default: '' }

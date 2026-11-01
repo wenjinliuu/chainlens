@@ -2,7 +2,7 @@
  * 潮信 · Cloudflare Worker：静态站 + 订阅 API（免费额度：Workers 请求 + D1）
  * /api/subscribe   POST {email, cols[], watch[], hp}   → 记 pending、发确认邮件（double opt-in）
  * /api/resend      POST {email}                        → 重发确认邮件（10 分钟内只发一次）
- * /api/confirm     GET  ?token=                        → 确认订阅，跳 /subscribe.html?state=confirmed
+ * /api/confirm     GET  ?token=                        → 确认订阅，跳 /subscribe?state=confirmed
  * /api/prefs       GET  ?token= / POST {token, cols, watch, deliverAt, format}
  * /api/unsubscribe GET  ?token= （邮件里的一键退订）/ POST {token, keep?: cols[]}（只保留部分栏目）
  * 其它路径交给静态资源。邮箱只存在 D1，不进日志；没有 RESEND_KEY 时邮件只记日志不发（本地开发用）。
@@ -59,12 +59,12 @@ async function api(request, env, url) {
   }
   if (path === '/api/confirm' && method === 'GET') {
     const r = await byToken(url.searchParams.get('token'));
-    if (!r) return redirect(`${site(env)}/subscribe.html?state=expired`);
+    if (!r) return redirect(`${site(env)}/subscribe?state=expired`);
     if (r.status !== 'confirmed') {
-      if (r.confirm_sent_at && Date.now() - Date.parse(r.confirm_sent_at) > CONFIRM_TTL) return redirect(`${site(env)}/subscribe.html?state=expired&email=${encodeURIComponent(r.email)}`);
+      if (r.confirm_sent_at && Date.now() - Date.parse(r.confirm_sent_at) > CONFIRM_TTL) return redirect(`${site(env)}/subscribe?state=expired&email=${encodeURIComponent(r.email)}`);
       await DB.prepare('UPDATE subscribers SET status = ?, confirmed_at = ?, unsub_at = NULL WHERE id = ?').bind('confirmed', now(), r.id).run();
     }
-    return redirect(`${site(env)}/subscribe.html?state=confirmed&token=${r.token}&email=${encodeURIComponent(r.email)}`);
+    return redirect(`${site(env)}/subscribe?state=confirmed&token=${r.token}&email=${encodeURIComponent(r.email)}`);
   }
   if (path === '/api/prefs' && method === 'GET') {
     const r = await byToken(url.searchParams.get('token')); if (!r) return json({ ok: false, error: '链接失效' }, 404);
@@ -79,11 +79,11 @@ async function api(request, env, url) {
   }
   if (path === '/api/unsubscribe' && (method === 'GET' || method === 'POST')) {
     const tk = method === 'GET' ? url.searchParams.get('token') : body && body.token;
-    const r = await byToken(tk); if (!r) return method === 'GET' ? redirect(`${site(env)}/unsubscribe.html?state=expired`) : json({ ok: false, error: '链接失效' }, 404);
+    const r = await byToken(tk); if (!r) return method === 'GET' ? redirect(`${site(env)}/unsubscribe?state=expired`) : json({ ok: false, error: '链接失效' }, 404);
     const keep = method === 'POST' ? cleanCols(body.keep) : [];
     if (keep.length) { await DB.prepare('UPDATE subscribers SET cols = ? WHERE id = ?').bind(keep.join(','), r.id).run(); return json({ ok: true, state: 'kept', cols: keep }); }
     await DB.prepare('UPDATE subscribers SET status = ?, unsub_at = ? WHERE id = ?').bind('unsubscribed', now(), r.id).run();
-    return method === 'GET' ? redirect(`${site(env)}/unsubscribe.html?done=1&email=${encodeURIComponent(r.email)}`) : json({ ok: true, state: 'unsubscribed' });
+    return method === 'GET' ? redirect(`${site(env)}/unsubscribe?done=1&email=${encodeURIComponent(r.email)}`) : json({ ok: true, state: 'unsubscribed', email: r.email });
   }
   if (path === '/api/health') return json({ ok: true, t: now() });
   return json({ ok: false, error: 'not found' }, 404);

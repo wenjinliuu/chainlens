@@ -27,6 +27,7 @@
     for (let i = 0; i < 40; i++) { const e = document.createElement('i'); e.style.left = Math.random() * 100 + '%'; e.style.background = cols[i % cols.length]; e.style.animationDelay = Math.random() * .8 + 's'; e.style.transform = `rotate(${Math.random() * 360}deg)`; box.appendChild(e); }
   }
   const LIVE = location.protocol !== 'file:', qs = new URLSearchParams(location.search), tokenQ = qs.get('token');
+  if (LIVE) { $$('.nav-right .disclaimer, .sb-demo').forEach(el => { el.hidden = true; }); }   // 站点下不显示"设计稿演示"字样和状态开关
   const COL_ID = { '期权日报': 'eve', '研报日报': 'rr', '盘前汇总': 'morn', '专栏报告': 'col', '周报': 'week' };
   const api = (path, body) => fetch(path, { method: body ? 'POST' : 'GET', headers: { 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : undefined }).then(r => r.json());
   const chipsOf = box => [...box.querySelectorAll('.cp-chip.on b')].map(b => COL_ID[b.textContent.trim()]).filter(Boolean);
@@ -42,6 +43,7 @@
   // 站点下带 token 打开：拉偏好填进表单
   if (LIVE && tokenQ && $('#pickC')) api('/api/prefs?token=' + encodeURIComponent(tokenQ)).then(j => { if (!j.ok) return;
     $$('#emailA, #emailB, #emailC').forEach(el => el.textContent = j.email); setChips($('#pickC'), j.cols); setChips($('#pickB'), j.cols);
+    if ($('#sinceC')) $('#sinceC').textContent = j.since; if ($('#sentC')) $('#sentC').textContent = j.sent;
     const wk = $('#pickC').parentElement.querySelector('.pf-row input'); if (wk) wk.checked = j.cols.includes('week');
     document.querySelectorAll('input[name=tm]')[j.deliverAt === 'morning' ? 1 : 0].checked = true; document.querySelectorAll('input[name=fm]')[j.format === 'text' ? 1 : 0].checked = true;
     window.__watchList && window.__watchList(j.watch); }).catch(() => {});
@@ -66,7 +68,7 @@
     let keep = null;
     un.onclick = () => {
       if (!LIVE || !tokenQ) { showDone(); return; }
-      un.disabled = true; api('/api/unsubscribe', { token: tokenQ, keep: keep || [] }).then(j => { if (!j.ok) throw new Error(j.error); if (j.state === 'kept') { un.textContent = '✓ 已改为只保留：' + j.cols.map(c => ({ eve: '期权日报', rr: '研报日报', morn: '盘前汇总', week: '周报', col: '专栏报告' })[c]).join('、'); } else showDone(); }).catch(e => { un.disabled = false; alert('没成功：' + (e.message || '稍后再试')); });
+      un.disabled = true; api('/api/unsubscribe', { token: tokenQ, keep: keep || [] }).then(j => { if (!j.ok) throw new Error(j.error); if (j.state === 'kept') { un.textContent = '✓ 已改为只保留：' + j.cols.map(c => ({ eve: '期权日报', rr: '研报日报', morn: '盘前汇总', week: '周报', col: '专栏报告' })[c]).join('、'); } else { if (j.email) $$('#done p b').forEach(el => el.textContent = j.email); showDone(); } }).catch(e => { un.disabled = false; alert('没成功：' + (e.message || '稍后再试')); });
     };
     if (qs.get('done') === '1') showDone();
     const em = qs.get('email'); if (em) $$('#ask p b, #done p b').forEach(el => el.textContent = em);
