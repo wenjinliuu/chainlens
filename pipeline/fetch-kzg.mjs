@@ -109,6 +109,23 @@ export function mapWeek(wk, rep) {
   return { mon, fri, sun, label: `${+mon.slice(5, 7)}月第 ${Math.ceil(+mon.slice(8, 10) / 7)} 周`, range: `${md(mon)} – ${md(fri)}`, dir, avg: r1(avg, 2), bullSeg, bearSeg, segs, strongest, persist, days, next,
     headline: rep?.headline || null, summary: rep?.summary || null, themes: rep?.themes || [] };
 }
+// ---------- 镇上数据：数据面 + 判断 JSON → town/{date}.json（契约见 docs/town-plan.md 第 4 节） ----------
+// layerHeat 用数据面 layers（按层的 segmentStats）；公司当日量倍数用 ai.changed / calm 的 volX；涨跌用 px（{SYM: [[日期, 收盘价]…]}，可选）；
+// 信号：进了判断 JSON 的 picks / watch 的票标 o；研报信号由研报 fetcher 另行合并
+const WX = { '偏乐观': 'sunny', '中性': 'cloudy', '偏谨慎': 'rain' };
+export function mapTown(daily, a, px) {
+  const layerHeat = {}; for (const l of a.layers || []) if (fin(l.heatX)) layerHeat[l.layer || l.seg] = r1(l.heatX);
+  const companies = {};
+  for (const m of [...(a.ai?.changed || []), ...(a.ai?.calm || [])]) {
+    let chg = null; const ser = px && px[m.sym]; if (Array.isArray(ser) && ser.length >= 2) { const [, c1] = ser[ser.length - 1], [, c0] = ser[ser.length - 2]; if (c0 > 0) chg = r1((c1 / c0 - 1) * 100, 2); }
+    companies[m.sym] = { chg, vx: r1(m.volX), signals: [] };
+  }
+  const towers = {};
+  for (const p of daily.picks || []) { towers[p.t] = { dir: p.dir, conf: p.conf, flag: true, lamp: p.conf === '高' }; if (companies[p.t]) companies[p.t].signals.push('o'); }
+  for (const t of daily.watch || []) if (companies[t] && !companies[t].signals.includes('o')) companies[t].signals.push('o');
+  return { date: daily.date, weather: WX[daily.mood] || 'cloudy', mood: daily.mood, segHeat: Object.fromEntries(daily.heat.map(h => [h[0], h[1]])), layerHeat, companies, towers,
+    boards: daily.heat.map(h => ({ seg: h[0], t: h[2].split(' ')[0] })), bus: [], blimp: '' };
+}
 const addDays = (s, n) => new Date(Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10) + n)).toISOString().slice(0, 10);
 
 // ---------- CLI ----------
@@ -119,7 +136,7 @@ async function main() {
   const write = (f, o) => { mkdirSync(dirname(join(out, f)), { recursive: true }); writeFileSync(join(out, f), JSON.stringify({ v: 1, gen: GEN, disclaimer: DISC, ...o }, null, 2) + '\n'); console.log('写入', join(out, f)); };
   if (get('--from')) {
     const i = args.indexOf('--from'); const report = JSON.parse(readFileSync(resolve(args[i + 1]), 'utf8')); const brief = args[i + 2] && !args[i + 2].startsWith('--') ? JSON.parse(readFileSync(resolve(args[i + 2]), 'utf8')) : null;
-    const d = mapDaily(report.mood ? report : null, brief || report); write(`daily/${d.date}.json`, d); return;
+    const d = mapDaily(report.mood ? report : null, brief || report); write(`daily/${d.date}.json`, d); write(`town/${d.date}.json`, mapTown(d, (report.mood ? report.data : null) || brief || report, null)); return;
   }
   const BASE = process.env.KZG_BASE, KEY = process.env.KZG_KEY;
   if (!BASE || !KEY) { console.error('需要环境变量 KZG_BASE、KZG_KEY（或用 --from 本地文件）'); process.exit(1); }
@@ -128,6 +145,8 @@ async function main() {
     const date = get('--date');
     const report = await fetchJson(`/report.json?date=${date}`, true), brief = await fetchJson(`/brief.json?date=${date}`);
     const d = mapDaily(report, brief); write(`daily/${date}.json`, d);
+    const px = await fetchJson(`/px.json?syms=${encodeURIComponent(d.picks.map(p => p.t).join(','))}&days=2`, true);
+    write(`town/${date}.json`, mapTown(d, (report && report.data) || brief, px));
   } else if (get('--week')) {
     const mon = get('--week');
     const wk = await fetchJson(`/weekly.json?week=${mon}`), rep = await fetchJson(`/weekly-report.json?week=${mon}`, true);

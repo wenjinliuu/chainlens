@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
-import { mapDaily, mapWeek } from './fetch-kzg.mjs';
+import { mapDaily, mapWeek, mapTown } from './fetch-kzg.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const m = (sym, seg, volX, premX, cpDev, lean, baseConf, rank, hot) => ({ sym, seg, layer: '芯片', tier: 'core', volX, premX, cp: 2.1, cpBase: 1.4, cpDev, leapTrend: .2, leapZ: 1.2, lean, baseConf, rank, hot });
@@ -54,6 +54,9 @@ const checks = [
 // 只有数据面的日子
 const d2 = mapDaily(null, report.data);
 checks.push(['dataOnly', d2.dataOnly && d2.mood === '偏乐观' && d2.picks.length === 3 && d2.picks[0].t === 'LITE' && d2.events.length === 0]);
+// 镇上数据
+const tw = mapTown(d, { ...report.data, layers: [{ layer: 'chip', heatX: 1.8 }, { layer: 'net', heatX: 2.3 }] }, { LITE: [['2026-10-29', 100], ['2026-10-30', 103.1]] });
+checks.push(['town', tw.weather === 'sunny' && tw.layerHeat.net === 2.3 && tw.companies.LITE.chg === 3.1 && tw.companies.LITE.signals.includes('o') && tw.towers.LITE.lamp === true && tw.companies.MU.signals.includes('o')]);
 // 周报
 const wk = { week: '2026-10-26', from: '2026-10-26', to: '2026-10-30', cpLine: [{ date: '2026-10-27', mkt: -.14 }, { date: '2026-10-28', mkt: .06 }, { date: '2026-10-30', mkt: .15 }],
   rotation: [{ seg: '光模块', heat: 2.0, prev: 1.5 }, { seg: '存储', heat: 1.6, prev: 1.7 }, { seg: '晶圆代工', heat: 1.1, prev: 1.1 }],
@@ -66,9 +69,9 @@ checks.push(['week dir', w.dir === '中性' && w.avg === .02], ['week segs', w.s
 let bad = 0; for (const [n, ok] of checks) { console.log(`${ok ? '✓' : '✗'} ${n}`); if (!ok) bad++; }
 // 写进临时目录，跑 build-archive 的校验
 const tmp = mkdtempSync(join(tmpdir(), 'cx-'));
-for (const sub of ['daily', 'weekly']) mkdirSync(join(tmp, sub));
+for (const sub of ['daily', 'weekly', 'town']) mkdirSync(join(tmp, sub));
 const wrap = o => JSON.stringify({ v: 1, gen: 'test', disclaimer: 'test', ...o });
-writeFileSync(join(tmp, 'daily/2026-10-30.json'), wrap(d)); writeFileSync(join(tmp, 'daily/2026-10-29.json'), wrap({ ...d2, date: '2026-10-29' })); writeFileSync(join(tmp, 'weekly/2026-10-26.json'), wrap(w));
+writeFileSync(join(tmp, 'daily/2026-10-30.json'), wrap(d)); writeFileSync(join(tmp, 'daily/2026-10-29.json'), wrap({ ...d2, date: '2026-10-29' })); writeFileSync(join(tmp, 'weekly/2026-10-26.json'), wrap(w)); writeFileSync(join(tmp, 'town/2026-10-30.json'), wrap(tw));
 cpSync(join(ROOT, 'data/samples/companies.json'), join(tmp, 'companies.json'));
 try { const out = execFileSync('node', [join(ROOT, 'pipeline/build-archive.mjs'), tmp], { encoding: 'utf8' }); console.log('✓ build-archive 校验通过：' + out.trim()); }
 catch (e) { console.log('✗ build-archive 校验失败\n' + (e.stdout || '') + (e.stderr || '')); bad++; }

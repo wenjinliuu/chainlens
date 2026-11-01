@@ -9,7 +9,8 @@
 - **第 2 步已做（前端只读 JSON）**：`scripts/export-samples.mjs` 按文件导出全部 30 个交易日的期权日报 / 研报日报、6 份周报、4 篇专栏、镇上数据；`pipeline/build-archive.mjs` 校验枚举与数字字段后汇总成 `archive.json`（124 KB，前端一次读完）、`daily/index.json`、`search-index.json`、`meta.json`。`archive.js` 在站点（http）下 fetch `/data/archive.json` 原地装载（`ARCHIVE.source === 'json'`），设计稿 file:// 下仍用内置生成器；归档 / 专栏 / 公司 / 看盘 / 搜索 / 小镇都等 `ARCHIVE_READY` 再初始化。M2 的 fetcher 只需往 `data/<目录>/` 放单日文件再跑 build-archive。
 - **M2 桥接已写**：`pipeline/fetch-kzg.mjs` 把 kzg 的判断 JSON（`/report.json`，含海报数据快照）和数据面（`/brief.json`）映射成 `daily/{date}.json`，把 `/weekly.json` + `/weekly-report.json` 映射成 `weekly/{mon}.json`；不重算指标，规则固定（picks 取 group = ai、非 compact 的前 3，按可信度再按 max(量倍数, 权利金倍数)；没有判断 JSON 的日子标 `dataOnly`，情绪按 CP 偏离 ±7% 分档）。地址与密钥只从 `KZG_BASE` / `KZG_KEY` 环境变量读；`--from` 可用本地文件离线跑；`pipeline/test-fetch-kzg.mjs` 用按真实结构拼的样例做回归并过 build-archive 校验。**真实数据还没跑过**：第 11 节第 1 条（数据行字段名）要用一份真实 `report.json` 对一遍，`data/live/` 已加进 .gitignore，核对无误前不提交。
 - **小镇已读 `town/latest.json`**（`town-data.js`，见 `docs/town-plan.md` 第 4 节）；`town/{date}.json` 由 `scripts/export-samples.mjs` 生成（接真实数据后由 fetch-kzg 的数据面 + 日报 picks 生成，待补）。
-- 未做：研报卡片的 fetcher（等 ima-knowledge-mcp 的导出格式）、`town/{date}.json` 的真实数据生成、邮件（M4）、Astro 组件化拆分。
+- **研报卡片转换已写**：`pipeline/build-rr.mjs` 按第 6 节规则把卡片（JSON / JSONL，字段按 ima-knowledge-mcp 的导出约定）转成 `rr/{date}.json`，英文评级有别名表，不在名单内的票丢弃，要点最多 3 条、40 字截断；导出格式定下来后只改 `norm()`。`fetch-kzg --date` 同时产出 `town/{date}.json`（层热度、公司量倍数与涨跌、楼的信号）。
+- 未做：真实数据跑通、邮件（M4）、Astro 组件化拆分。
 
 ## 0. 目标与范围
 

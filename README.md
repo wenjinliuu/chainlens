@@ -59,8 +59,9 @@ pnpm preview   # 本地预览
 ```bash
 KZG_BASE=https://… KZG_KEY=… node pipeline/fetch-kzg.mjs --date 2026-10-30 --out data/live   # 期权日报 → daily/{date}.json
 KZG_BASE=… KZG_KEY=… node pipeline/fetch-kzg.mjs --week 2026-10-26 --out data/live            # 周报 → weekly/{mon}.json
-node pipeline/build-archive.mjs data/live     # 校验并汇总 archive.json / daily/index.json / search-index.json / meta.json
-node pipeline/test-fetch-kzg.mjs              # 映射的离线回归
+node pipeline/build-rr.mjs cards.json --out data/live                                        # 研报卡片 → rr/{date}.json
+node pipeline/build-archive.mjs data/live     # 校验并汇总 archive.json / daily/index.json / search-index.json / meta.json / town/latest.json
+node pipeline/test-fetch-kzg.mjs && node pipeline/test-build-rr.mjs   # 映射的离线回归
 ```
 
 地址与密钥只从环境变量读；`data/live/` 不进仓库。辅助脚本：`node scripts/compliance-scan.mjs`（文案合规扫描）、`node scripts/export-samples.mjs`（导出示例 JSON 到 `data/samples/`）。

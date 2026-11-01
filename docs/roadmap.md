@@ -26,7 +26,7 @@
 
 ## M2 · 接入真实数据
 - [~] pipeline：读取 kzg-option-brief 期权结果 → 日报 / 周报 JSON（`pipeline/fetch-kzg.mjs` 已写并有离线测试，待用真实 report.json 核对字段）
-- [ ] pipeline：读取 ima-knowledge-mcp 研报卡片 → 事件 + 目标价区间
+- [~] pipeline：读取 ima-knowledge-mcp 研报卡片 → 研报日报 JSON（`pipeline/build-rr.mjs` 已写并有测试，等导出格式）
 - [ ] pipeline：Finnhub 新闻 + 评级趋势
 - [ ] 每日快照与时间回放
 - [ ] "信息集中出现"规则
