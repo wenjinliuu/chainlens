@@ -109,10 +109,13 @@ function offset(P, lane, closed) {
 // ---------- 布局 ----------
 const PER = { x0: -1180, x1: 1180, z0: -560, z1: 600, r: 150, w: 100 };
 const AVE = { z: 20, w: 110, x0: -3600, x1: 1760 };
-const CROSS = [-590, 0, 590], CW_ = 80;
-const COLS = [-885, -295, 295, 885], ROWS = [-272, 312];
-const BLOCKS = [[0, 0], [1, 0], [2, 0], [3, 0], [3, 1], [2, 1], [1, 1], [0, 1]].map(([c, r]) => ({ cx: COLS[c], cz: ROWS[r], back: r === 0, side: c < 2 ? -1 : 1 }));
-const BW = 470, BD = 455, PAD = 240;
+// 列宽不等（芯片那列最宽），列间 120 留给横街；最西边那条横街改成一条小河，车只走剩下两条横街
+const COLW = [370, 440, 650, 420], COLX = [-935, -410, 255, 910];
+const CANAL = { x: -690, w: 70 };
+const CROSS = [-130, 640], CW_ = 80;
+const COLS = COLX, ROWS = [-272, 312];
+const BLOCKS = [[0, 0], [1, 0], [2, 0], [3, 0], [3, 1], [2, 1], [1, 1], [0, 1]].map(([c, r]) => ({ cx: COLS[c], cz: ROWS[r], w: COLW[c], back: r === 0, side: c < 2 ? -1 : 1 }));
+const BW = 470, BD = 455, PAD = 240;   // BW 只是默认值，街区实际宽度用 B.w
 const BRIDGE0 = -1450;
 const roadY = x => x > BRIDGE0 ? G + .8 : G + .8 + 160 * Math.sin(Math.PI * Math.min((BRIDGE0 - x) / (BRIDGE0 - AVE.x0 - 150), 1));
 
@@ -194,12 +197,33 @@ function getTown() {
   const zebra = (cx, cz, alongX, n) => { for (let i = 0; i < n; i++) S.add(flat(alongX ? 5 : 30, alongX ? 30 : 5, lineM, cx + (alongX ? (i - n / 2) * 10 : 0), cz + (alongX ? 0 : (i - n / 2) * 10), G + 1.45)); };
   CROSS.forEach(cx => { zebra(cx, AVE.z - 72, true, 8); zebra(cx, AVE.z + 72, true, 8); zebra(cx, z0 + 64, true, 8); zebra(cx, z1 - 64, true, 8); });
 
+  // ---------- 小河：从北岸流到南岸，替代最西边的横街；三座桥让环岛路和大道跨过去 ----------
+  {
+    const waterM = new THREE.MeshStandardMaterial({ color: '#9fdcf3', roughness: .12, metalness: .05, transparent: true, opacity: .92 });
+    const strip = new THREE.Mesh(new THREE.PlaneGeometry(CANAL.w, 1800, 1, 1).rotateX(-Math.PI / 2), waterM); at(strip, CANAL.x, G + .6, 0); scene.add(strip);   // 水面略低于路面，桥面压在上面
+    const bankM = M('#fbefd6', { roughness: .95 });
+    [-1, 1].forEach(sd => S.add(at(box(10, 5, 1800, bankM, .2), CANAL.x + sd * (CANAL.w / 2 + 4), G + 2.5, 0)));
+    // 河里几块石头和两只小船（静态）
+    for (let k = 0; k < 7; k++) S.add(at(sph(6 + (k % 3) * 2, M('#cfd2e2', { roughness: 1 }), 8), CANAL.x + ((k * 37) % 40 - 20), G + 2, -700 + k * 230 + (k % 2) * 60));
+    [[-420, .3], [380, -.4]].forEach(([z, ry]) => { const b = box(30, 7, 12, M('#ff6b2c'), .3); b.rotation.y = ry; at(b, CANAL.x + 8, G + 5, z); S.add(b); });
+    // 桥：桥面略高于路面，两侧矮栏杆
+    [z0, AVE.z, z1].forEach((bz, k) => {
+      const bw = k === 1 ? AVE.w + 24 : w + 24;
+      S.add(at(box(CANAL.w + 40, 1.4, bw, M('#ffffff'), .08), CANAL.x, G + .55, bz));   // 桥面和路面齐平，车不会陷进去
+      [-1, 1].forEach(sd => { S.add(at(box(CANAL.w + 40, 9, 4, M('#5b4cff'), .3), CANAL.x, G + 5.5, bz + sd * (bw / 2 - 2))); });
+    });
+    // 岸边：树与长椅
+    for (let k = 0; k < 10; k++) { const t = T_.buildTreeSmall(k + 3); t.scale.setScalar(1.1 + (k % 3) * .15); at(t, CANAL.x + (k % 2 ? 58 : -58), G + 5, -760 + k * 165 + ((k * 7) % 5) * 9); S.add(t); }
+    [[-160, 1], [250, -1]].forEach(([z, sd]) => { const bn = T_.buildBench(); bn.rotation.y = sd > 0 ? -Math.PI / 2 : Math.PI / 2; at(bn, CANAL.x + sd * 52, G + 5, z); S.add(bn); });
+  }
+
   // ---------- 街区底板、站点、仓库、工人 ----------
   const stations = [], chimneys = [], forklifts = [], workers = [], arms = [];
   CL.layers.forEach((L, i) => {
     const B = BLOCKS[i], { cx, cz, back, side } = B, toAve = back ? 1 : -1;
-    S.add(at(box(BW, 5, BD, M(mix(L.color, W, .9), { roughness: .8 }), .02), cx, G + 2.5, cz));
-    S.add(at(box(BW + 8, 3, BD + 8, curbM, 0), cx, G + 1.5, cz));
+    const hw = B.w / 2, sx = Math.min(175, hw - 60), ex = Math.min(160, hw - 50);   // 仓库 / 机械臂离中心的距离按街区宽度收缩
+    S.add(at(box(B.w, 5, BD, M(mix(L.color, W, .9), { roughness: .8 }), .02 + (i % 3) * .03), cx, G + 2.5, cz));   // 转角圆度各不相同
+    S.add(at(box(B.w + 8, 3, BD + 8, curbM, 0), cx, G + 1.5, cz));
     // 站点（底座高度 = 热度）
     const grp = new THREE.Group(); at(grp, cx, G + 5, cz); scene.add(grp);
     const podMat = new THREE.MeshStandardMaterial({ color: mix(L.color, W, .78), roughness: .55, envMapIntensity: .55 });
@@ -212,29 +236,29 @@ function getTown() {
     const coins = L.members.slice().sort((a, b) => b.cap - a.cap).slice(0, 3).map(c => { const cg = buildCoin(c, L.color, 24); grp.add(cg); return cg; });
     stations.push({ L, i, grp, pod, podMat, st, coins, modelH, h: 0, hv: 0, ht: 0, lift: 0, lv: 0, lt: 0 });
     // 仓库（门朝大道），烟囱
-    const wh = T_.buildWarehouse(L.color); wh.scale.setScalar(.85); wh.rotation.y = back ? 0 : Math.PI; at(wh, cx + side * 175, G + 5, cz); S.add(wh);
+    const wh = T_.buildWarehouse(L.color); wh.scale.setScalar(.85); wh.rotation.y = back ? 0 : Math.PI; at(wh, cx + side * sx, G + 5, cz); S.add(wh);
     const ch = wh.userData.chimney.clone().multiplyScalar(.85).applyAxisAngle(new THREE.Vector3(0, 1, 0), wh.rotation.y).add(wh.position);
     // 屋顶广告牌：这一环节今天成交最热的公司（广告牌有贴图，不参与合并）
     const hot = L.members.slice().sort((a, b) => b.vx[6] - a.vx[6])[0];
-    const bb = T_.buildBillboard(T_.hotStockTexture(hot, L), 150, 75, 30); at(bb, cx + side * 175, G + 55, cz + 6); scene.add(bb);
+    const bb = T_.buildBillboard(T_.hotStockTexture(hot, L), 150, 75, 30); at(bb, cx + side * sx, G + 55, cz + 6); scene.add(bb);
     pickables.push({ obj: bb, info: () => ({ kind: 'board', title: `${hot.t} ${hot.name}`, sub: `${L.name} · 今日成交最热 · 量 ${hot.vx[6].toFixed(1)}x · ${hot.chg[6] >= 0 ? '+' : '−'}${Math.abs(hot.chg[6]).toFixed(2)}%`, go: hot.t, L }) });
     chimneys.push({ p: ch, puffs: Array.from({ length: 5 }, (_, k) => { const m = sph(10, M('#ffffff', { roughness: 1, transparent: true, opacity: .8 }), 10); scene.add(m); return { m, ph: k / 5 }; }) });
     // 货堆（大道边）与叉车
-    const pileZ = cz + toAve * 200, fx = cx + side * 175;
+    const pileZ = cz + toAve * 200, fx = cx + side * sx;
     const pile = T_.buildCrates(5, L.color); at(pile, fx + side * 36, G + 5, pileZ); S.add(pile);
     const fk = T_.buildForklift(); fk.group.rotation.y = back ? -Math.PI / 2 : Math.PI / 2; scene.add(fk.group);
     pickables.push({ obj: fk.group, info: () => ({ kind: 'fork', title: `${L.name}街区的叉车`, sub: '把仓库里的货搬到路边，等卡车来运走', L }) });
     forklifts.push({ v: fk, x: fx, za: cz + toAve * 52, zb: pileZ - toAve * 4, ph: i * .13 });
     // 工人（在站点前干活）、机器人臂
-    [[-side * 150, toAve * 150], [-side * 60, toAve * 150]].forEach(([dx, dz], k) => {
+    [[-side * ex, toAve * 150], [-side * Math.min(60, hw - 110), toAve * 150]].forEach(([dx, dz], k) => {
       const p = T_.buildPerson(i * 3 + k, { vest: true, helmet: true }); at(p.group, cx + dx, G + 5, cz + dz);
       p.group.lookAt(cx, G + 5, cz); p.group.rotateY(-Math.PI / 2); scene.add(p.group); workers.push(p);
       pickables.push({ obj: p.group, info: () => ({ kind: 'worker', title: `${L.name}街区的工人`, sub: `今天这个环节期权热度 ${L.heat[6].toFixed(1)}x，${L.heat[6] >= 1.5 ? '开足马力' : '正常开工'}`, L }) });
     });
-    if ([2, 4, 5].includes(i)) { const a = T_.buildRobotArm(L.color); at(a.group, cx - side * 160, G + 5, cz - toAve * 160); a.group.scale.setScalar(1.2); scene.add(a.group); arms.push(a); pickables.push({ obj: a.group, info: () => ({ kind: 'arm', title: `${L.name}街区的机械臂`, sub: '自动化产线，24 小时不停', L }) }); }
+    if ([2, 4, 5].includes(i)) { const a = T_.buildRobotArm(L.color); at(a.group, cx - side * ex, G + 5, cz - toAve * 160); a.group.scale.setScalar(1.2); scene.add(a.group); arms.push(a); pickables.push({ obj: a.group, info: () => ({ kind: 'arm', title: `${L.name}街区的机械臂`, sub: '自动化产线，24 小时不停', L }) }); }
     // 公司楼：沿街区远离大道的那条边，按子链分组排成一排；每组前立一块地块牌；楼顶按当日期权信号升旗（绿多 / 红空），楼前按研报调整立目标价牌
     const groups = Object.entries(L.segs).map(([seg, list]) => ({ seg, ms: list.split(' ').filter(Boolean).map(t => CL.byT[t]).filter(Boolean).sort((a, b) => b.cap - a.cap) }));
-    const towerZ = cz - toAve * (BD / 2 - 40), span = BW - 90, MAXT = 7;
+    const towerZ = cz - toAve * (BD / 2 - 40), span = B.w - 90, MAXT = 7;
     const drawn = groups.map(g => ({ ...g, ms: g.ms.slice(0, Math.min(g.ms.length, Math.max(1, Math.round(MAXT * g.ms.length / Math.max(1, L.members.length))))) }));
     const slots = []; drawn.forEach(g => { slots.push({ sign: g }); g.ms.forEach(c => slots.push({ c, g })); });   // 每组：一块牌 + 它的楼；空子链只有牌（留地块）
     const unit = span / Math.max(slots.length - 1, 1), tscale = slots.length > 9 ? .74 : slots.length > 7 ? .84 : 1;
@@ -257,13 +281,13 @@ function getTown() {
     // 模型与云街区：未上市实验室的在建工地（塔吊慢慢转、吊钩上下）
     if (L.id === 'cloud') {
       const names = CL.unlisted.filter(u => u.layer === 'cloud').map(u => u.name);
-      const cr = T_.buildCrane('#f5a314'); cr.group.scale.setScalar(.72); at(cr.group, cx - side * 150, G + 5, cz - toAve * 150); scene.add(cr.group); cranes.push({ cr, ph: 1.3 });
-      const fe = T_.buildFence(names, L.color); fe.rotation.y = back ? Math.PI : 0; fe.scale.setScalar(.8); at(fe, cx - side * 150, G + 5, cz - toAve * 92); scene.add(fe);
+      const cr = T_.buildCrane('#f5a314'); cr.group.scale.setScalar(.72); at(cr.group, cx - side * ex, G + 5, cz - toAve * 150); scene.add(cr.group); cranes.push({ cr, ph: 1.3 });
+      const fe = T_.buildFence(names, L.color); fe.rotation.y = back ? Math.PI : 0; fe.scale.setScalar(.8); at(fe, cx - side * ex, G + 5, cz - toAve * 92); scene.add(fe);
       pickables.push({ obj: cr.group, info: () => ({ kind: 'site', title: '未上市实验室 · 在建', sub: `${names.join('、')}：还没上市，没有期权与研报数据；上市后这里会换成公司楼`, L }) });
     }
     // 行道树、长椅
-    for (let k = 0; k < 5; k++) { const t = T_.buildTreeSmall(i + k); at(t, cx - BW / 2 + 40 + k * ((BW - 80) / 4), G + 5, cz + toAve * (BD / 2 - 14)); t.scale.setScalar(1.3); S.add(t); } // 大道这一侧的行道树
-    for (let k = 0; k < 3; k++) { const t = T_.buildTreeSmall(i + k + 2); at(t, cx - side * (BW / 2 - 16), G + 5, cz - 120 + k * 120); t.scale.setScalar(1.2); S.add(t); }
+    for (let k = 0; k < 5; k++) { const t = T_.buildTreeSmall(i + k); at(t, cx - hw + 40 + k * ((B.w - 80) / 4) + ((i * 7 + k * 5) % 11 - 5), G + 5, cz + toAve * (BD / 2 - 14 - (k % 2) * 6)); t.scale.setScalar(1.3); S.add(t); } // 大道这一侧的行道树
+    for (let k = 0; k < 3; k++) { const t = T_.buildTreeSmall(i + k + 2); at(t, cx - side * (hw - 16), G + 5, cz - 120 + k * 120 + ((i + k) % 3 - 1) * 14); t.scale.setScalar(1.2); S.add(t); }
     const bench = T_.buildBench(); at(bench, cx, G + 5, cz + toAve * (BD / 2 - 32)); bench.rotation.y = back ? Math.PI : 0; S.add(bench);
   });
   // 外圈绿地：大树
@@ -361,9 +385,9 @@ function getTown() {
   const routes = [
     { path: rectLoop(x0, x1, z0, z1, [150, 150, 150, 150], true, PL, Y), kinds: ['bus', 'truck', 'car', 'flat', 'car', 'van', 'truck'] },
     { path: rectLoop(x0, x1, z0, z1, [150, 150, 150, 150], false, PL, Y), kinds: ['truck', 'car', 'flat', 'van', 'car', 'bus'] },
-    { path: rectLoop(-590, 590, z0, z1, [40, 40, 40, 40], true, IL, Y), kinds: ['flat', 'car', 'van', 'car'] },
-    { path: rectLoop(x0, 0, AVE.z, z1, [40, 40, 40, 150], false, IL, Y), kinds: ['car', 'flat', 'car'] },
-    { path: rectLoop(0, x1, z0, AVE.z, [40, 150, 40, 40], true, IL, Y), kinds: ['van', 'car', 'flat'] },
+    { path: rectLoop(CROSS[0], CROSS[1], z0, z1, [40, 40, 40, 40], true, IL, Y), kinds: ['flat', 'car', 'van', 'car'] },
+    { path: rectLoop(x0, CROSS[0], AVE.z, z1, [40, 40, 40, 150], false, IL, Y), kinds: ['car', 'flat', 'car'] },
+    { path: rectLoop(CROSS[0], x1, z0, AVE.z, [40, 150, 40, 40], true, IL, Y), kinds: ['van', 'car', 'flat'] },
     { path: ave(true), open: true, kinds: ['truck', 'car', 'truck', 'flat', 'van'] },
     { path: ave(false), open: true, kinds: ['truck', 'car', 'van', 'truck', 'car'] },
   ];
@@ -394,7 +418,7 @@ function getTown() {
   // ---------- 行人、机器人（街区人行道） ----------
   const walkers = [];
   BLOCKS.forEach((B, bi) => {
-    const lp = (cw) => rectLoop(B.cx - BW / 2 + 16, B.cx + BW / 2 - 16, B.cz - BD / 2 + 16, B.cz + BD / 2 - 16, [24, 24, 24, 24], cw, 0, G + 5);
+    const lp = (cw) => rectLoop(B.cx - B.w / 2 + 16, B.cx + B.w / 2 - 16, B.cz - BD / 2 + 16, B.cz + BD / 2 - 16, [24, 24, 24, 24], cw, 0, G + 5);
     const paths = [lp(true), lp(false)];
     const L = CL.layers[bi], JOBS = ['去上班', '午休散步', '下班回家', '去港口看船'], who = ['工程师', '分析师', '实习生', '产品经理'];
     for (let k = 0; k < Math.max(1, Math.round(4 * Q.density)); k++) { const p = T_.buildPerson(bi * 5 + k); scene.add(p.group); walkers.push({ o: p, path: paths[k % 2], s: paths[0].len * (k / 4 + bi * .07), sp: 15 + (k * 7 % 9) });
