@@ -100,8 +100,11 @@
         panel.innerHTML = `<div class="ip-k">AI 产业镇 · 全景</div><h3>8 个环节 · 58 家公司</h3>
           <p>从矿石、电力，到芯片、光模块、服务器，再到云和机器人。潮信每天沿着这条链，看哪里在放量、谁被调评级、发生了什么。</p>
           <div class="ip-leg"><span><i class="lg-pod"></i>底座越高 = 当天期权成交越热</span><span><i class="lg-cube"></i>方块 = 产业链流向</span><span><i class="lg-coin"></i>硬币 = 成员公司</span></div>
-          <button class="btn accent" id="ipStart">从「原材料」开始导览 →</button>`;
+          <button class="btn accent" id="ipStart">从「原材料」开始导览 →</button>
+          <div class="ip-spots"><span>远景区：</span><button type="button" class="chip" id="ipPad">${ICON.svg('rocket', 13)} 发射场</button><button type="button" class="chip" id="ipCamp">${ICON.svg('med', 13)} 医疗园区 · 试验场</button></div>`;
         $('#ipStart').onclick = () => isl.go(0);
+        $('#ipPad').onclick = () => isl.look(1560, 560, 1980, 1000, 40, 1230);
+        $('#ipCamp').onclick = () => isl.look(-1560, 560, 1980, -1000, 40, 1230);
         return;
       }
       const l = L[i], o = sigTk(l, 'o'), r = sigTk(l, 'r'), n = sigTk(l, 'n');
@@ -118,7 +121,7 @@
     }
     // 点镇里的东西：气泡跟着它走
     const bub = $('#isleBubble'); let followed = null;
-    const KIND_ICON = { tower: 'building', truck: 'truck', flat: 'flat', bus: 'bus', car: 'car', fork: 'forklift', worker: 'worker', arm: 'arm', person: 'walker', bot: 'robot', board: 'billboard', port: 'anchor', light: 'lighthouse', robin: 'bird', blimp: 'blimp', rocket: 'rocket', site: 'crane', plot: 'factory' };
+    const KIND_ICON = { tower: 'building', truck: 'truck', flat: 'flat', bus: 'bus', car: 'car', fork: 'forklift', worker: 'worker', arm: 'arm', person: 'walker', bot: 'robot', board: 'billboard', port: 'anchor', light: 'lighthouse', robin: 'bird', blimp: 'blimp', rocket: 'rocket', site: 'crane', plot: 'factory', med: 'med', track: 'robot', drone: 'blimp' };
     const thing = (info, x, y, th) => {
       if (!info) { followed = null; bub.classList.remove('show'); return; }
       followed = th;

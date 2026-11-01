@@ -92,12 +92,12 @@ function buildFlatbed(layerIdx) { // 平板车：车斗上的货物随所在站�
   v.setCargo(layerIdx || 0);
   return v;
 }
-function buildBus() { // 潮信巴士
+function buildBus(line2) { // 潮信巴士；line2 = 车身第二行（默认三个栏目，接周报后写环节轮动）
   const g = new THREE.Group();
   g.add(at(box(66, 24, 22, M(W)), 0, 17, 0));
   g.add(at(box(58, 8, 22.4, M('#dfeefe', { roughness: .2 })), 2, 21, 0));
   g.add(at(box(66.4, 4, 22.4, M('#5b4cff')), 0, 9, 0));
-  const tex = textTexture([['潮信', '900 30px "Noto Sans SC", sans-serif', '#5b4cff', 18, 34], ['盘前汇总 · 期权日报 · 研报日报', '700 15px "Noto Sans SC", sans-serif', '#1296f0', 96, 32]], 300, 48, '#ffffff');
+  const tex = textTexture([['潮信', '900 30px "Noto Sans SC", sans-serif', '#5b4cff', 18, 34], [line2 || '盘前汇总 · 期权日报 · 研报日报', '700 15px "Noto Sans SC", sans-serif', '#1296f0', 96, 32]], 300, 48, '#ffffff');
   [-1, 1].forEach(s => { const p = new THREE.Mesh(new THREE.PlaneGeometry(56, 9), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false })); at(p, 0, 13.5, s * 11.3); if (s < 0) p.rotation.y = Math.PI; g.add(p); });
   lamps(g, 33.5, -33.5, 12, 7);
   return vehicle(g, wheels(g, [-20, 22], 10, 5.2));
@@ -390,7 +390,7 @@ const NIGHT = {
 };
 
 // ================= 天空 =================
-function buildBlimp() {
+function buildBlimp(banner) { // banner：吊在飞艇下面的横幅文字（周报方向与环节轮动）
   const g = new THREE.Group();
   const hull = new THREE.Mesh(new THREE.CapsuleGeometry(30, 110, 10, 24), M(W, { roughness: .45 })); hull.rotation.z = Math.PI / 2; g.add(hull);
   const band = new THREE.Mesh(new THREE.CylinderGeometry(30.6, 30.6, 26, 32, 1, true), M('#5b4cff')); band.rotation.z = Math.PI / 2; at(band, -38, 0, 0); g.add(band);
@@ -398,6 +398,11 @@ function buildBlimp() {
   [-1, 1].forEach(s => { const p = new THREE.Mesh(new THREE.PlaneGeometry(64, 28), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false })); at(p, 18, 2, s * 30.8); if (s < 0) p.rotation.y = Math.PI; g.add(p); });
   [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(([y, z]) => { const f = box(26, 3, 3, M('#1296f0'), 0); f.scale.set(1, y ? 9 : 1, z ? 9 : 1); at(f, -78, y * 14, z * 14); g.add(f); });
   g.add(at(box(26, 9, 12, M('#efedff')), 6, -34, 0));
+  if (banner) {
+    const bt = textTexture([[banner, '800 26px "Noto Sans SC", sans-serif', '#16172a', 300, 30, 'center']], 600, 48, '#ffffff');
+    const bp = new THREE.Mesh(new THREE.PlaneGeometry(210, 17), new THREE.MeshBasicMaterial({ map: bt, toneMapped: false, side: THREE.DoubleSide })); at(bp, 10, -62, 0); g.add(bp);
+    [-80, 80].forEach(x => g.add(at(box(.8, 20, .8, M('#8e91a7'), 0), x + 10, -44, 0)));
+  }
   const prop = new THREE.Group(); at(prop, -96, 0, 0); g.add(prop);
   [0, 1].forEach(k => { const b = box(1.5, 22, 3, M('#8e91a7'), 0); b.rotation.x = k * Math.PI / 2; prop.add(b); });
   shadow(g);
@@ -518,6 +523,39 @@ function buildRocketPad() {
   } };
 }
 
-return { plotSignTexture, buildPlotSign, buildFlag, buildTargetSign, buildCrane, buildFence, buildRocketPad, M, box, cyl, sph, at, buildTower, logoSignTexture, buildTrafficLight, SIG, hotStockTexture, marketBoardTexture, tickerTexture, buildBillboard, NIGHT, buildCar, buildVan, buildTruck, buildFlatbed, buildBus, buildForklift, buildPerson, buildWalkerBot, buildDeliveryBot,
+
+// ================= 园区平台（西南）：AI 医疗园区 + 机器人试验场 =================
+function buildCampus() {
+  const g = new THREE.Group();
+  g.add(at(box(440, 10, 300, M('#e9f3ea', { roughness: .9 }), .04), 0, 5, 0));
+  // 医院：白楼 + 蓝玻璃带 + 红十字 + 停机坪
+  const hosp = new THREE.Group(); at(hosp, -110, 10, -40); g.add(hosp);
+  hosp.add(at(box(130, 58, 86, M('#ffffff', { roughness: .5 }), .05), 0, 29, 0));
+  hosp.add(at(box(132, 10, 88, M('#dfeefe', { roughness: .2 }), 0), 0, 22, 0));
+  hosp.add(at(box(132, 10, 88, M('#dfeefe', { roughness: .2 }), 0), 0, 42, 0));
+  const red = M('#e8364a', { emissive: '#e8364a', emissiveIntensity: .25 });
+  hosp.add(at(box(24, 8, 2, red, 0), 0, 50, 44)); hosp.add(at(box(8, 24, 2, red, 0), 0, 50, 44));
+  hosp.add(at(box(22, 2, 8, red, 0), 36, 59.5, 0)); hosp.add(at(box(8, 2, 22, red, 0), 36, 59.5, 0));
+  hosp.add(at(cyl(26, 26, 2, M('#cfd2e2'), 32), -36, 59, 0)); hosp.add(at(cyl(20, 20, 1, M('#ffffff'), 32), -36, 60.5, 0));
+  hosp.add(at(box(60, 2, 60, M('#dcdfeb'), 0), 0, .8, 80));   // 门前停车位
+  // 试验场：环形跑道 + 看台
+  const ring = new THREE.Mesh(new THREE.RingGeometry(58, 84, 48), M('#cfd2e2', { roughness: .9 })); ring.rotation.x = -Math.PI / 2; at(ring, 120, 10.6, 30); g.add(ring);
+  const inner = new THREE.Mesh(new THREE.CircleGeometry(56, 40), M('#d6f0dc', { roughness: 1 })); inner.rotation.x = -Math.PI / 2; at(inner, 120, 10.5, 30); g.add(inner);
+  for (let k = 0; k < 3; k++) g.add(at(box(110, 6, 10, M(k ? '#ffffff' : '#c9c3ff'), .1), 120, 13 + k * 6, 130 + k * 10));
+  // 牌子
+  const sign = buildBillboard(canvasTex(380, 150, x => { x.fillStyle = '#ffffff'; rr(x, 0, 0, 380, 150, 22); x.fill(); x.fillStyle = '#16172a'; x.font = `900 38px ${CNF}`; x.textAlign = 'left'; x.fillText('AI 医疗园区 · 机器人试验场', 20, 62); x.fillStyle = '#8e91a7'; x.font = `700 23px ${CNF}`; x.fillText('应用与端侧的延伸 · 名单待补', 20, 110); }), 130, 52, 26);
+  at(sign, -20, 10, 128); g.add(sign);
+  shadow(g);
+  return { group: g, hospital: hosp, trackCenter: new THREE.Vector3(120, 10, 30), sign };
+}
+function buildDrone() {
+  const g = new THREE.Group();
+  g.add(at(box(10, 4, 10, M('#3a3c52'), .2), 0, 0, 0));
+  const rotors = [[-7, -7], [7, -7], [-7, 7], [7, 7]].map(([x, z]) => { g.add(at(box(9, 1.2, 1.2, M('#8e91a7'), 0), x / 2, 1, z / 2)); const r = cyl(5, 5, .6, M('#c9c3ff', { transparent: true, opacity: .7 }), 12); at(r, x, 3, z); g.add(r); return r; });
+  g.add(at(box(6, 3, 6, M('#e8364a'), .3), 0, -3, 0));   // 药箱
+  return { group: g, tick(t) { rotors.forEach((r, i) => r.rotation.y = t * 40 + i); } };
+}
+
+return { buildCampus, buildDrone, plotSignTexture, buildPlotSign, buildFlag, buildTargetSign, buildCrane, buildFence, buildRocketPad, M, box, cyl, sph, at, buildTower, logoSignTexture, buildTrafficLight, SIG, hotStockTexture, marketBoardTexture, tickerTexture, buildBillboard, NIGHT, buildCar, buildVan, buildTruck, buildFlatbed, buildBus, buildForklift, buildPerson, buildWalkerBot, buildDeliveryBot,
   buildWarehouse, buildRobotArm, buildGantry, buildPylon, buildStreetLight, buildTreeSmall, buildBench, buildCrates, buildContainerStack, buildBlimp, buildGull, buildCloud, SHIRT };
 })();

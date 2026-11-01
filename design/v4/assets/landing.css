@@ -587,3 +587,5 @@
 /* 产业镇底栏：天气标签（= 当天大盘情绪） */
 .isle-wx { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 999px; background: var(--card-2); font-size: 12.5px; font-weight: 700; color: var(--ink2); white-space: nowrap; } .isle-wx svg { color: var(--accent-deep); }
 @media (max-width: 640px) { .isle-wx span { display: none; } }
+
+.ip-spots { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 12px; font-size: 12px; color: var(--ink3); } .ip-spots .chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }

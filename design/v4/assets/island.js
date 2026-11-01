@@ -355,6 +355,16 @@ function getTown() {
   pickables.push({ obj: pad.rocket, info: () => ({ kind: 'rocket', title: 'SpaceX 试射 · 发射场', sub: `太空与卫星通信 · 未上市，没有期权与研报数据 · ${padState.launching ? '正在升空' : '下次点火 ' + padState.next + ' 秒后'}` }) });
   pickables.push({ obj: pad.sign, info: () => ({ kind: 'rocket', title: '发射场 · 太空', sub: '应用与端侧的延伸：未来有上市公司时会在这里给地块' }) });
 
+  // ---------- 园区平台（西南半岛）：AI 医疗园区 + 机器人试验场；救护车绕医院、机器人绕跑道、无人机送药 ----------
+  const pierSW = box(64, 10, 460, M('#eef0f7'), .02); pierSW.rotation.y = Math.atan2(230, 390); at(pierSW, -885, G - 8, 1035); S.add(pierSW);
+  for (let k = 0; k <= 5; k++) { const t = k / 5; S.add(at(cyl(9, 9, 120, pierM, 10), -770 - 230 * t, G - 70, 840 + 390 * t)); }
+  const CAMP = { x: -1000, z: 1230 };
+  const campus = T_.buildCampus(); at(campus.group, CAMP.x, G - 4, CAMP.z); scene.add(campus.group);
+  pickables.push({ obj: campus.hospital, info: () => ({ kind: 'med', title: 'AI 医疗园区', sub: '影像 AI、手术机器人、AI 制药：应用与端侧的延伸；上市公司名单待补，先留地块' }) });
+  pickables.push({ obj: campus.sign, info: () => ({ kind: 'track', title: '机器人试验场', sub: '端侧 / 机器人子链的试验场：两台两足机器人在绕圈，看台上没人打分' }) });
+  const drone = T_.buildDrone(); scene.add(drone.group);
+  pickables.push({ obj: drone.group, info: () => ({ kind: 'drone', title: '送药无人机', sub: '从医院楼顶起飞，绕园区一圈再回来' }) });
+
   // ---------- 电力：电塔与电线 ----------
   const pyl = [[-150, -130], [-150, 140], [170, 140], [760, 140]].map(([x, z]) => { const p = T_.buildPylon(); p.rotation.y = Math.PI / 2; at(p, x, G + 5, z); S.add(p); p.updateMatrixWorld(true); return p; });
   const tipsOf = p => p.userData.tips.map(t => t.clone().applyMatrix4(p.matrixWorld));
@@ -396,7 +406,7 @@ function getTown() {
   let vid = 0;
   routes.forEach((R, ri) => R.kinds.slice(0, Math.max(1, Math.round(R.kinds.length * Q.density))).forEach((k, j) => {
     const col = CARC[(ri * 3 + j) % CARC.length];
-    const v = k === 'bus' ? T_.buildBus() : k === 'truck' ? T_.buildTruck(CL.layers[(ri + j * 3) % 8].color) : k === 'van' ? T_.buildVan(col) : k === 'flat' ? T_.buildFlatbed(0) : T_.buildCar(col);
+    const v = k === 'bus' ? T_.buildBus(window.ARCHIVE && ARCHIVE.weeks ? `本周最热 ${ARCHIVE.weeks[ARCHIVE.weeks.length - 1].segs.slice(0, 3).map(x => x.n).join(' · ')}` : undefined) : k === 'truck' ? T_.buildTruck(CL.layers[(ri + j * 3) % 8].color) : k === 'van' ? T_.buildVan(col) : k === 'flat' ? T_.buildFlatbed(0) : T_.buildCar(col);
     scene.add(v.group);
     const cruise = k === 'bus' || k === 'truck' ? 62 : k === 'flat' ? 66 : 80;
     const beam = new THREE.Mesh(new THREE.PlaneGeometry(110, 64), T_.NIGHT.beam); beam.rotation.x = -Math.PI / 2;
@@ -417,6 +427,14 @@ function getTown() {
 
   // ---------- 行人、机器人（街区人行道） ----------
   const walkers = [];
+  // 园区：救护车绕医院一圈，两台机器人绕试验场跑道
+  { const cy = G - 4 + 10 + .8, ax = CAMP.x - 110, az = CAMP.z - 40;
+    const amb = T_.buildVan('#e8364a'); amb.group.add(at(box(10, 3, 6, M('#1296f0', { emissive: '#1296f0', emissiveIntensity: 1.2 }), .3), -4, 26, 0)); scene.add(amb.group);
+    walkers.push({ o: amb, path: rectLoop(ax - 95, ax + 95, az - 75, az + 95, [30, 30, 30, 30], true, 0, cy), s: 0, sp: 38 });
+    pickables.push({ obj: amb.group, info: () => ({ kind: 'med', title: '救护车', sub: '绕着医院巡逻，园区里还没有真正的病人' }) });
+    const tc = campus.trackCenter, pts = []; for (let i = 0; i < 48; i++) { const a_ = i / 48 * Math.PI * 2; pts.push(new THREE.Vector3(CAMP.x + tc.x + Math.cos(a_) * 71, cy, CAMP.z + tc.z + Math.sin(a_) * 71)); }
+    const track = new Path(pts, true);
+    [0, 1].forEach(k => { const bot = T_.buildWalkerBot(20 + k); scene.add(bot.group); walkers.push({ o: bot, path: track, s: track.len * k / 2, sp: 15 + k * 4 }); }); }
   BLOCKS.forEach((B, bi) => {
     const lp = (cw) => rectLoop(B.cx - B.w / 2 + 16, B.cx + B.w / 2 - 16, B.cz - BD / 2 + 16, B.cz + BD / 2 - 16, [24, 24, 24, 24], cw, 0, G + 5);
     const paths = [lp(true), lp(false)];
@@ -451,8 +469,11 @@ function getTown() {
   const ship = buildShip(); ship.scale.setScalar(1.4); scene.add(ship);
   const robin = buildRobin(); robin.group.scale.setScalar(2.1); scene.add(robin.group);
   pickables.push({ obj: robin.group, info: () => ({ kind: 'robin', title: '小更', sub: '潮信的信使，一只知更鸟。叼着的信封里是今天的日报' }) });
-  const blimp = T_.buildBlimp(); blimp.group.scale.setScalar(1.6); scene.add(blimp.group);
-  pickables.push({ obj: blimp.group, info: () => ({ kind: 'blimp', title: '潮信飞艇', sub: '在小镇上空巡航，提醒大家：收盘后看信号' }) });
+  // 周报的方向与环节轮动：飞艇横幅 + 巴士车身（有 archive.js 时）
+  const WK = window.ARCHIVE && ARCHIVE.weeks ? ARCHIVE.weeks[ARCHIVE.weeks.length - 1] : null;
+  const banner = WK ? `本周${WK.dir} · 环节轮动 ${WK.segs.slice(0, 3).map(x => x.n).join(' → ')}` : '收盘后看信号';
+  const blimp = T_.buildBlimp(banner); blimp.group.scale.setScalar(1.6); scene.add(blimp.group);
+  pickables.push({ obj: blimp.group, info: () => ({ kind: 'blimp', title: '潮信飞艇', sub: WK ? `横幅是周报的结论：本周${WK.dir}，最热环节 ${WK.segs[0].n}（${WK.segs[0].heat.toFixed(1)}x）` : '在小镇上空巡航，提醒大家：收盘后看信号' }) });
   const gulls = Array.from({ length: Math.max(2, Math.round(7 * Q.density)) }, (_, i) => { const g = T_.buildGull(i); g.group.scale.setScalar(2.2); scene.add(g.group); return { g, r: 500 + i * 140, h: 420 + (i % 3) * 70, w: .25 + (i % 4) * .05, ph: i * .9, cx: (i % 2 ? 1 : -1) * 600 }; });
   const clouds = Array.from({ length: Math.max(3, Math.round(7 * Q.density)) }, (_, i) => { const c = T_.buildCloud(i); c.scale.setScalar(1.3 + (i % 3) * .35); at(c, -3200 + i * 950, 480 + (i % 3) * 110, -1750 - (i % 3) * 420); scene.add(c); return c; }); // 云在岛的远处，不挡镇子
 
@@ -515,6 +536,7 @@ function getTown() {
     arms.forEach(a => a.tick(T));
     gantry.tick(T, dt);
     flags.forEach(o => o.f.tick(T, o.ph)); cranes.forEach(o => o.cr.tick(T, o.ph)); padState = pad.tick(T);
+    { const k = (T * .18) % 1, a_ = k * Math.PI * 2; drone.group.position.set(CAMP.x - 110 + Math.cos(a_) * 140, G + 70 + Math.sin(k * Math.PI) * 60 + (k < .08 || k > .92 ? -(1 - Math.min(k, 1 - k) / .08) * 40 : 0), CAMP.z - 40 + Math.sin(a_) * 120); drone.group.rotation.y = -a_; drone.tick(T); }
     if (rain.visible) { const arr = rainGeo.attributes.position.array; for (let i = 0; i < RAIN_N; i++) { let y = arr[i * 6 + 1] - dt * 560; if (y < G) y += 900; arr[i * 6 + 1] = y; arr[i * 6 + 4] = y - 16; } rainGeo.attributes.position.needsUpdate = true; }
     // 车辆：跟车减速、路口让行（编号小的先走；等太久就放行，防止互相卡住）
     vehicles.forEach(a => { a.R.path.at(a.s, a.pos, a.dir); });
@@ -758,7 +780,7 @@ function initIsland(canvas, ui) {
     });
   };
   view.resize();
-  return { go, setDay: town.setDay, town, get focus() { return town.focus; } };
+  return { look: (px, py, pz, tx, ty, tz, d) => { town.focus = -2; tween = { t0: performance.now(), d: d || 1400, p0: camera.position.clone(), t0v: controls.target.clone(), p1: new THREE.Vector3(px, py, pz), t1: new THREE.Vector3(tx, ty, tz) }; }, go, setDay: town.setDay, town, get focus() { return town.focus; } };
 }
 return { initIsland, initHeroIsland, getTown };
 })();
