@@ -300,7 +300,7 @@
     columns.length = 0; (j.columns || []).forEach(c => columns.push(c)); Object.keys(colById).forEach(k => delete colById[k]); columns.forEach(c => { colById[c.id] = c; });
     ARCHIVE.source = 'json'; ARCHIVE.gen = j.gen || null; return true;
   }
-  const ARCHIVE = { DATES, days, byDate, weeks, weekOf, rr, SEGS, peek, text, rrPage, weekPage, md, wd, addDays, dow, pct, pillK, tb, columns, colById, colsOn, colList, colPage, KIND, kindTag, load, source: 'generated' };
+  const ARCHIVE = { DATES, days, byDate, weeks, weekOf, rr, SEGS, peek, text, rrPage, weekPage, md, wd, addDays, dow, pct, pillK, tb, columns, colById, colsOn, colList, colPage, colCard, KIND, kindTag, load, source: 'generated' };
   window.ARCHIVE = ARCHIVE;
   // 站点（http）优先读 /data/archive.json；设计稿直接用 file:// 打开时用内置生成器。消费方等 ARCHIVE_READY 再初始化
   window.ARCHIVE_READY = (async () => {

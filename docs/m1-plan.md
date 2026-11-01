@@ -11,7 +11,8 @@
 - **小镇已读 `town/latest.json`**（`town-data.js`，见 `docs/town-plan.md` 第 4 节）；`town/{date}.json` 由 `scripts/export-samples.mjs` 生成（接真实数据后由 fetch-kzg 的数据面 + 日报 picks 生成，待补）。
 - **研报卡片转换已写**：`pipeline/build-rr.mjs` 按第 6 节规则把卡片（JSON / JSONL，字段按 ima-knowledge-mcp 的导出约定）转成 `rr/{date}.json`，英文评级有别名表，不在名单内的票丢弃，要点最多 3 条、40 字截断；导出格式定下来后只改 `norm()`。`fetch-kzg --date` 同时产出 `town/{date}.json`（层热度、公司量倍数与涨跌、楼的信号）。
 - **每日自动更新已写**：`.github/workflows/data.yml`（工作日 16:10 北京时间，或手动指定日期 / 周），拉最新期权日报 → 汇总 → 以机器人身份提交 `data/live` → 触发 deploy；deploy 构建时有 `data/live/archive.json` 就用它，否则用示例。站点另有 404 页、robots.txt、sitemap.txt（域名定下来后改 `astro.config.mjs` 的 `site` 和这两个文件）。
-- 未做：真实数据跑通（等 Secrets）、邮件（M4）、Astro 组件化拆分。
+- **每日静态页已做**：`web/src/pages/daily/[date].astro` 在构建时用 `src/lib/legacy.mjs`（vm 跑设计稿的 poster.js / archive.js）把每个交易日的海报、文字版、研报日报、当天专栏渲染成 HTML（`/daily/2026-10-30.html`，无 JS 也能看、带 OG 文案），归档页的"分享"在站点下复制这个链接；`sync-web` 按数据生成 `sitemap.txt`。现在 30 天 → 40 页，构建 1.3 秒。
+- 未做：真实数据跑通（等 Secrets）、邮件（M4）、Astro 组件化拆分（legacy.mjs 是过渡，模块迁成 ES module 后删）。
 
 ## 0. 目标与范围
 

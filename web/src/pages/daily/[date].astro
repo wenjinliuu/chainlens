@@ -1,0 +1,43 @@
+---
+// 每个交易日一页：构建时把期权日报海报直接渲染成 HTML（分享、搜索引擎、无 JS 也能看）；文字版、研报日报、当天专栏在下面
+// 数据来自 public/data/archive.json（pipeline 产出）；交互（下载高清图、回放）仍在 /daily.html
+import Base from '../../layouts/Base.astro';
+import { legacy } from '../../lib/legacy.mjs';
+export async function getStaticPaths() {
+  const { ARCHIVE } = legacy();
+  return ARCHIVE.days.map(d => ({ params: { date: d.date } }));
+}
+const { date } = Astro.params;
+const { ARCHIVE: A, renderPoster } = legacy();
+const d = A.byDate[date];
+const i = A.DATES.indexOf(date), prev = A.DATES[i - 1], next = A.DATES[i + 1];
+const poster = renderPoster(d), text = A.text(date), rr = A.rrPage(date), cols = A.colsOn(date);
+const title = `${d.md} 期权日报 · 大盘${d.mood} · ${d.h2} · 潮信`;
+const desc = d.t3;
+---
+<Base title={title} description={desc} css={['/assets/brand.css', '/assets/landing.css', '/assets/daily.css', '/assets/column.css', '/assets/search.css']}>
+  <header class="nav scrolled">
+    <a class="brand" href="/">潮信<span class="pro">AI 产业链情报</span></a>
+    <nav class="nav-links"><a href="/">首页</a><a href="/daily.html">日报归档</a><a href="/company.html">公司档案</a><a href="/stock.html">看盘</a></nav>
+    <div class="nav-right"><a class="btn accent" href="/#subscribe">免费订阅</a></div>
+  </header>
+  <main class="wrap" style="max-width:1120px;padding:20px 24px 60px">
+    <section class="card ar-head">
+      <div class="t"><span class="tag">期权日报</span><h2>{d.md} <small>{d.wd}</small><span class={`pill ${A.pillK(d.mood)}`}>大盘{d.mood}</span></h2><div class="sub">{d.h2} · 海报署名 KZG 期权 Pro{d.dataOnly && ' · 当天只有数据面'}</div></div>
+      <div class="act">
+        <a class="btn ghost" href={`/daily.html?col=eve&d=${date}`}>在归档里打开（可下载高清图）</a>
+        <div class="ar-nav">{prev ? <a class="btn ghost" href={`/daily/${prev}.html`} title="上一个交易日">‹ {A.md(prev)}</a> : null}{next ? <a class="btn ghost" href={`/daily/${next}.html`} title="下一个交易日">{A.md(next)} ›</a> : null}</div>
+      </div>
+    </section>
+    <div class="pz" id="pz" style="margin-top:14px"><Fragment set:html={poster} /></div>
+    <section class="card" style="margin-top:14px"><Fragment set:html={text} /></section>
+    <section class="card" style="margin-top:14px"><div class="ph" style="padding:18px 24px 0"><h3 style="margin:0;font-family:var(--title);font-weight:900;font-size:20px">研报日报 · {d.md}</h3></div><Fragment set:html={rr} /></section>
+    {cols.length > 0 && <section class="card" style="margin-top:14px;padding:16px 20px"><h3 style="margin:0 0 10px;font-family:var(--title);font-weight:900;font-size:20px">当天的专栏报告</h3><div class="ar-cols-list" style="padding:0"><Fragment set:html={cols.map(c => A.colCard(c, true)).join('')} /></div></section>}
+    <footer class="footer"><div><div class="warn">本站内容为公开信息整理，不构成任何投资建议。市场有风险，投资需谨慎。</div>期权数据：每日成交前 100 · 对比 20 日常态 · "偏多 / 偏空"是期权成交结构的数据面倾向</div></footer>
+  </main>
+  <script is:inline>
+    // 海报按容器宽度等比缩放（和归档页同一做法）
+    (function () { const pz = document.getElementById('pz'), kp = pz && pz.querySelector('.kp'); if (!kp) return;
+      const fit = () => { const s = Math.min(1, pz.clientWidth / 1080); kp.style.transform = `scale(${s})`; pz.style.height = `${kp.offsetHeight * s}px`; }; fit(); addEventListener('resize', fit); })();
+  </script>
+</Base>

@@ -24,6 +24,15 @@ if (existsSync(join(W, 'public/data'))) rmSync(join(W, 'public/data'), { recursi
 const DATA = process.env.CX_DATA_DIR ? resolve(R, process.env.CX_DATA_DIR) : join(R, 'data/samples');   // 定时任务用 data/live
 cpSync(DATA, join(W, 'public/data'), { recursive: true });
 
+// sitemap：固定页 + 每个交易日的静态页 + 专栏
+try {
+  const site = (process.env.SITE_URL || 'https://chaoxin.example').replace(/\/$/, '');
+  const idx = JSON.parse(readFileSync(join(DATA, 'daily/index.json'), 'utf8')).days || [];
+  const cols = existsSync(join(DATA, 'archive.json')) ? JSON.parse(readFileSync(join(DATA, 'archive.json'), 'utf8')).columns || [] : [];
+  const urls = ['/', '/daily.html', '/company.html', '/stock.html', '/subscribe.html', ...idx.map(d => `/daily/${d.date}.html`), ...cols.map(c => `/column.html?id=${c.id}`)];
+  writeFileSync(join(W, 'public/sitemap.txt'), urls.map(u => site + u).join('\n') + '\n');
+} catch (e) { console.warn('sitemap 未生成：', e.message); }
+
 // 页面
 const PAGES = {
   index: ['潮信 · AI 产业链情报 · 免费订阅', '潮信：盘前汇总、期权日报、研报日报、专栏报告，按 8 层 AI 产业链整理，每天准时送达。'],
