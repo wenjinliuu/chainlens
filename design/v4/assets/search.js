@@ -37,6 +37,7 @@
     ['常见问题', '', 'help', 'index.html#faq', 'faq 问题 帮助'],
   ].forEach(([t, sub, ic, href, k]) => items.push({ g: '页面', t, sub, ic: `<span class="ic">${ICON.svg(ic, 18)}</span>`, href, k: `${t} ${k}`.toLowerCase(), pri: 40 }));
   if (window.ARCHIVE) ARCHIVE.days.forEach(d => items.push({ g: '期权日报归档', t: `${d.md} ${d.wd}`, sub: `大盘${d.mood} · ${d.h2}`, ic: `<span class="ic"><i class="ck-dot ${ARCHIVE.pillK(d.mood)}"></i></span>`, href: `daily.html?col=eve&d=${d.date}`, k: `${d.date} ${d.date.slice(5).replace('-', '')} ${d.md} ${d.mood} ${d.h2} ${d.strong.t} ${d.hot.seg}`.toLowerCase(), pri: 10, date: true }));
+  if (window.ARCHIVE && ARCHIVE.columns) ARCHIVE.columns.forEach(c => items.push({ g: '专栏报告', t: c.title, sub: `${c.kind} · ${c.date} · ${c.tags.slice(0, 3).join(' ')}`, ic: `<span class="ic">${ICON.svg(ARCHIVE.KIND[c.kind].ic, 18)}</span>`, href: `column.html?id=${c.id}`, k: `${c.title} ${c.kind} ${c.tags.join(' ')} 专栏 专题 ${c.date}`.toLowerCase(), pri: 35 }));
   if (window.CX_THEME) items.push({ g: '操作', t: '切换深色 / 浅色模式', sub: '实验性；海报与 3D 场景保持浅色', ic: `<span class="ic">${ICON.svg('half', 18)}</span>`, fn: () => CX_THEME.toggle(), k: '深色 浅色 主题 dark light theme 模式', pri: 30 });
   if (window.LP && LP.setNight) items.push({ g: '操作', t: '切换白天 / 夜晚模式', sub: '首屏和产业镇一起变', ic: `<span class="ic">${ICON.svg('moon', 18)}</span>`, fn: () => LP.setNight(!$('#hero').classList.contains('night')), k: '夜晚 白天 模式 night', pri: 30 });
 

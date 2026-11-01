@@ -5,7 +5,7 @@ body { background: linear-gradient(180deg, #fff, var(--bg-2) 600px); }
 .ar-main { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
 
 /* 栏目切换 */
-.ar-cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.ar-cols { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
 .ar-cols button { position: relative; padding: 9px 4px; font-size: 13.5px; }
 .ar-cols button em { position: absolute; right: -2px; top: -8px; font-style: normal; font-size: 9.5px; font-weight: 800; color: #b45309; background: #fff4dc; border-radius: 999px; padding: 1px 6px; }
 
@@ -28,7 +28,7 @@ body { background: linear-gradient(180deg, #fff, var(--bg-2) 600px); }
 .cal-legend { display: flex; gap: 12px; margin-top: 10px; font-size: 11.5px; color: var(--ink3); }
 .cal-legend span { display: flex; align-items: center; gap: 4px; } .cal-legend i { width: 7px; height: 7px; border-radius: 50%; }
 .cal-legend i.wk { width: 12px; height: 4px; border-radius: 2px; background: #a04cf5; }
-i.bull { background: var(--bull-c); } i.bear { background: var(--bear-c); } i.flat { background: #b8bdc8; } i.sky { background: var(--sky); }
+i.bull { background: var(--bull-c); } i.bear { background: var(--bear-c); } i.flat { background: #b8bdc8; } i.sky { background: var(--sky); } i.col { background: #ff6b2c; }
 
 /* 时间回放 */
 .ar-replay { padding: 16px 16px 14px; }

@@ -2,7 +2,7 @@
 (function () {
   const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
   const A = ARCHIVE, P = POSTER, { mix } = ISO;
-  const COLS = { eve: '期权日报', rr: '研报日报', week: '周报', morn: '盘前汇总' };
+  const COLS = { eve: '期权日报', rr: '研报日报', week: '周报', col: '专栏报告', morn: '盘前汇总' };
   const q = new URLSearchParams(location.search);
   const last = A.DATES[A.DATES.length - 1];
   const S = { col: COLS[q.get('col')] ? q.get('col') : 'eve', date: A.byDate[q.get('d')] ? q.get('d') : last, view: q.get('v') === 'text' ? 'text' : 'poster', month: '', playing: false, speed: 1, timer: 0 };
@@ -13,7 +13,7 @@
   // ---------- 日历 ----------
   const MONTHS = [...new Set(A.DATES.map(d => d.slice(0, 7)))];
   const LEGEND = { eve: '<span><i class="bull"></i>偏乐观</span><span><i class="flat"></i>中性</span><span><i class="bear"></i>偏谨慎</span><span><i class="wk"></i>周报（周日）</span>',
-    rr: '<span><i class="sky"></i>有研报日报</span><span><i class="wk"></i>周报（周日）</span>', week: '<span><i class="wk"></i>周报（周日发）· 点任意一天看那一周</span>', morn: '<span><i class="flat"></i>上线后每个交易日开盘前发</span>' };
+    rr: '<span><i class="sky"></i>有研报日报</span><span><i class="wk"></i>周报（周日）</span>', week: '<span><i class="wk"></i>周报（周日发）· 点任意一天看那一周</span>', col: '<span><i class="col"></i>有专栏报告</span><span><i class="wk"></i>周报（周日）</span>', morn: '<span><i class="flat"></i>上线后每个交易日开盘前发</span>' };
   function renderCal() {
     const [y, m] = S.month.split('-').map(Number);
     $('#calTitle').textContent = `${y} 年 ${m} 月`;
@@ -24,6 +24,7 @@
       const iso = `${S.month}-${String(d).padStart(2, '0')}`, day = A.byDate[iso], wk = A.weeks.find(w => w.sun === iso);
       let cls = 'd', dot = '';
       if (S.col === 'week') { const w = A.weekOf(iso); if (w) { cls += ' has'; if (w.mon === A.weekOf(S.date).mon) cls += ' on'; } if (wk) dot = '<i></i>', cls += ' wk'; }
+      else if (S.col === 'col') { const has = A.colsOn(iso).length; if (day) cls += ' has'; if (has) dot = '<i class="col"></i>'; if (iso === S.date) cls += ' on'; if (wk && !has) { cls += ' wk'; dot = '<i></i>'; } }
       else if (day && S.col !== 'morn') { cls += ' has'; dot = `<i class="${S.col === 'eve' ? moodK(day) : 'sky'}"></i>`; if (iso === S.date) cls += ' on'; }
       else if (wk) { cls += ' wk'; dot = '<i></i>'; }
       if (iso === '2026-10-31') cls += ' today';
@@ -85,7 +86,7 @@
   }
   function syncHeat() {
     const d = A.byDate[S.date], wk = A.weekOf(S.date), useWeek = S.col === 'week';
-    $('#arHeat').hidden = S.col === 'rr' || S.col === 'morn';
+    $('#arHeat').hidden = S.col === 'rr' || S.col === 'morn' || S.col === 'col';
     $('#arHeat .h span').textContent = useWeek ? `周均热度 · ${wk.range}` : `热度 = 成员量倍数中位数 · 回放时看资金在环节间怎么轮动`;
     const rows = useWeek ? wk.segs.map(s => [s.n, s.heat, '', s.dev]) : d.heat;
     const hot = rows.slice().sort((a, b) => b[1] - a[1])[0][0];
@@ -101,6 +102,7 @@
       act = `<div class="seg-ctl sm" id="viewSeg"><button data-v="poster" class="${S.view === 'poster' ? 'on' : ''}">海报</button><button data-v="text" class="${S.view === 'text' ? 'on' : ''}">文字版</button></div><button class="btn ghost" type="button" id="copyBtn">复制文字版</button><button class="btn accent" type="button" id="dlBtn">下载高清图</button><span class="ar-msg" id="msg"></span>`; }
     else if (S.col === 'rr') { const R = A.rr(S.date); tag = '<span class="tag" style="--tc-deep:#0b77c0;--tc-bg:#e7f4fe">研报日报</span>'; h2 = `${d.md} <small>${d.wd}</small>`; sub = `今日 ${R.total} 条评级 / 目标价调整，摘录 ${R.items.length} 条 · 只放摘要，不放原文`; }
     else if (S.col === 'week') { tag = '<span class="tag" style="--tc-deep:#7a3ec9;--tc-bg:#f3e8ff">期权周报</span>'; h2 = `${wk.label} <small>${wk.range}</small><span class="pill ${A.pillK(wk.dir)}">本周${wk.dir}</span>`; sub = `${A.md(wk.sun)}（周日）上午送达 · 汇总 ${wk.days.length} 个交易日`; }
+    else if (S.col === 'col') { const cs = A.colsOn(S.date); tag = '<span class="tag" style="--tc-deep:#c2410c;--tc-bg:#ffece3">专栏报告</span>'; h2 = cs.length ? `${d.md} <small>${cs[0].kind}</small>` : `专栏报告 <small>共 ${A.columns.length} 篇</small>`; sub = cs.length ? cs[0].title : `${d.md} 没有专栏；下面是全部专栏，不定期更新`; }
     else { tag = '<span class="tag" style="--tc-deep:#b45309;--tc-bg:#fff4dc">盘前汇总</span>'; h2 = `即将上线`; sub = '上线后每个交易日美东 09:00 送达，这里会按日归档'; }
     const share = `<button class="btn ghost" type="button" id="shareBtn" title="复制这一天的链接">分享</button>${S.col === 'eve' ? '' : '<span class="ar-msg" id="msg"></span>'}`;
     $('#arHead').innerHTML = `<div class="t">${tag}<h2>${h2}</h2><div class="sub">${sub}</div></div><div class="act">${act}${share}${nav}</div>`;
@@ -117,6 +119,7 @@
     if (S.col === 'eve') body.innerHTML = S.view === 'poster' ? `<div class="pz" id="pz">${P.render(d)}</div>` : `<div class="card">${A.text(S.date)}</div>`;
     else if (S.col === 'rr') body.innerHTML = `<div class="card">${A.rrPage(S.date)}</div>`;
     else if (S.col === 'week') body.innerHTML = `<div class="card">${A.weekPage(wk.mon)}</div>`;
+    else if (S.col === 'col') body.innerHTML = `<div class="card">${A.colList(S.date)}</div>`;
     else body.innerHTML = `<div class="card ar-soon"><div class="lead"><div><h3>盘前汇总还在准备中</h3><p>隔夜要闻、盘前异动的 AI 链个股、当天财报与宏观日程，开盘前 5 分钟看完。先看一张样张：</p></div><a class="btn accent" href="index.html#subscribe">上线时第一个收到</a></div><div class="sheet">${A.peek.morn()}</div></div>`;
     fitPoster();
     $$('#arBody .ar-wk-days a').forEach(a => a.onclick = e => { e.preventDefault(); switchCol('eve'); setDate(a.getAttribute('href').split('d=')[1]); });

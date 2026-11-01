@@ -7,7 +7,7 @@
   $$('#emailA, #emailB, #emailC').forEach(el => el.textContent = email);
 
   // 栏目勾选（和首页同一组）
-  const COLS = [['期权日报', '收盘后', '#5b4cff', false], ['研报日报', '每日', '#1296f0', false], ['盘前汇总', '开盘前', '#f5a314', true]];
+  const COLS = [['期权日报', '收盘后', '#5b4cff', false], ['研报日报', '每日', '#1296f0', false], ['盘前汇总', '开盘前', '#f5a314', true], ['专栏报告', '不定期', '#ff6b2c', false]];
   const check = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="m5 12 5 5 9-10"/></svg>';
   $$('.col-pick').forEach(box => {
     box.innerHTML = COLS.map(([n, sub, c, soon]) => `<button type="button" class="cp-chip on" style="--c:${c}">${check}<b>${n}</b>${sub}${soon ? '<em>即将上线</em>' : ''}</button>`).join('');

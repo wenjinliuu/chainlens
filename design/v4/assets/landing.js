@@ -48,8 +48,9 @@
       items: ['隔夜要闻与公司公告', '盘前异动的 AI 链个股', '当天财报与宏观日程'], desc: '开盘前 5 分钟，知道今天 AI 链上发生了什么、要看什么。' },
   ];
   const check = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="m5 12 5 5 9-10"/></svg>';
+  const CHIPS = [...COLS, { name: '专栏报告', sub: '不定期', color: '#ff6b2c' }];
   document.querySelectorAll('.col-pick').forEach(box => {
-    box.innerHTML = COLS.map(c => `<button type="button" class="cp-chip on" style="--c:${c.color}">${check}<b>${c.name}</b>${c.sub}${c.soon ? '<em>即将上线</em>' : ''}</button>`).join('');
+    box.innerHTML = CHIPS.map(c => `<button type="button" class="cp-chip on" style="--c:${c.color}">${check}<b>${c.name}</b>${c.sub}${c.soon ? '<em>即将上线</em>' : ''}</button>`).join('');
     box.querySelectorAll('.cp-chip').forEach(b => b.onclick = () => b.classList.toggle('on'));
   });
   function colArt(kind, c) {
@@ -71,6 +72,7 @@
       <ul>${c.items.map(x => `<li>${x}</li>`).join('')}</ul>
       <button type="button" class="col-peek" data-peek="${c.id}">看样张 ↓</button>
     </div>`).join('') + `<div class="col-week card"><b>周报</b><span>每周日上午：本周大盘方向、最热和最冷的环节、持续出现的信号、下周看点。订阅任何一个栏目都会收到。</span><button type="button" class="col-peek" data-peek="week">看样张 ↓</button></div>
+    <div class="col-week card col-extra" style="--c:#ff6b2c"><b>专栏报告</b><span>不定期：财报前瞻、产业链专题、事件专题——一件事讲透，带数据和图，随日报一起送达。</span><button type="button" class="col-peek" data-peek="col">看样张 ↓</button></div>
     <div class="peek-wrap" id="peekWrap"><div class="peek card" id="peek"></div></div>`;
 
   // ---------- 样张（虚构）：盘前汇总 / 期权日报 / 研报日报 / 周报 ----------

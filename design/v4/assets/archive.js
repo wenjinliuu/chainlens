@@ -243,5 +243,51 @@
     </div>
     <div class="ar-f">本周方向按周汇总期权成交结构，不拆到每一天；"持续信号"只统计进重点的天数 · 不构成投资建议</div></div>`; };
 
-  window.ARCHIVE = { DATES, days, byDate, weeks, weekOf, rr, SEGS, peek, text, rrPage, weekPage, md, wd, addDays, dow, pct, pillK, tb };
+  // ---------- 专栏报告（不定期：财报前瞻 / 产业链专题 / 事件专题；全部虚构） ----------
+  const KIND = { '财报': { c: '#ff6b2c', ic: 'trend' }, '产业链': { c: '#00a8c6', ic: 'factory' }, '事件': { c: '#a04cf5', ic: 'calendar' } };
+  const columns = [
+    { id: 'nvda-earnings-preview', date: '2026-10-29', kind: '财报', title: 'NVDA 财报前瞻：期权市场把筹码放在了哪里', dek: '财报前 5 个交易日，成交量前 100 里 NVDA 的 Call / Put 结构、远月仓位和研报目标价分布，一次看完。', tags: ['NVDA', 'TSM', 'MU', 'SMCI'], readMin: 6,
+      sections: [
+        { h: '财报日程与这次要看的三件事', p: ['NVDA 将于 11 月 19 日美股盘后公布季度财报（示例日程）。过去四个季度，财报后首个交易日的成交量都在 20 日均值的 2 倍以上。', '这次市场关心的三件事：数据中心收入占比、新平台量产时间表、毛利率指引。它们分别对应产业链上的 TSM（代工）、MU（存储）和 SMCI（服务器）。'] },
+        { h: '期权结构：近 5 日发生了什么', p: ['成交量倍数从 1.1 倍升到 1.4 倍，权利金倍数 1.6 倍；CP 比高于 20 日常态 22%，Call 集中在 11 月 21 日到期的近月合约；LEAP Call 占比持平。', '按期权日报的口径，这属于"量放大、方向偏多、可信度中"，还没到强异动。'], data: { kind: 'bars', rows: [['量倍数', 1.4, 3], ['权利金倍数', 1.6, 3], ['CP 偏离', .22, .6], ['LEAP 趋势', .04, .6]] } },
+        { h: '研报目标价怎么分布', p: ['近 60 日 4 家机构的目标价区间 494 ~ 542，均值 517；10 月 19 日机构 A 上调评级后，区间上沿抬高了 8%。', '目标价与现价的距离是研报日报每天都会更新的字段，财报后变化最大的往往是上沿。'], data: { kind: 'kv', rows: [['目标价区间', '494 – 542'], ['均值', '517'], ['现价（延迟）', '514'], ['覆盖机构', '4 家']] } },
+        { h: '上下游可能的联动', p: ['TSM 的先进制程占比、MU 的 HBM 出货、SMCI 的服务器毛利率，都会在同一周被重新定价。产业镇上这三家在不同街区，但平板车上的货物是同一条链。', '财报后 48 小时，期权日报会把这几家的 CP 偏离放在同一张表里。'] },
+        { h: '财报后怎么用日报', p: ['看三处：全市场情绪有没有跟着变、AI 环节热度里芯片层是否仍是最热、NVDA 的 LEAP 占比有没有方向。这些都是数据面，不构成任何投资建议。'] },
+      ] },
+    { id: '800g-optics-chain', date: '2026-10-22', kind: '产业链', title: '800G 光模块：从一颗激光器到数据中心，7 家公司怎么分工', dek: '把光模块这条子链拆开：器件、整机、交换、下游云厂商各在哪一站，以及近 30 日期权和研报在这条链上看到了什么。', tags: ['LITE', 'COHR', 'CIEN', 'ANET', 'MSFT'], readMin: 8,
+      sections: [
+        { h: '一只光模块的旅程', p: ['激光器与光芯片（LITE、COHR）→ 光模块整机与系统（CIEN）→ 交换机与连接（ANET、CRDO）→ 云厂商的数据中心（MSFT、GOOGL）。每过一站，附加值与客户集中度都在变。'] },
+        { h: '7 家公司在链上的位置', p: ['上游器件的毛利率最高但订单最集中；整机环节产能是瓶颈；交换环节跟着云厂商的资本开支走。'], data: { kind: 'kv', rows: [['器件 / 激光器', 'LITE · COHR'], ['整机 / 系统', 'CIEN'], ['交换 / 连接', 'ANET · CRDO'], ['下游云', 'MSFT · GOOGL']] } },
+        { h: '近 30 日：期权与研报怎么看这条链', p: ['光模块环节热度 9 月下旬起连续 11 个交易日在 1.5 倍以上，10 月 30 日达到 2.3 倍，是六个环节里最高；LITE 连续 3 天进期权日报重点，方向偏多、可信度高。', '研报侧：10 月有 5 篇覆盖这条链的评级或目标价调整，4 篇上调，集中在 800G 出货指引。'], data: { kind: 'bars', rows: [['光模块热度（10/30）', 2.3, 3], ['交换 / 连接热度', 1.4, 3], ['研报上调篇数（10 月）', 4, 6], ['研报下调篇数', 1, 6]] } },
+        { h: '之后看什么', p: ['1.6T 产品的送样进度、云厂商下一季资本开支指引、以及期权日报里光模块环节热度是否回落到 1.5 倍以下。'] },
+      ] },
+    { id: 'fomc-48h-ai-options', date: '2026-10-15', kind: '事件', title: '议息后 48 小时：AI 链的期权结构怎么变', dek: '以美联储议息为事件锚点，看全市场 CP、8 个环节热度和研报调整在议息前后两天的变化。', tags: ['NVDA', 'AMD', 'VRT', 'CRWV'], readMin: 5,
+      sections: [
+        { h: '事件时间线', p: ['10 月 13 日（周二）议息结果公布，10 月 14 ~ 15 日为"后 48 小时"。全市场 CP 从议息前一日的 0.74 升到 0.80，偏离从 −3% 到 +6%。'], data: { kind: 'kv', rows: [['议息前一日 CP', '0.74（−3%）'], ['议息次日 CP', '0.80（+6%）'], ['最热环节（前）', 'GPU/加速器 1.9x'], ['最热环节（后）', '存储 1.7x']] } },
+        { h: '8 个环节的变化', p: ['芯片与算力租赁的热度在议息后回落，电力 / 散热和存储上升；这和周报里"环节轮动"看到的方向一致。'], data: { kind: 'bars', rows: [['GPU/加速器', 1.3, 3], ['存储', 1.7, 3], ['电力/散热', 1.6, 3], ['GPU/算力云', 1.0, 3]] } },
+        { h: '研报在议息后的调整', p: ['两天内 7 篇评级或目标价调整，4 篇上调、2 篇下调、1 篇首次覆盖；上调集中在电力设备。'] },
+        { h: '下一个节点', p: ['11 月 CPI 与 NVDA 财报在同一周。期权日报会在"近期日程"里标出来。'] },
+      ] },
+    { id: 'hbm-capacity-map', date: '2026-10-08', kind: '产业链', title: 'HBM 扩产：存储三家的产能地图', dek: 'MU、SNDK、WDC 三家在 HBM 与企业级存储上的扩产节奏，以及设备厂商 AMAT、LRCX 的订单可见度。', tags: ['MU', 'SNDK', 'WDC', 'AMAT', 'LRCX'], readMin: 7,
+      sections: [
+        { h: '为什么是现在', p: ['HBM 占存储厂商收入的比重在一年内翻了一番（示例），而产能扩建的审批与设备交付周期在 9 ~ 12 个月。'] },
+        { h: '三家的扩产节奏', p: ['MU 的扩建项目 10 月获地方审批；SNDK 以企业级 SSD 为主；WDC 的 HDD 产线转向数据中心客户。'], data: { kind: 'kv', rows: [['MU', 'HBM 扩建获批 · 2027 年量产'], ['SNDK', '企业级 SSD 产能 +30%'], ['WDC', '数据中心 HDD 占比提升'], ['AMAT / LRCX', '订单可见度到明年下半年']] } },
+        { h: '期权与研报怎么看', p: ['存储环节热度 10 月均值 1.5 倍，MU 在 10 月进期权日报重点 3 次；研报侧 MU 有 2 篇上调目标价，均提到 HBM 产能。'] },
+      ] },
+  ];
+  const colById = Object.fromEntries(columns.map(c => [c.id, c]));
+  const colsOn = date => columns.filter(c => c.date === date);
+  const kindTag = k => `<span class="tag" style="--tc-deep:${deep(KIND[k].c)};--tc-bg:${mix(KIND[k].c, '#ffffff', .86)}">${k}</span>`;
+  const colCard = (c, big) => `<a class="colx${big ? ' big' : ''}" href="column.html?id=${c.id}" style="--c:${KIND[c.kind].c}"><div class="cx-k">${kindTag(c.kind)}<span class="num">${md(c.date)}</span><span>· 读 ${c.readMin} 分钟</span></div><b>${c.title}</b><p>${c.dek}</p><div class="cx-tags">${c.tags.slice(0, 4).map(t => `<span>${tb(t, 20)}${t}</span>`).join('')}</div></a>`;
+  peek.col = () => `<div class="pk-h"><span class="tag" style="--tc-deep:#c2410c;--tc-bg:#ffece3">专栏报告 · 样张</span><b>${ICON.svg('column', 20, 'pk-ic')}最近三篇</b><span class="pk-t">不定期 · 一件事讲透，带数据和图</span></div>
+      <div class="pk-cols">${columns.slice(0, 3).map(c => colCard(c)).join('')}</div>
+      <div class="pk-f">专栏是对财报、产业链或事件的专题整理，数字来自期权日报与研报日报的数据面 · 不构成投资建议</div>`;
+  const colList = (cur) => `<div class="ar-cols-list">${columns.map(c => colCard(c, c.date === cur)).join('')}</div>`;
+  const colPage = id => { const c = colById[id] || columns[0]; const K = KIND[c.kind];
+    const data = d => !d ? '' : d.kind === 'kv' ? `<div class="cx-data kv">${d.rows.map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join('')}</div>`
+      : `<div class="cx-data bars">${d.rows.map(([k, v, max]) => `<div><span>${k}</span><i><em style="width:${Math.min(100, Math.abs(v) / max * 100)}%"></em></i><b class="num">${typeof v === 'number' && max <= 1 ? pct(v) : v + (max === 3 ? 'x' : '')}</b></div>`).join('')}</div>`;
+    return { c, K, html: c.sections.map((sec, i) => `<section class="cx-sec" id="s${i + 1}"><h2>${sec.h}</h2>${sec.p.map(x => `<p>${x}</p>`).join('')}${data(sec.data)}</section>`).join('') };
+  };
+
+  window.ARCHIVE = { DATES, days, byDate, weeks, weekOf, rr, SEGS, peek, text, rrPage, weekPage, md, wd, addDays, dow, pct, pillK, tb, columns, colById, colsOn, colList, colPage, KIND, kindTag };
 })();
