@@ -131,10 +131,16 @@ function bake(root, scene) {
     if (!o.isMesh) return;
     let g = o.geometry.clone().applyMatrix4(o.matrixWorld);
     if (g.index) g = g.toNonIndexed();
-    Object.keys(g.attributes).forEach(k => { if (k !== 'position' && k !== 'normal') g.deleteAttribute(k); });
+    Object.keys(g.attributes).forEach(k => { if (k !== 'position' && k !== 'normal' && k !== 'uv') g.deleteAttribute(k); });
+    // 贴图面（logo 招牌、地块牌、表盘）要保留 uv；没有 uv 的几何补一份全 0，否则合并时属性集不一致会失败
+    if (!g.attributes.uv) g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
     g.morphAttributes = {};
-    if (!groups.has(o.material)) groups.set(o.material, { list: [], cast: false });
-    const e = groups.get(o.material); e.list.push(g); e.cast = e.cast || o.castShadow;
+    const push = (geo, mat) => { if (!groups.has(mat)) groups.set(mat, { list: [], cast: false }); const e = groups.get(mat); e.list.push(geo); e.cast = e.cast || o.castShadow; };
+    if (Array.isArray(o.material)) {
+      // 多材质网格（楼顶招牌、地块牌面板、围挡）：按几何分组拆开，各自并进对应材质；合并后的网格没有 groups，不能直接带材质数组
+      const grps = g.groups.length ? g.groups : [{ start: 0, count: g.attributes.position.count, materialIndex: 0 }];
+      grps.forEach(gr => { const sub = new THREE.BufferGeometry(); ['position', 'normal', 'uv'].forEach(k => { const at_ = g.attributes[k]; if (!at_) return; const n = Math.min(gr.count, at_.count - gr.start); sub.setAttribute(k, new THREE.BufferAttribute(at_.array.slice(gr.start * at_.itemSize, (gr.start + n) * at_.itemSize), at_.itemSize)); }); push(sub, o.material[gr.materialIndex] || o.material[0]); });
+    } else push(g, o.material);
   });
   groups.forEach((e, m) => {
     const mesh = new THREE.Mesh(mergeGeometries(e.list), m);
