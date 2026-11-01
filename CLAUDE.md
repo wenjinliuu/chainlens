@@ -11,6 +11,7 @@ ChainLens（仓库名）：AI 产业链情报台，**对外品牌叫"潮信"**�
 4. `docs/data-sources.md`
 5. `docs/roadmap.md`（当前进度与下一步）
 6. `docs/m1-plan.md`（M1 工程化方案、静态 JSON 契约、与上游字段映射）
+7. `docs/town-plan.md`（AI 产业镇重构方案：子地块细分、自然布局、扩展区、信号上镇、分步实现）
 
 ## 硬性约束
 - 只用 Cloudflare **免费**额度，不引入 Workers Paid 依赖。

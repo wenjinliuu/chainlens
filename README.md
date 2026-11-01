@@ -23,6 +23,7 @@ ChainLens 只做**公开信息的整理与可视化**，不提供任何投资建
 | [docs/compliance.md](docs/compliance.md) | 合规原则（必读） |
 | [docs/roadmap.md](docs/roadmap.md) | 分阶段路线图 |
 | [docs/m1-plan.md](docs/m1-plan.md) | M1 工程化方案、静态 JSON 契约、与上游字段映射 |
+| [docs/town-plan.md](docs/town-plan.md) | AI 产业镇重构方案：子地块细分、自然布局、扩展区、信号上镇 |
 | [CLAUDE.md](CLAUDE.md) | 给 AI 编程助手的交接说明 |
 
 ## 状态
