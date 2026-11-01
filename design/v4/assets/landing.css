@@ -598,3 +598,10 @@
 .isle-days button:hover:not(.on) { background: var(--card-2); }
 .town-full.night .isle-days { background: rgba(16,22,64,.8); color: #c3c6dd; border-color: rgba(255,255,255,.14); } .town-full.night .isle-days button { color: #e6e8f5; }
 @media (max-width: 1100px) { .isle-days { display: none; } }
+
+/* 首屏文案在窄屏上的断行：标语缩一号、眉标题用短版 */
+.kicker .k-short { display: none; }
+@media (max-width: 640px) {
+  .kicker { white-space: nowrap; } .kicker .k-long { display: none; } .kicker .k-short { display: inline; }
+  .h-t2 { font-size: 28px !important; letter-spacing: -.02em; }
+}
