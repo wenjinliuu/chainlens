@@ -25,7 +25,7 @@
 - [~] 部署到 Cloudflare（免费）：流水线与 wrangler 配置已写，等仓库 Secrets（`CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID`）
 
 ## M2 · 接入真实数据
-- [ ] pipeline：读取 kzg-option-brief 期权结果 → 事件
+- [~] pipeline：读取 kzg-option-brief 期权结果 → 日报 / 周报 JSON（`pipeline/fetch-kzg.mjs` 已写并有离线测试，待用真实 report.json 核对字段）
 - [ ] pipeline：读取 ima-knowledge-mcp 研报卡片 → 事件 + 目标价区间
 - [ ] pipeline：Finnhub 新闻 + 评级趋势
 - [ ] 每日快照与时间回放

@@ -17,7 +17,7 @@ ChainLens（仓库名）：AI 产业链情报台，**对外品牌叫"潮信"**�
 - 只用 Cloudflare **免费**额度，不引入 Workers Paid 依赖。
 - 仓库是**公开**的：密钥、上游私有接口地址、订阅者数据一律走 Secrets / 环境变量，绝不提交。
 - 数据侧判断（阈值、排序、"信息集中出现"规则）用代码固定；AI 只做文字摘要。
-- 期权信号直接读取 `kzg-option-brief` 的结果，不在本仓库重算。
+- 期权信号直接读取 `kzg-option-brief` 的结果，不在本仓库重算。（映射在 `pipeline/fetch-kzg.mjs`，改字段要同步 `docs/m1-plan.md` 第 5 节和 `pipeline/test-fetch-kzg.mjs`）
 - 不提交研报原文或付费订阅原文，示例数据用虚构 / 脱敏内容。
 - 任何面向用户的文案都要过 `docs/compliance.md` 的自检清单。
 
