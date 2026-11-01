@@ -158,6 +158,11 @@ function getTown() {
   const S = new THREE.Group();     // 静态道具，最后统一合并
   const pickables = [];            // 可点击的东西：{ obj, info() }
   const flags = [], cranes = [];   // 楼顶旗、塔吊（每帧动）
+  // 静态且可点的道具：几何并进 S 合并绘制，另放一个隐形盒子（按包围盒）给射线拾取；Raycaster 不看 visible，所以能点中
+  const PROXY_M = new THREE.MeshBasicMaterial({ visible: false });
+  const proxyOf = obj => { obj.updateMatrixWorld(true); const bx = new THREE.Box3().setFromObject(obj), sz = bx.getSize(new THREE.Vector3()), c = bx.getCenter(new THREE.Vector3());
+    const m = new THREE.Mesh(new THREE.BoxGeometry(Math.max(sz.x, 8), Math.max(sz.y, 8), Math.max(sz.z, 8)), PROXY_M); m.position.copy(c); m.visible = false; scene.add(m); return m; };
+  const staticPick = (obj, info) => { S.add(obj); pickables.push({ obj: proxyOf(obj), info }); };
   let padState = { next: 0, launching: false };
   // 天气：跟着当天的大盘情绪（偏乐观 = 晴，中性 = 多云，偏谨慎 = 阴雨）；规则固定在这里
   const WX = { sunny: { sun: 1, hemi: 1, fogN: 5200, fogF: 11000, gray: 0, cloud: .55 }, cloudy: { sun: .74, hemi: .92, fogN: 4300, fogF: 9600, gray: .35, cloud: .85 }, rain: { sun: .5, hemi: .8, fogN: 3400, fogF: 8200, gray: .6, cloud: 1 } };
@@ -245,8 +250,8 @@ function getTown() {
     const ch = wh.userData.chimney.clone().multiplyScalar(.85).applyAxisAngle(new THREE.Vector3(0, 1, 0), wh.rotation.y).add(wh.position);
     // 屋顶广告牌：这一环节今天成交最热的公司（广告牌有贴图，不参与合并）
     const hot = L.members.slice().sort((a, b) => b.vx[6] - a.vx[6])[0];
-    const bb = T_.buildBillboard(T_.hotStockTexture(hot, L), 150, 75, 30); at(bb, cx + side * sx, G + 55, cz + 6); scene.add(bb);
-    pickables.push({ obj: bb, info: () => ({ kind: 'board', title: `${hot.t} ${hot.name}`, sub: `${L.name} · 今日成交最热 · 量 ${hot.vx[6].toFixed(1)}x · ${hot.chg[6] >= 0 ? '+' : '−'}${Math.abs(hot.chg[6]).toFixed(2)}%`, go: hot.t, L }) });
+    const bb = T_.buildBillboard(T_.hotStockTexture(hot, L), 150, 75, 30); at(bb, cx + side * sx, G + 55, cz + 6);
+    staticPick(bb, () => ({ kind: 'board', title: `${hot.t} ${hot.name}`, sub: `${L.name} · 今日成交最热 · 量 ${hot.vx[6].toFixed(1)}x · ${hot.chg[6] >= 0 ? '+' : '−'}${Math.abs(hot.chg[6]).toFixed(2)}%`, go: hot.t, L }));
     chimneys.push({ p: ch, puffs: Array.from({ length: 5 }, (_, k) => { const m = sph(10, M('#ffffff', { roughness: 1, transparent: true, opacity: .8 }), 10); scene.add(m); return { m, ph: k / 5 }; }) });
     // 货堆（大道边）与叉车
     const pileZ = cz + toAve * 200, fx = cx + side * sx;
@@ -271,23 +276,23 @@ function getTown() {
       const x = cx - span / 2 + k * unit;
       if (sl.sign) {
         const g = sl.sign, sub = g.ms.length ? `${g.ms.length} 家 · 热度 ${L.heat[6].toFixed(1)}x` : '新子链 · 名单待补';
-        const ps = T_.buildPlotSign(g.seg, sub, L.color); ps.rotation.y = back ? 0 : Math.PI; ps.scale.setScalar(.78); at(ps, x, G + 5, towerZ + toAve * 22); scene.add(ps);
-        pickables.push({ obj: ps, info: () => ({ kind: 'plot', title: `${L.name} · ${g.seg}`, sub: g.ms.length ? `这块地上有 ${g.ms.length} 家：${g.ms.map(c => c.t).join('、')}` : '还没有上市公司，先留着地块', L }) });
+        const ps = T_.buildPlotSign(g.seg, sub, L.color); ps.rotation.y = back ? 0 : Math.PI; ps.scale.setScalar(.78); at(ps, x, G + 5, towerZ + toAve * 22);
+        staticPick(ps, () => ({ kind: 'plot', title: `${L.name} · ${g.seg}`, sub: g.ms.length ? `这块地上有 ${g.ms.length} 家：${g.ms.map(c => c.t).join('、')}` : '还没有上市公司，先留着地块', L }));
         return;
       }
       const c = sl.c, h = 24 + Math.min(Math.sqrt(c.cap) * 2.2, 92);
       const tw = T_.buildTower(c, L.color, h); tw.rotation.y = back ? 0 : Math.PI; tw.scale.setScalar(tscale);
-      at(tw, x, G + 5, towerZ); scene.add(tw); c.towerPos = tw.position.clone();
+      at(tw, x, G + 5, towerZ); c.towerPos = tw.position.clone();
       const sigTxt = c.signals.length ? ' · 今日有' + c.signals.map(k => ({ o: '期权信号', r: '研报调整', n: '新闻' })[k]).join('、') : '';
-      pickables.push({ obj: tw, info: () => ({ kind: 'tower', title: `${c.t} ${c.name}`, sub: `${L.name} · ${c.seg} · 今日 ${c.chg[6] >= 0 ? '+' : '−'}${Math.abs(c.chg[6]).toFixed(2)}%${sigTxt} · 点击打开公司档案`, go: c.t, L }) });
+      staticPick(tw, () => ({ kind: 'tower', title: `${c.t} ${c.name}`, sub: `${L.name} · ${c.seg} · 今日 ${c.chg[6] >= 0 ? '+' : '−'}${Math.abs(c.chg[6]).toFixed(2)}%${sigTxt} · 点击打开公司档案`, go: c.t, L }));
       if (c.signals.includes('o')) { const f = T_.buildFlag(c.chg[6] >= 0 ? '#0fb57b' : '#e8364a'); f.group.scale.setScalar(tscale); at(f.group, x - 14 * tscale, G + 5 + (h + 22) * tscale, towerZ); scene.add(f.group); flags.push({ f, ph: k }); }
-      if (c.signals.includes('r')) { const sg = T_.buildTargetSign(c.chg[6] >= 0); sg.rotation.y = back ? 0 : Math.PI; sg.scale.setScalar(tscale); at(sg, x + 28 * tscale, G + 5, towerZ + toAve * 34); scene.add(sg); }
+      if (c.signals.includes('r')) { const sg = T_.buildTargetSign(c.chg[6] >= 0); sg.rotation.y = back ? 0 : Math.PI; sg.scale.setScalar(tscale); at(sg, x + 28 * tscale, G + 5, towerZ + toAve * 34); S.add(sg); }
     });
     // 模型与云街区：未上市实验室的在建工地（塔吊慢慢转、吊钩上下）
     if (L.id === 'cloud') {
       const names = CL.unlisted.filter(u => u.layer === 'cloud').map(u => u.name);
       const cr = T_.buildCrane('#f5a314'); cr.group.scale.setScalar(.72); at(cr.group, cx - side * ex, G + 5, cz - toAve * 150); scene.add(cr.group); cranes.push({ cr, ph: 1.3 });
-      const fe = T_.buildFence(names, L.color); fe.rotation.y = back ? Math.PI : 0; fe.scale.setScalar(.8); at(fe, cx - side * ex, G + 5, cz - toAve * 92); scene.add(fe);
+      const fe = T_.buildFence(names, L.color); fe.rotation.y = back ? Math.PI : 0; fe.scale.setScalar(.8); at(fe, cx - side * ex, G + 5, cz - toAve * 92); S.add(fe);
       pickables.push({ obj: cr.group, info: () => ({ kind: 'site', title: '未上市实验室 · 在建', sub: `${names.join('、')}：还没上市，没有期权与研报数据；上市后这里会换成公司楼`, L }) });
     }
     // 行道树、长椅
@@ -365,9 +370,9 @@ function getTown() {
   const pierSW = box(64, 10, 460, M('#eef0f7'), .02); pierSW.rotation.y = Math.atan2(230, 390); at(pierSW, -885, G - 8, 1035); S.add(pierSW);
   for (let k = 0; k <= 5; k++) { const t = k / 5; S.add(at(cyl(9, 9, 120, pierM, 10), -770 - 230 * t, G - 70, 840 + 390 * t)); }
   const CAMP = { x: -1000, z: 1230 };
-  const campus = T_.buildCampus(); at(campus.group, CAMP.x, G - 4, CAMP.z); scene.add(campus.group);
-  pickables.push({ obj: campus.hospital, info: () => ({ kind: 'med', title: 'AI 医疗园区', sub: '影像 AI、手术机器人、AI 制药：应用与端侧的延伸；上市公司名单待补，先留地块' }) });
-  pickables.push({ obj: campus.sign, info: () => ({ kind: 'track', title: '机器人试验场', sub: '端侧 / 机器人子链的试验场：两台两足机器人在绕圈，看台上没人打分' }) });
+  const campus = T_.buildCampus(); at(campus.group, CAMP.x, G - 4, CAMP.z); S.add(campus.group);
+  pickables.push({ obj: proxyOf(campus.hospital), info: () => ({ kind: 'med', title: 'AI 医疗园区', sub: '影像 AI、手术机器人、AI 制药：应用与端侧的延伸；上市公司名单待补，先留地块' }) });
+  pickables.push({ obj: proxyOf(campus.sign), info: () => ({ kind: 'track', title: '机器人试验场', sub: '端侧 / 机器人子链的试验场：两台两足机器人在绕圈，看台上没人打分' }) });
   const drone = T_.buildDrone(); scene.add(drone.group);
   pickables.push({ obj: drone.group, info: () => ({ kind: 'drone', title: '送药无人机', sub: '从医院楼顶起飞，绕园区一圈再回来' }) });
 
@@ -381,8 +386,8 @@ function getTown() {
   const PLAZA = { x: 1310, z: 240 };
   const plate = new THREE.Mesh(new THREE.CircleGeometry(105, 48).rotateX(-Math.PI / 2), M('#eef0f7', { roughness: .9 })); at(plate, PLAZA.x, G + 2.2, PLAZA.z); S.add(plate);
   const plateRim = new THREE.Mesh(new THREE.RingGeometry(103, 109, 48).rotateX(-Math.PI / 2), M('#cfd2e2')); at(plateRim, PLAZA.x, G + 2.4, PLAZA.z); S.add(plateRim);
-  const clock = T_.buildClockTower(); clock.scale.setScalar(.85); at(clock, PLAZA.x + 40, G + 2.4, PLAZA.z + 30); scene.add(clock);
-  pickables.push({ obj: clock, info: () => ({ kind: 'clock', title: '潮信钟楼 · 15:40', sub: '表针停在 15:40——每个交易日这个时候，期权日报送到你的邮箱' }) });
+  const clock = T_.buildClockTower(); clock.scale.setScalar(.85); at(clock, PLAZA.x + 40, G + 2.4, PLAZA.z + 30);
+  staticPick(clock, () => ({ kind: 'clock', title: '潮信钟楼 · 15:40', sub: '表针停在 15:40——每个交易日这个时候，期权日报送到你的邮箱' }));
   const fountain = T_.buildFountain(); at(fountain.group, PLAZA.x - 45, G + 2.4, PLAZA.z - 30); scene.add(fountain.group);
   pickables.push({ obj: fountain.group, info: () => ({ kind: 'fountain', title: '港口广场的喷泉', sub: '下班后大家在这里等巴士、看市场大屏' }) });
   [[-70, 70, .9], [60, -70, -2.3], [-30, 95, 0]].forEach(([dx, dz, ry]) => { const bn = T_.buildBench(); bn.rotation.y = ry; at(bn, PLAZA.x + dx, G + 2.4, PLAZA.z + dz); S.add(bn); });
@@ -472,7 +477,7 @@ function getTown() {
   });
 
   // ---------- 港口入口的市场大屏 + 滚动字幕 ----------
-  const board = T_.buildBillboard(T_.marketBoardTexture(), 230, 115, 70, { dark: true }); at(board, 1290, G + 5, -150); scene.add(board);
+  const board = T_.buildBillboard(T_.marketBoardTexture(), 230, 115, 70, { dark: true }); at(board, 1290, G + 5, -150); S.add(board);
   const tickerTex = T_.tickerTexture(CL.companies.slice().sort((a, b) => b.vx[6] - a.vx[6]).slice(0, 14).map(c => [c.t, c.chg[6]]));
   const ticker = new THREE.Mesh(new THREE.BoxGeometry(236, 18, 4), [M('#2b2d45'), M('#2b2d45'), M('#2b2d45'), M('#2b2d45'), new THREE.MeshBasicMaterial({ map: tickerTex, toneMapped: false }), M('#2b2d45')]);
   at(ticker, 1290, G + 5 + 58, -149); scene.add(ticker);
@@ -805,7 +810,7 @@ function initIsland(canvas, ui) {
     });
   };
   view.resize();
-  return { look: (px, py, pz, tx, ty, tz, d) => { town.focus = -2; tween = { t0: performance.now(), d: d || 1400, p0: camera.position.clone(), t0v: controls.target.clone(), p1: new THREE.Vector3(px, py, pz), t1: new THREE.Vector3(tx, ty, tz) }; }, go, setDay: town.setDay, town, get focus() { return town.focus; } };
+  return { view, look: (px, py, pz, tx, ty, tz, d) => { town.focus = -2; tween = { t0: performance.now(), d: d || 1400, p0: camera.position.clone(), t0v: controls.target.clone(), p1: new THREE.Vector3(px, py, pz), t1: new THREE.Vector3(tx, ty, tz) }; }, go, setDay: town.setDay, town, get focus() { return town.focus; } };
 }
 return { initIsland, initHeroIsland, getTown };
 })();
