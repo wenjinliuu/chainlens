@@ -12,14 +12,14 @@
 
   // 8 层：从上游到下游；颜色取 palette.md 主分类 8 色（不含涨跌红绿），相邻层色差大
   const layers = [
-    { id: 'raw', name: '原材料', en: 'Materials', color: '#f5a314', obj: 'ingots', segs: { '铜/稀土': 'FCX SCCO MP' } },
+    { id: 'raw', name: '原材料', en: 'Materials', color: '#f5a314', obj: 'ingots', segs: { '铜/稀土': 'FCX SCCO MP', '硅片/材料': '' } },
     { id: 'energy', name: '能源', en: 'Energy', color: '#ff6b2c', obj: 'power', segs: { '发电': 'VST CEG TLN', '电网设备': 'GEV', '核能/铀': 'OKLO CCJ', '燃料电池': 'BE' } },
-    { id: 'chip', name: '芯片', en: 'Chips', color: '#5b4cff', obj: 'chip', segs: { 'GPU/加速器': 'NVDA AMD', '定制ASIC': 'AVGO MRVL', 'CPU': 'ARM INTC', '存储': 'MU SNDK WDC', '晶圆代工': 'TSM', '设备/材料': 'ASML AMAT LRCX KLAC' } },
+    { id: 'chip', name: '芯片', en: 'Chips', color: '#5b4cff', obj: 'chip', segs: { 'GPU/加速器': 'NVDA AMD', '定制ASIC': 'AVGO MRVL', 'CPU': 'ARM INTC', '存储': 'MU SNDK WDC', '晶圆代工': 'TSM', '设备/材料': 'ASML AMAT LRCX KLAC', 'EDA/IP': '' } },
     { id: 'net', name: '网络与光', en: 'Network', color: '#00a8c6', obj: 'switches', segs: { '光模块': 'COHR LITE CIEN', '交换/连接': 'ANET CRDO ALAB CSCO' } },
     { id: 'dc', name: '服务器与数据中心', en: 'Servers & DC', color: '#2b6cf2', obj: 'rack', segs: { 'AI服务器': 'SMCI DELL HPE', '电力/散热': 'VRT ETN', '数据中心REIT': 'EQIX DLR' } },
-    { id: 'compute', name: '算力租赁', en: 'GPU Cloud', color: '#d23fd8', obj: 'gpu', segs: { 'GPU/算力云': 'CRWV NBIS IREN CIFR WULF CORZ APLD' } },
-    { id: 'cloud', name: '模型与云', en: 'Models & Cloud', color: '#1296f0', obj: 'datacenter', segs: { '大模型/云': 'MSFT GOOGL AMZN META ORCL', '中概云': 'BABA' } },
-    { id: 'app', name: '应用与端侧', en: 'Apps & Edge', color: '#a04cf5', obj: 'robot', segs: { 'AI软件': 'PLTR SNOW CRWD NOW', '端侧/机器人': 'TSLA AAPL QCOM' } },
+    { id: 'compute', name: '算力租赁', en: 'GPU Cloud', color: '#d23fd8', obj: 'gpu', segs: { 'GPU/算力云': 'CRWV NBIS', '矿企转型': 'IREN CIFR WULF CORZ APLD' } },
+    { id: 'cloud', name: '模型与云', en: 'Models & Cloud', color: '#1296f0', obj: 'datacenter', segs: { '大模型/云': 'MSFT GOOGL AMZN META ORCL', '中概云': 'BABA', '未上市实验室': '' } },
+    { id: 'app', name: '应用与端侧', en: 'Apps & Edge', color: '#a04cf5', obj: 'robot', segs: { 'AI软件': 'PLTR SNOW CRWD NOW', '端侧/机器人': 'TSLA AAPL QCOM', 'AI医疗': '', '太空': '' } },
   ];
 
   const NAMES = {
@@ -47,7 +47,7 @@
   layers.forEach((L, li) => {
     L.heat = heatShape[L.id];
     L.members = [];
-    Object.entries(L.segs).forEach(([seg, list]) => list.split(' ').forEach(t => {
+    Object.entries(L.segs).forEach(([seg, list]) => list.split(' ').filter(Boolean).forEach(t => { // 空字符串 = 还没有上市公司的子链，只留地块
       const mood = L.heat.map(h => (h - 1.2) * 1.6);
       const c = { t, name: NAMES[t][0], cap: NAMES[t][1], layer: L.id, li, seg, logo: logo(t),
         chg: days.map((_, d) => +(mood[d] + (r() - 0.5) * 5).toFixed(2)), vx: days.map((_, d) => +(L.heat[d] * (0.6 + r() * 0.9)).toFixed(1)), signals: [] };
@@ -55,6 +55,15 @@
     }));
   });
   const byT = Object.fromEntries(companies.map(c => [c.t, c]));
+  // 未上市的参与者：镇上只给"在建工地 / 发射场"，没有行情、期权、研报数据，不进 companies
+  const unlisted = [
+    { t: 'ANTHROPIC', name: 'Anthropic', layer: 'cloud', seg: '未上市实验室', note: '大模型' },
+    { t: 'OPENAI', name: 'OpenAI', layer: 'cloud', seg: '未上市实验室', note: '大模型' },
+    { t: 'XAI', name: 'xAI', layer: 'cloud', seg: '未上市实验室', note: '大模型' },
+    { t: 'SPACEX', name: 'SpaceX', layer: 'app', seg: '太空', note: '火箭与卫星通信' },
+  ];
+  // 7 天的大盘情绪（虚构；10-30 与期权日报样张一致）：镇上的天气跟着它走
+  const moods = ['中性', '偏乐观', '中性', '偏谨慎', '中性', '偏乐观', '偏乐观'];
   [['NVDA', 'o'], ['NVDA', 'r'], ['MU', 'o'], ['MU', 'r'], ['LITE', 'o'], ['SMCI', 'o'], ['IREN', 'o'], ['MP', 'o'],
    ['ANET', 'r'], ['COHR', 'r'], ['VRT', 'r'], ['CEG', 'n'], ['TSM', 'n'], ['AVGO', 'r'], ['CRWV', 'n'], ['PLTR', 'n']]
     .forEach(([t, k]) => byT[t].signals.push(k));
@@ -79,6 +88,6 @@
     { q: '数据中心的电源和液冷设备，代表公司是？', opts: ['VRT', 'PLTR', 'ASML', 'MU'], a: 'VRT', why: 'Vertiv 做机房供配电、UPS 和液冷散热。' },
   ];
 
-  window.CL = { layers, companies, byT, days, cards, quiz, logo,
+  window.CL = { layers, companies, byT, days, cards, quiz, logo, unlisted, moods,
     disclaimer: '本站内容为公开信息整理，不构成任何投资建议。市场有风险，投资需谨慎。' };
 })();

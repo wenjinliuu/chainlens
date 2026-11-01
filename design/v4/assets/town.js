@@ -419,6 +419,105 @@ function buildCloud(i) {
   return g;
 }
 
-return { M, box, cyl, sph, at, buildTower, logoSignTexture, buildTrafficLight, SIG, hotStockTexture, marketBoardTexture, tickerTexture, buildBillboard, NIGHT, buildCar, buildVan, buildTruck, buildFlatbed, buildBus, buildForklift, buildPerson, buildWalkerBot, buildDeliveryBot,
+
+// ================= 子链地块牌 =================
+function plotSignTexture(seg, sub, color) {
+  return canvasTex(300, 130, g => {
+    g.fillStyle = '#ffffff'; rr(g, 0, 0, 300, 130, 18); g.fill();
+    g.fillStyle = color; rr(g, 0, 0, 14, 130, [18, 0, 0, 18]); g.fill();
+    g.fillStyle = '#16172a'; g.font = `900 40px ${CNF}`; g.textAlign = 'left'; g.fillText(seg, 32, 62);
+    g.fillStyle = '#8e91a7'; g.font = `700 22px ${CNF}`; g.fillText(sub, 32, 102);
+  });
+}
+function buildPlotSign(seg, sub, color) { return buildBillboard(plotSignTexture(seg, sub, color), 96, 42, 22); }
+
+// ================= 信号：楼顶旗（绿多 / 红空）、楼前目标价牌（研报上调 / 下调） =================
+function buildFlag(color) {
+  const g = new THREE.Group();
+  g.add(at(cyl(1, 1.3, 44, M('#b8bccd'), 6), 0, 22, 0));
+  const cloth = new THREE.Mesh(new THREE.PlaneGeometry(20, 12, 6, 1), new THREE.MeshStandardMaterial({ color, roughness: .8, side: THREE.DoubleSide, emissive: color, emissiveIntensity: .25 }));
+  cloth.geometry.translate(10, 0, 0); cloth.position.y = 38; g.add(cloth);
+  return { group: g, cloth, tick(T, ph) { const pos = cloth.geometry.attributes.position; for (let i = 0; i < pos.count; i++) { const x = pos.getX(i); pos.setZ(i, Math.sin(T * 6 + x * .35 + ph) * x * .12); } pos.needsUpdate = true; } };
+}
+function buildTargetSign(up) {
+  const g = new THREE.Group(), c = up ? '#0fb57b' : '#e8364a';
+  g.add(at(box(2.4, 22, 2.4, M('#b8bccd'), 0), 0, 11, 0));
+  g.add(at(box(16, 14, 2, M('#ffffff'), .12), 0, 28, 0));
+  const a = new THREE.Mesh(new THREE.ConeGeometry(4.5, 6, 3), M(c, { emissive: c, emissiveIntensity: .3 })); a.rotation.z = up ? 0 : Math.PI; a.position.set(0, up ? 30 : 26, 1.6); g.add(a);
+  g.add(at(box(2.4, 5, 1.6, M(c), 0), 0, up ? 25 : 31, 1.6));
+  return shadow(g);
+}
+
+// ================= 在建工地：塔吊 + 围挡（未上市巨头） =================
+function buildCrane(color) {
+  const g = new THREE.Group(), steel = M(color || '#f5a314'), dark = M('#3a3c52');
+  g.add(at(box(34, 6, 34, M('#cfd2e2'), .1), 0, 3, 0));
+  for (let k = 0; k < 6; k++) g.add(at(box(k % 2 ? 7 : 9, 28, k % 2 ? 7 : 9, steel, 0), 0, 6 + 14 + k * 28, 0));   // 塔身（粗细交替像桁架）
+  const top = 6 + 6 * 28;
+  const jib = new THREE.Group(); jib.position.y = top; g.add(jib);
+  jib.add(at(box(150, 5, 5, steel, 0), 60, 6, 0)); jib.add(at(box(44, 5, 5, steel, 0), -32, 6, 0));
+  jib.add(at(box(12, 12, 10, dark, .15), -42, 2, 0)); jib.add(at(box(10, 9, 9, M('#ffffff'), .1), 10, 0, 7));   // 配重、驾驶室
+  for (let k = 1; k <= 4; k++) { const t = new THREE.Mesh(new THREE.CylinderGeometry(.8, .8, 40 + k * 22, 4), M('#8e91a7')); t.position.set(20 + k * 25, 20, 0); t.rotation.z = Math.atan2(40 + k * 22, 0) * 0 + Math.PI / 2 - Math.atan2(26, 20 + k * 25); jib.add(t); }
+  jib.add(at(box(6, 30, 6, steel, 0), 0, 18, 0));
+  const hookG = new THREE.Group(); hookG.position.set(110, 6, 0); jib.add(hookG);
+  const cable = new THREE.Mesh(new THREE.CylinderGeometry(.6, .6, 1, 4), M('#5d6182')); cable.position.y = -.5; hookG.add(cable);
+  const hook = at(box(10, 8, 10, M('#ff6b2c'), .1), 0, -60, 0); hookG.add(hook);
+  shadow(g);
+  return { group: g, jib, hook, cable, tick(T, ph) { jib.rotation.y = Math.sin(T * .17 + ph) * .9; const L = 60 + Math.sin(T * .4 + ph) * 25; cable.scale.y = L; cable.position.y = -L / 2; hook.position.y = -L; } };
+}
+function buildFence(names, color) {
+  const g = new THREE.Group(), n = names.length;
+  const tex = canvasTex(520, 100, x => {
+    x.fillStyle = mix(color, W, .85); x.fillRect(0, 0, 520, 100);
+    x.fillStyle = mix(color, '#000000', .2); x.font = `900 30px ${CNF}`; x.textAlign = 'left'; x.fillText('未上市实验室 · 在建', 20, 42);
+    x.fillStyle = '#444760'; x.font = `800 26px ${NUMF}`; x.fillText(names.join('  ·  '), 20, 80);
+  });
+  const panel = new THREE.Mesh(new THREE.BoxGeometry(170, 32, 2.4), [M(W), M(W), M(W), M(W), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }), M(mix(color, W, .85))]);
+  at(panel, 0, 16, 0); g.add(panel);
+  [-85, -28, 28, 85].forEach(x => g.add(at(box(4, 36, 4, M('#b8bccd'), 0), x, 18, -1)));
+  g.add(at(box(150, 4, 90, M('#dcdfeb'), 0), 0, 2, -60));   // 地基
+  for (let k = 0; k < 3; k++) g.add(at(box(14, 18, 14, M(mix(color, W, .6)), .05), -50 + k * 50, 9, -60));   // 刚起的柱子
+  return shadow(g);
+}
+
+// ================= 发射场：发射塔 + 火箭（每隔一会儿点火升空） =================
+function buildRocketPad() {
+  const g = new THREE.Group(), steel = M('#8e91a7'), white = M('#ffffff', { roughness: .35 });
+  g.add(at(cyl(150, 160, 10, M('#e4e6ef', { roughness: .9 }), 48), 0, 5, 0));
+  g.add(at(box(70, 6, 70, M('#b8bccd'), 0), 0, 13, 0));
+  // 发射塔：四根立柱 + 横撑
+  const H = 190;
+  [[-26, -26], [26, -26], [-26, 26], [26, 26]].forEach(([x, z]) => g.add(at(box(5, H, 5, steel, 0), x + 60, 16 + H / 2, z)));
+  for (let y = 40; y < H; y += 30) { g.add(at(box(57, 3, 3, steel, 0), 60, 16 + y, -26)); g.add(at(box(57, 3, 3, steel, 0), 60, 16 + y, 26)); g.add(at(box(3, 3, 57, steel, 0), 34, 16 + y, 0)); }
+  g.add(at(box(40, 4, 10, steel, 0), 20, 16 + H - 30, 0));   // 连接臂
+  // 火箭
+  const rocket = new THREE.Group(); rocket.position.set(0, 16, 0); g.add(rocket);
+  rocket.add(at(cyl(12, 12, 120, white, 20), 0, 60, 0));
+  rocket.add(at(box(26, 6, 26, M('#1296f0'), 0), 0, 92, 0));
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(12, 34, 20), white); nose.position.y = 137; rocket.add(nose);
+  [0, 1, 2].forEach(k => { const f = at(box(4, 26, 16, M('#3a3c52'), 0), 0, 13, 0); f.geometry.translate(0, 0, 14); f.rotation.y = k * Math.PI * 2 / 3; rocket.add(f); });
+  rocket.add(at(cyl(6, 9, 10, M('#3a3c52'), 12), 0, -2, 0));
+  const flame = new THREE.Mesh(new THREE.ConeGeometry(9, 70, 12), new THREE.MeshStandardMaterial({ color: '#ffd27a', emissive: '#ff8a1e', emissiveIntensity: 2.2, transparent: true, opacity: .9 }));
+  flame.rotation.x = Math.PI; flame.position.y = -42; flame.scale.setScalar(.001); rocket.add(flame);
+  const puffs = Array.from({ length: 10 }, (_, k) => { const m = sph(14, M('#ffffff', { roughness: 1, transparent: true, opacity: 0 }), 10); m.position.set(0, 20, 0); g.add(m); return { m, ph: k / 10 }; });
+  const sign = buildBillboard(canvasTex(360, 150, x => { x.fillStyle = '#ffffff'; rr(x, 0, 0, 360, 150, 22); x.fill(); x.fillStyle = '#16172a'; x.font = `900 40px ${CNF}`; x.textAlign = 'left'; x.fillText('发射场 · 太空', 22, 64); x.fillStyle = '#8e91a7'; x.font = `700 24px ${CNF}`; x.fillText('SpaceX · 未上市 · 定期试射', 22, 112); }), 120, 50, 26);
+  at(sign, -110, 10, 110); g.add(sign);
+  shadow(g);
+  const CYCLE = 96;
+  return { group: g, rocket, flame, sign, tick(T) {
+    const k = T % CYCLE;
+    let y = 0, fl = 0, launching = false;
+    if (k < 70) { y = 0; fl = 0; }
+    else if (k < 73) { y = 0; fl = (k - 70) / 3; launching = true; }
+    else if (k < 86) { const u = (k - 73) / 13; y = u * u * 2600; fl = 1; launching = true; }
+    else { y = -9999; fl = 0; }
+    rocket.position.y = y === -9999 ? -400 : 16 + y; rocket.visible = y !== -9999;
+    flame.scale.setScalar(Math.max(fl, .001)); flame.scale.y = Math.max(fl * (1 + Math.sin(T * 40) * .15), .001);
+    puffs.forEach(p => { const u = launching ? ((T * .6 + p.ph) % 1) : 0; p.m.material.opacity = launching ? (1 - u) * .8 : Math.max(0, p.m.material.opacity - .02); p.m.position.set(Math.cos(p.ph * 6.28) * (20 + u * 120), 18 + u * 40, Math.sin(p.ph * 6.28) * (20 + u * 120)); p.m.scale.setScalar(.6 + u * 2.4); });
+    return { next: Math.max(0, Math.ceil(70 - k)), launching };
+  } };
+}
+
+return { plotSignTexture, buildPlotSign, buildFlag, buildTargetSign, buildCrane, buildFence, buildRocketPad, M, box, cyl, sph, at, buildTower, logoSignTexture, buildTrafficLight, SIG, hotStockTexture, marketBoardTexture, tickerTexture, buildBillboard, NIGHT, buildCar, buildVan, buildTruck, buildFlatbed, buildBus, buildForklift, buildPerson, buildWalkerBot, buildDeliveryBot,
   buildWarehouse, buildRobotArm, buildGantry, buildPylon, buildStreetLight, buildTreeSmall, buildBench, buildCrates, buildContainerStack, buildBlimp, buildGull, buildCloud, SHIRT };
 })();

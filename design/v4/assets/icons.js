@@ -47,6 +47,10 @@ window.ICON = (() => {
     pause: '<path d="M8 5v14M16 5v14" stroke-width="3"/>',
     column: '<path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/>',
     rocket: '<path d="M12 3c3 2 5 6 5 10l-5 4-5-4c0-4 2-8 5-10Z"/><path d="M7 13l-3 3 2 2 3-1M17 13l3 3-2 2-3-1M10 20l2 2 2-2"/>',
+    crane: '<path d="M6 21V4M3 21h6M6 4l12 3M18 7v4M18 11l-2 2h4l-2-2ZM11 5.5v4"/><circle cx="11" cy="11" r="1.5"/>',
+    cloud: '<path d="M7 18a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.6 1.5A3.5 3.5 0 0 1 17 18H7Z"/>',
+    rain: '<path d="M7 15a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.6 1.5A3.5 3.5 0 0 1 17 15H7Z"/><path d="M9 18l-1 3M13 18l-1 3M17 18l-1 3"/>',
+    flag: '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
     share: '<circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8 11l8-5M8 13l8 5"/>',
   };
   const svg = (n, s = 18, cls = '') => `<svg class="ico ico-${n}${cls ? ' ' + cls : ''}" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n] || P.sparkle}</svg>`;

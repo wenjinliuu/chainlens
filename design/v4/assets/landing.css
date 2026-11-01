@@ -583,3 +583,7 @@
 .pk-h b { display: inline-flex; align-items: center; gap: 8px; } .pk-ic { color: var(--accent-deep); flex: none; }
 /* 贴纸感：标签轻微歪一点（只用在样张 / 海报的"示例"标） */
 .tag.stk { rotate: -2deg; box-shadow: 0 2px 0 rgba(0,0,0,.06); }
+
+/* 产业镇底栏：天气标签（= 当天大盘情绪） */
+.isle-wx { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 999px; background: var(--card-2); font-size: 12.5px; font-weight: 700; color: var(--ink2); white-space: nowrap; } .isle-wx svg { color: var(--accent-deep); }
+@media (max-width: 640px) { .isle-wx span { display: none; } }

@@ -118,7 +118,7 @@
     }
     // 点镇里的东西：气泡跟着它走
     const bub = $('#isleBubble'); let followed = null;
-    const KIND_ICON = { tower: 'building', truck: 'truck', flat: 'flat', bus: 'bus', car: 'car', fork: 'forklift', worker: 'worker', arm: 'arm', person: 'walker', bot: 'robot', board: 'billboard', port: 'anchor', light: 'lighthouse', robin: 'bird', blimp: 'blimp' };
+    const KIND_ICON = { tower: 'building', truck: 'truck', flat: 'flat', bus: 'bus', car: 'car', fork: 'forklift', worker: 'worker', arm: 'arm', person: 'walker', bot: 'robot', board: 'billboard', port: 'anchor', light: 'lighthouse', robin: 'bird', blimp: 'blimp', rocket: 'rocket', site: 'crane', plot: 'factory' };
     const thing = (info, x, y, th) => {
       if (!info) { followed = null; bub.classList.remove('show'); return; }
       followed = th;
@@ -130,6 +130,11 @@
     const moveThing = (x, y, vis) => { bub.style.left = x + 'px'; bub.style.top = y + 'px'; bub.style.opacity = vis ? 1 : 0; };
     const isl = initIsland($('#isleCanvas'), { labels: [...document.querySelectorAll('.isle-label')], select: i => { thing(null); render(i); if (location.hash.startsWith('#island')) history.replaceState(null, '', i >= 0 ? `#island?station=${L[i].id}` : '#island'); }, thing, followThing: () => followed, moveThing });
     LP.town = isl.town;
+    // 天气标签：跟着当天的大盘情绪
+    const WXI = { sunny: ['sun', '晴'], cloudy: ['cloud', '多云'], rain: ['rain', '阴雨'] };
+    const wxEl = $('#isleWx');
+    const syncWx = () => { if (!wxEl || !LP.town) return; const [ic, nm] = WXI[LP.town.weather] || WXI.sunny; const mood = CL.moods ? CL.moods[LP.town.day ?? 6] : '偏乐观'; wxEl.innerHTML = `${ICON.svg(ic, 15)}<span>${nm} · 今日${mood}</span>`; };
+    syncWx(); const _sw = isl.town.setWeather; isl.town.setWeather = m => { _sw(m); syncWx(); };
     document.querySelectorAll('.isle-label, .isle-chip').forEach(b => b.onclick = () => isl.go(+b.dataset.i));
     $('#islePrev').onclick = () => isl.go(isl.focus <= 0 ? L.length - 1 : isl.focus - 1);
     $('#isleNext').onclick = () => isl.go(isl.focus >= L.length - 1 ? 0 : isl.focus + 1);

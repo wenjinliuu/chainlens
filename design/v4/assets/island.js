@@ -150,6 +150,11 @@ function getTown() {
   scene.add(sun);
   const S = new THREE.Group();     // 静态道具，最后统一合并
   const pickables = [];            // 可点击的东西：{ obj, info() }
+  const flags = [], cranes = [];   // 楼顶旗、塔吊（每帧动）
+  let padState = { next: 0, launching: false };
+  // 天气：跟着当天的大盘情绪（偏乐观 = 晴，中性 = 多云，偏谨慎 = 阴雨）；规则固定在这里
+  const WX = { sunny: { sun: 1, hemi: 1, fogN: 5200, fogF: 11000, gray: 0, cloud: .55 }, cloudy: { sun: .74, hemi: .92, fogN: 4300, fogF: 9600, gray: .35, cloud: .85 }, rain: { sun: .5, hemi: .8, fogN: 3400, fogF: 8200, gray: .6, cloud: 1 } };
+  const MOOD_WX = { '偏乐观': 'sunny', '中性': 'cloudy', '偏谨慎': 'rain' };
 
   // ---------- 岛与潮水 ----------
   const shape = new THREE.Shape(), N = 80;
@@ -227,16 +232,35 @@ function getTown() {
       pickables.push({ obj: p.group, info: () => ({ kind: 'worker', title: `${L.name}街区的工人`, sub: `今天这个环节期权热度 ${L.heat[6].toFixed(1)}x，${L.heat[6] >= 1.5 ? '开足马力' : '正常开工'}`, L }) });
     });
     if ([2, 4, 5].includes(i)) { const a = T_.buildRobotArm(L.color); at(a.group, cx - side * 160, G + 5, cz - toAve * 160); a.group.scale.setScalar(1.2); scene.add(a.group); arms.push(a); pickables.push({ obj: a.group, info: () => ({ kind: 'arm', title: `${L.name}街区的机械臂`, sub: '自动化产线，24 小时不停', L }) }); }
-    // 公司楼：沿街区远离大道的那条边排一排，高度 ≈ 市值；点楼进公司档案
-    const members = L.members.slice().sort((a, b) => b.cap - a.cap).slice(0, 5);
-    const towerZ = cz - toAve * (BD / 2 - 40), span = BW - 110;
-    members.forEach((c, k) => {
-      const h = 24 + Math.min(Math.sqrt(c.cap) * 2.2, 92);
-      const tw = T_.buildTower(c, L.color, h); tw.rotation.y = back ? 0 : Math.PI;
-      at(tw, cx - span / 2 + (members.length === 1 ? span / 2 : k * span / (members.length - 1)), G + 5, towerZ); scene.add(tw);
-      c.towerPos = tw.position.clone();
-      pickables.push({ obj: tw, info: () => ({ kind: 'tower', title: `${c.t} ${c.name}`, sub: `${L.name} · ${c.seg} · 今日 ${c.chg[6] >= 0 ? '+' : '−'}${Math.abs(c.chg[6]).toFixed(2)}%${c.signals.length ? ' · 今日有' + c.signals.map(x => ({ o: '期权信号', r: '研报调整', n: '新闻' })[x]).join('、') : ''}`, go: c.t, L }) });
+    // 公司楼：沿街区远离大道的那条边，按子链分组排成一排；每组前立一块地块牌；楼顶按当日期权信号升旗（绿多 / 红空），楼前按研报调整立目标价牌
+    const groups = Object.entries(L.segs).map(([seg, list]) => ({ seg, ms: list.split(' ').filter(Boolean).map(t => CL.byT[t]).filter(Boolean).sort((a, b) => b.cap - a.cap) }));
+    const towerZ = cz - toAve * (BD / 2 - 40), span = BW - 90, MAXT = 7;
+    const drawn = groups.map(g => ({ ...g, ms: g.ms.slice(0, Math.min(g.ms.length, Math.max(1, Math.round(MAXT * g.ms.length / Math.max(1, L.members.length))))) }));
+    const slots = []; drawn.forEach(g => { slots.push({ sign: g }); g.ms.forEach(c => slots.push({ c, g })); });   // 每组：一块牌 + 它的楼；空子链只有牌（留地块）
+    const unit = span / Math.max(slots.length - 1, 1), tscale = slots.length > 9 ? .74 : slots.length > 7 ? .84 : 1;
+    slots.forEach((sl, k) => {
+      const x = cx - span / 2 + k * unit;
+      if (sl.sign) {
+        const g = sl.sign, sub = g.ms.length ? `${g.ms.length} 家 · 热度 ${L.heat[6].toFixed(1)}x` : '新子链 · 名单待补';
+        const ps = T_.buildPlotSign(g.seg, sub, L.color); ps.rotation.y = back ? 0 : Math.PI; ps.scale.setScalar(.78); at(ps, x, G + 5, towerZ + toAve * 22); scene.add(ps);
+        pickables.push({ obj: ps, info: () => ({ kind: 'plot', title: `${L.name} · ${g.seg}`, sub: g.ms.length ? `这块地上有 ${g.ms.length} 家：${g.ms.map(c => c.t).join('、')}` : '还没有上市公司，先留着地块', L }) });
+        return;
+      }
+      const c = sl.c, h = 24 + Math.min(Math.sqrt(c.cap) * 2.2, 92);
+      const tw = T_.buildTower(c, L.color, h); tw.rotation.y = back ? 0 : Math.PI; tw.scale.setScalar(tscale);
+      at(tw, x, G + 5, towerZ); scene.add(tw); c.towerPos = tw.position.clone();
+      const sigTxt = c.signals.length ? ' · 今日有' + c.signals.map(k => ({ o: '期权信号', r: '研报调整', n: '新闻' })[k]).join('、') : '';
+      pickables.push({ obj: tw, info: () => ({ kind: 'tower', title: `${c.t} ${c.name}`, sub: `${L.name} · ${c.seg} · 今日 ${c.chg[6] >= 0 ? '+' : '−'}${Math.abs(c.chg[6]).toFixed(2)}%${sigTxt} · 点击打开公司档案`, go: c.t, L }) });
+      if (c.signals.includes('o')) { const f = T_.buildFlag(c.chg[6] >= 0 ? '#0fb57b' : '#e8364a'); f.group.scale.setScalar(tscale); at(f.group, x - 14 * tscale, G + 5 + (h + 22) * tscale, towerZ); scene.add(f.group); flags.push({ f, ph: k }); }
+      if (c.signals.includes('r')) { const sg = T_.buildTargetSign(c.chg[6] >= 0); sg.rotation.y = back ? 0 : Math.PI; sg.scale.setScalar(tscale); at(sg, x + 28 * tscale, G + 5, towerZ + toAve * 34); scene.add(sg); }
     });
+    // 模型与云街区：未上市实验室的在建工地（塔吊慢慢转、吊钩上下）
+    if (L.id === 'cloud') {
+      const names = CL.unlisted.filter(u => u.layer === 'cloud').map(u => u.name);
+      const cr = T_.buildCrane('#f5a314'); cr.group.scale.setScalar(.72); at(cr.group, cx - side * 150, G + 5, cz - toAve * 150); scene.add(cr.group); cranes.push({ cr, ph: 1.3 });
+      const fe = T_.buildFence(names, L.color); fe.rotation.y = back ? Math.PI : 0; fe.scale.setScalar(.8); at(fe, cx - side * 150, G + 5, cz - toAve * 92); scene.add(fe);
+      pickables.push({ obj: cr.group, info: () => ({ kind: 'site', title: '未上市实验室 · 在建', sub: `${names.join('、')}：还没上市，没有期权与研报数据；上市后这里会换成公司楼`, L }) });
+    }
     // 行道树、长椅
     for (let k = 0; k < 5; k++) { const t = T_.buildTreeSmall(i + k); at(t, cx - BW / 2 + 40 + k * ((BW - 80) / 4), G + 5, cz + toAve * (BD / 2 - 14)); t.scale.setScalar(1.3); S.add(t); } // 大道这一侧的行道树
     for (let k = 0; k < 3; k++) { const t = T_.buildTreeSmall(i + k + 2); at(t, cx - side * (BW / 2 - 16), G + 5, cz - 120 + k * 120); t.scale.setScalar(1.2); S.add(t); }
@@ -299,6 +323,13 @@ function getTown() {
   const docked = buildShip(); docked.scale.setScalar(1.25); at(docked, 1630, WATER_Y + 8, 330); scene.add(docked);
   pickables.push({ obj: gantry.group, info: () => ({ kind: 'port', title: '港口岸桥', sub: '把 8 个环节的成品装上货船，运往全世界' }) });
   pickables.push({ obj: docked, info: () => ({ kind: 'port', title: '靠港货船', sub: '集装箱是 8 层产业链的颜色，装满就出发' }) });
+
+  // ---------- 发射场（东南半岛）：SpaceX 未上市，只有火箭和倒计时，没有数据 ----------
+  const pierSE = box(64, 10, 460, M('#eef0f7'), .02); pierSE.rotation.y = -Math.atan2(230, 390); at(pierSE, 885, G - 8, 1035); S.add(pierSE);
+  for (let k = 0; k <= 5; k++) { const t = k / 5; S.add(at(cyl(9, 9, 120, pierM, 10), 770 + 230 * t, G - 70, 840 + 390 * t)); }
+  const pad = T_.buildRocketPad(); at(pad.group, 1000, G - 4, 1230); scene.add(pad.group);
+  pickables.push({ obj: pad.rocket, info: () => ({ kind: 'rocket', title: 'SpaceX 试射 · 发射场', sub: `太空与卫星通信 · 未上市，没有期权与研报数据 · ${padState.launching ? '正在升空' : '下次点火 ' + padState.next + ' 秒后'}` }) });
+  pickables.push({ obj: pad.sign, info: () => ({ kind: 'rocket', title: '发射场 · 太空', sub: '应用与端侧的延伸：未来有上市公司时会在这里给地块' }) });
 
   // ---------- 电力：电塔与电线 ----------
   const pyl = [[-150, -130], [-150, 140], [170, 140], [760, 140]].map(([x, z]) => { const p = T_.buildPylon(); p.rotation.y = Math.PI / 2; at(p, x, G + 5, z); S.add(p); p.updateMatrixWorld(true); return p; });
@@ -423,7 +454,7 @@ function getTown() {
   const tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3(), look = new THREE.Vector3();
   const town = { scene, stations, focus: -1, hover: null };
   const hOf = heat => 14 + Math.max(heat - .6, 0) * 70;
-  town.setDay = d => stations.forEach(s => { s.ht = hOf(s.L.heat[d]); });
+  town.setDay = d => { stations.forEach(s => { s.ht = hOf(s.L.heat[d]); }); town.day = d; if (town.setWeather && CL.moods) town.setWeather(MOOD_WX[CL.moods[d]] || 'sunny'); };
   town.setDay(6);
   const place = (obj, path, s, pos, dir) => { path.at(s, pos, dir); obj.position.copy(pos); obj.rotation.set(0, Math.atan2(-dir.z, dir.x), Math.asin(Math.max(-1, Math.min(1, dir.y)))); };
 
@@ -459,6 +490,8 @@ function getTown() {
     workers.forEach(w => w.tick(T, dt, 0, 'work'));
     arms.forEach(a => a.tick(T));
     gantry.tick(T, dt);
+    flags.forEach(o => o.f.tick(T, o.ph)); cranes.forEach(o => o.cr.tick(T, o.ph)); padState = pad.tick(T);
+    if (rain.visible) { const arr = rainGeo.attributes.position.array; for (let i = 0; i < RAIN_N; i++) { let y = arr[i * 6 + 1] - dt * 560; if (y < G) y += 900; arr[i * 6 + 1] = y; arr[i * 6 + 4] = y - 16; } rainGeo.attributes.position.needsUpdate = true; }
     // 车辆：跟车减速、路口让行（编号小的先走；等太久就放行，防止互相卡住）
     vehicles.forEach(a => { a.R.path.at(a.s, a.pos, a.dir); });
     vehicles.forEach(a => {
@@ -551,11 +584,27 @@ function getTown() {
     light.night = lit;
     // RoomEnvironment 本身很亮，夜里几乎关掉，只留路灯和月光
     scene.environmentIntensity = ENV_DAY * (1 - n * .97);
+    applyWeather();
   }
+  // 雨：线段粒子，只在"偏谨慎"的日子下
+  const RAIN_N = Math.round(900 * Q.density), rainGeo = new THREE.BufferGeometry(), rp = new Float32Array(RAIN_N * 6);
+  for (let i = 0; i < RAIN_N; i++) { const x = (Math.random() - .5) * 4200, z = (Math.random() - .5) * 3000, y = G + Math.random() * 900; rp.set([x, y, z, x, y - 16, z], i * 6); }
+  rainGeo.setAttribute('position', new THREE.BufferAttribute(rp, 3));
+  const rain = new THREE.LineSegments(rainGeo, new THREE.LineBasicMaterial({ color: '#9fb6d8', transparent: true, opacity: .55 })); rain.visible = false; rain.frustumCulled = false; scene.add(rain);
+  const GRAY = new THREE.Color('#cfd6e3');
+  town.weather = 'sunny';
+  function applyWeather() {
+    const w = WX[town.weather]; sun.intensity *= w.sun; hemi.intensity *= w.hemi; scene.fog.near = w.fogN; scene.fog.far = w.fogF;
+    scene.fog.color.lerp(GRAY, w.gray * (1 - town.night)); uni.uFog.value.copy(scene.fog.color); uni.uSky.value.lerp(GRAY, w.gray * .6 * (1 - town.night));
+    rain.visible = town.weather === 'rain';
+    clouds.forEach((c, i) => { c.visible = i < Math.ceil(clouds.length * w.cloud); });
+  }
+  town.setWeather = mode => { town.weather = WX[mode] ? mode : 'sunny'; applyNight(town.night); };
   town.night = 0; town.nightTarget = 0;
+  town.setWeather(MOOD_WX[CL.moods ? CL.moods[6] : '偏乐观']);   // 必须在 night 初始化之后，否则 lerp 出 NaN 整屏黑
   town.setNight = (v, immediate) => { town.nightTarget = Math.max(0, Math.min(1, v)); if (immediate) { town.night = town.nightTarget; applyNight(town.night); } };
   town.faceCoins = cam => stations.forEach(s => s.coins.forEach(c => c.lookAt(cam.position)));
-  town.vehicles = vehicles; town.walkers = walkers; town.pickables = pickables;
+  town.vehicles = vehicles; town.walkers = walkers; town.pickables = pickables; town.pad = pad; town.flags = flags;
   TOWN_SINGLETON = town;
   return town;
 }
