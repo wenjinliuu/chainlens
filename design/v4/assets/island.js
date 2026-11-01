@@ -371,6 +371,23 @@ function getTown() {
   const drone = T_.buildDrone(); scene.add(drone.group);
   pickables.push({ obj: drone.group, info: () => ({ kind: 'drone', title: '送药无人机', sub: '从医院楼顶起飞，绕园区一圈再回来' }) });
 
+  // ---------- 北面山坡：缓坡上三台风机（能源的延伸）；港口广场：潮信钟楼（15:40）+ 喷泉 ----------
+  const MOUND = { x: 150, z: -770, sx: 560, sy: 90, sz: 120 };
+  const mound = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 20), M('#dcefd9', { roughness: .95 })); mound.scale.set(MOUND.sx, MOUND.sy, MOUND.sz); at(mound, MOUND.x, G - 30, MOUND.z); mound.receiveShadow = true; S.add(mound);
+  const moundY = (x, z) => { const dx = (x - MOUND.x) / MOUND.sx, dz = (z - MOUND.z) / MOUND.sz; return G - 30 + MOUND.sy * Math.sqrt(Math.max(0, 1 - dx * dx - dz * dz)); };
+  const turbines = [-180, 150, 470].map((x, k) => { const t = T_.buildTurbine(); t.group.scale.setScalar(.8); t.group.rotation.y = -.4 + k * .2; at(t.group, x, moundY(x, MOUND.z) - 2, MOUND.z); scene.add(t.group);
+    pickables.push({ obj: t.group, info: () => ({ kind: 'turbine', title: '山坡上的风机', sub: '能源街区的延伸：给镇上的数据中心供电（示意）' }) }); return { t, ph: k * 2.1 }; });
+  for (let k = 0; k < 6; k++) { const x = MOUND.x - 480 + k * 190, z = MOUND.z + 60 + (k % 2) * 30; const tr = T_.buildTreeSmall(k + 11); tr.scale.setScalar(1.6); at(tr, x, moundY(x, z) - 4, z); S.add(tr); }
+  const PLAZA = { x: 1310, z: 240 };
+  const plate = new THREE.Mesh(new THREE.CircleGeometry(105, 48).rotateX(-Math.PI / 2), M('#eef0f7', { roughness: .9 })); at(plate, PLAZA.x, G + 2.2, PLAZA.z); S.add(plate);
+  const plateRim = new THREE.Mesh(new THREE.RingGeometry(103, 109, 48).rotateX(-Math.PI / 2), M('#cfd2e2')); at(plateRim, PLAZA.x, G + 2.4, PLAZA.z); S.add(plateRim);
+  const clock = T_.buildClockTower(); clock.scale.setScalar(.85); at(clock, PLAZA.x + 40, G + 2.4, PLAZA.z + 30); scene.add(clock);
+  pickables.push({ obj: clock, info: () => ({ kind: 'clock', title: '潮信钟楼 · 15:40', sub: '表针停在 15:40——每个交易日这个时候，期权日报送到你的邮箱' }) });
+  const fountain = T_.buildFountain(); at(fountain.group, PLAZA.x - 45, G + 2.4, PLAZA.z - 30); scene.add(fountain.group);
+  pickables.push({ obj: fountain.group, info: () => ({ kind: 'fountain', title: '港口广场的喷泉', sub: '下班后大家在这里等巴士、看市场大屏' }) });
+  [[-70, 70, .9], [60, -70, -2.3], [-30, 95, 0]].forEach(([dx, dz, ry]) => { const bn = T_.buildBench(); bn.rotation.y = ry; at(bn, PLAZA.x + dx, G + 2.4, PLAZA.z + dz); S.add(bn); });
+  for (let k = 0; k < 5; k++) { const a_ = k / 5 * Math.PI * 2 + .3; const tr = T_.buildTreeSmall(k + 20); tr.scale.setScalar(1.25); at(tr, PLAZA.x + Math.cos(a_) * 92, G + 2.4, PLAZA.z + Math.sin(a_) * 92); S.add(tr); }
+
   // ---------- 电力：电塔与电线 ----------
   const pyl = [[-330, -130], [-330, 140], [60, 140], [760, 140]].map(([x, z]) => { const p = T_.buildPylon(); p.rotation.y = Math.PI / 2; at(p, x, G + 5, z); S.add(p); p.updateMatrixWorld(true); return p; });
   const tipsOf = p => p.userData.tips.map(t => t.clone().applyMatrix4(p.matrixWorld));
@@ -543,6 +560,7 @@ function getTown() {
     arms.forEach(a => a.tick(T));
     gantry.tick(T, dt);
     flags.forEach(o => o.f.tick(T, o.ph)); cranes.forEach(o => o.cr.tick(T, o.ph)); padState = pad.tick(T);
+    turbines.forEach(o => o.t.tick(T, o.ph)); fountain.tick(T);
     { const k = (T * .18) % 1, a_ = k * Math.PI * 2; drone.group.position.set(CAMP.x - 110 + Math.cos(a_) * 140, G + 70 + Math.sin(k * Math.PI) * 60 + (k < .08 || k > .92 ? -(1 - Math.min(k, 1 - k) / .08) * 40 : 0), CAMP.z - 40 + Math.sin(a_) * 120); drone.group.rotation.y = -a_; drone.tick(T); }
     if (rain.visible) { const arr = rainGeo.attributes.position.array; for (let i = 0; i < RAIN_N; i++) { let y = arr[i * 6 + 1] - dt * 560; if (y < G) y += 900; arr[i * 6 + 1] = y; arr[i * 6 + 4] = y - 16; } rainGeo.attributes.position.needsUpdate = true; }
     // 车辆：跟车减速、路口让行（编号小的先走；等太久就放行，防止互相卡住）

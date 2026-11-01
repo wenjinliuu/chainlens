@@ -556,6 +556,47 @@ function buildDrone() {
   return { group: g, tick(t) { rotors.forEach((r, i) => r.rotation.y = t * 40 + i); } };
 }
 
-return { buildCampus, buildDrone, plotSignTexture, buildPlotSign, buildFlag, buildTargetSign, buildCrane, buildFence, buildRocketPad, M, box, cyl, sph, at, buildTower, logoSignTexture, buildTrafficLight, SIG, hotStockTexture, marketBoardTexture, tickerTexture, buildBillboard, NIGHT, buildCar, buildVan, buildTruck, buildFlatbed, buildBus, buildForklift, buildPerson, buildWalkerBot, buildDeliveryBot,
+
+// ================= 山坡上的风机、港口广场的钟楼与喷泉 =================
+function buildTurbine() {
+  const g = new THREE.Group(), white = M('#ffffff', { roughness: .4 });
+  g.add(at(cyl(4, 7, 150, white, 12), 0, 75, 0));
+  const nac = at(box(22, 12, 12, white, .2), 4, 152, 0); g.add(nac);
+  const rotor = new THREE.Group(); rotor.position.set(16, 152, 0); g.add(rotor);
+  rotor.add(at(cyl(4, 4, 6, M('#c9c3ff'), 10).rotateZ(Math.PI / 2), 0, 0, 0));
+  for (let k = 0; k < 3; k++) { const b = new THREE.Mesh(new THREE.BoxGeometry(2.4, 74, 7), white); b.geometry.translate(0, 37, 0); b.rotation.x = k * Math.PI * 2 / 3; rotor.add(b); }
+  shadow(g);
+  return { group: g, rotor, tick(t, ph) { rotor.rotation.x = t * 1.4 + ph; } };
+}
+function buildClockTower() {
+  const g = new THREE.Group(), stone = M('#f4f1ea', { roughness: .8 }), band = M('#c9c3ff');
+  g.add(at(box(44, 150, 44, stone, .08), 0, 75, 0));
+  g.add(at(box(50, 6, 50, band, 0), 0, 3, 0)); g.add(at(box(50, 5, 50, band, 0), 0, 152, 0));
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(36, 40, 4), M('#5b4cff')); roof.rotation.y = Math.PI / 4; roof.position.y = 174; g.add(roof);
+  g.add(at(cyl(1.5, 1.5, 24, M('#f5a314'), 8), 0, 204, 0)); g.add(at(sph(4, M('#f5a314'), 10), 0, 216, 0));
+  // 表盘：15:40，期权日报送达的时刻
+  const face = canvasTex(256, 256, x => { x.fillStyle = '#ffffff'; x.beginPath(); x.arc(128, 128, 118, 0, Math.PI * 2); x.fill(); x.strokeStyle = '#5b4cff'; x.lineWidth = 10; x.stroke();
+    for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; x.strokeStyle = '#16172a'; x.lineWidth = k % 3 ? 4 : 8; x.beginPath(); x.moveTo(128 + Math.cos(a) * 96, 128 + Math.sin(a) * 96); x.lineTo(128 + Math.cos(a) * 108, 128 + Math.sin(a) * 108); x.stroke(); }
+    const hand = (a, l, w, c) => { x.strokeStyle = c; x.lineWidth = w; x.lineCap = 'round'; x.beginPath(); x.moveTo(128, 128); x.lineTo(128 + Math.cos(a) * l, 128 + Math.sin(a) * l); x.stroke(); };
+    hand(-Math.PI / 2 + (3 + 40 / 60) / 12 * Math.PI * 2, 58, 12, '#16172a'); hand(-Math.PI / 2 + 40 / 60 * Math.PI * 2, 88, 8, '#16172a'); hand(-Math.PI / 2 + 40 / 60 * Math.PI * 2 + .3, 92, 3, '#e8364a');
+    x.fillStyle = '#5b4cff'; x.beginPath(); x.arc(128, 128, 8, 0, Math.PI * 2); x.fill(); });
+  [0, 1, 2, 3].forEach(k => { const f = new THREE.Mesh(new THREE.CircleGeometry(15, 32), new THREE.MeshBasicMaterial({ map: face, toneMapped: false })); f.position.set(0, 126, 22.6); const h = new THREE.Group(); h.rotation.y = k * Math.PI / 2; h.add(f); g.add(h); });
+  shadow(g);
+  return g;
+}
+function buildFountain() {
+  const g = new THREE.Group();
+  g.add(at(cyl(46, 50, 10, M('#e4e6ef', { roughness: .9 }), 32), 0, 5, 0));
+  g.add(at(cyl(40, 40, 2, M('#9fdcf3', { roughness: .1, transparent: true, opacity: .9 }), 32), 0, 10, 0));
+  g.add(at(cyl(8, 10, 24, M('#f4f1ea'), 12), 0, 22, 0));
+  const jets = Array.from({ length: 10 }, (_, k) => { const m = sph(3, M('#bfeaff', { transparent: true, opacity: .85 }), 8); g.add(m); return { m, ph: k / 10 }; });
+  const rings = [0, 1, 2].map(k => { const r = new THREE.Mesh(new THREE.RingGeometry(10, 12, 32).rotateX(-Math.PI / 2), M('#ffffff', { transparent: true, opacity: .5 })); r.position.y = 11.2; g.add(r); return { r, ph: k / 3 }; });
+  return { group: g, tick(t) {
+    jets.forEach(j => { const k = (t * .9 + j.ph) % 1, a = j.ph * Math.PI * 2; j.m.position.set(Math.cos(a) * k * 30, 34 + Math.sin(k * Math.PI) * 40 - k * 20, Math.sin(a) * k * 30); j.m.scale.setScalar(.6 + (1 - k) * .6); });
+    rings.forEach(r => { const k = (t * .5 + r.ph) % 1; r.r.scale.setScalar(.6 + k * 2.6); r.r.material.opacity = (1 - k) * .5; });
+  } };
+}
+
+return { buildTurbine, buildClockTower, buildFountain, buildCampus, buildDrone, plotSignTexture, buildPlotSign, buildFlag, buildTargetSign, buildCrane, buildFence, buildRocketPad, M, box, cyl, sph, at, buildTower, logoSignTexture, buildTrafficLight, SIG, hotStockTexture, marketBoardTexture, tickerTexture, buildBillboard, NIGHT, buildCar, buildVan, buildTruck, buildFlatbed, buildBus, buildForklift, buildPerson, buildWalkerBot, buildDeliveryBot,
   buildWarehouse, buildRobotArm, buildGantry, buildPylon, buildStreetLight, buildTreeSmall, buildBench, buildCrates, buildContainerStack, buildBlimp, buildGull, buildCloud, SHIRT };
 })();
