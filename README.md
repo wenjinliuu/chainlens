@@ -46,7 +46,8 @@ M0 设计稿已完成（`design/v4/`，浏览器直接打开 HTML 即可看，�
 
 ```bash
 cd web && pnpm install
-pnpm sync      # 把 design/v4 同步成站点输入（改了设计稿后跑）
+pnpm data      # 导出示例数据并汇总 archive.json（scripts/export-samples.mjs + pipeline/build-archive.mjs）
+pnpm sync      # 把 design/v4 与 data/samples 同步成站点输入（改了设计稿或数据后跑）
 pnpm build     # 输出到 web/dist，9 个页面
 pnpm preview   # 本地预览
 ```

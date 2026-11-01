@@ -196,6 +196,7 @@
     return { load };
   }
   window.CO.start = async (initStar, initBlock) => {
+    await (window.ARCHIVE_READY || Promise.resolve());
     const tip = $('#coTip');
     const ui = {
       tip(html, x, y) { if (!html) { tip.classList.remove('show'); return; } tip.innerHTML = html; tip.style.left = x + 14 + 'px'; tip.style.top = y - 12 + 'px'; tip.classList.add('show'); },
@@ -207,6 +208,5 @@
     block = initBlock ? await initBlock($('#blockCanvas'), Object.assign({ caption: t => { $('#blockCap').textContent = t; } }, ui)) : null;
     go(cur);
   };
-  renderList('');
-  render(build(cur));
+  (window.ARCHIVE_READY || Promise.resolve()).then(() => { renderList(''); render(build(cur)); });
 })();

@@ -1,5 +1,5 @@
 /* 潮信 · 专栏报告阅读页：按 ?id= 渲染，目录随滚动高亮，上一篇 / 下一篇 */
-(function () {
+(window.ARCHIVE_READY || Promise.resolve()).then(() => { // 等 archive.json（站点）或内置示例（设计稿）就绪
   const $ = s => document.querySelector(s), A = ARCHIVE, { mix } = ISO;
   const id = new URLSearchParams(location.search).get('id');
   const { c, K, html } = A.colPage(id);
@@ -22,4 +22,4 @@
   const secs = [...document.querySelectorAll('.cx-sec')], links = [...document.querySelectorAll('.cx-toc a')];
   const io = new IntersectionObserver(es => { es.forEach(e => { if (e.isIntersecting) links.forEach(l => l.classList.toggle('on', l.dataset.i === e.target.id.slice(1))); }); }, { rootMargin: '-20% 0px -70% 0px' });
   secs.forEach(s => io.observe(s));
-})();
+});

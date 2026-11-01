@@ -289,5 +289,24 @@
     return { c, K, html: c.sections.map((sec, i) => `<section class="cx-sec" id="s${i + 1}"><h2>${sec.h}</h2>${sec.p.map(x => `<p>${x}</p>`).join('')}${data(sec.data)}</section>`).join('') };
   };
 
-  window.ARCHIVE = { DATES, days, byDate, weeks, weekOf, rr, SEGS, peek, text, rrPage, weekPage, md, wd, addDays, dow, pct, pillK, tb, columns, colById, colsOn, colList, colPage, KIND, kindTag };
+  // ---------- 从 JSON 装载（站点模式）：把 pipeline 产出的 archive.json 原地灌进上面这些数组 / 缓存，消费方拿到的引用不变 ----------
+  function load(j) {
+    if (!j || !Array.isArray(j.days) || !j.days.length) return false;
+    days.length = 0; days.push(...j.days); Object.keys(byDate).forEach(k => delete byDate[k]); days.forEach(d => { byDate[d.date] = d; });
+    DATES.length = 0; DATES.push(...days.map(d => d.date));
+    Object.keys(rrCache).forEach(k => delete rrCache[k]);
+    Object.entries(j.rr || {}).forEach(([date, R]) => { rrCache[date] = { date, total: R.total, up: R.up, down: R.down, keep: R.keep, items: (R.items || []).map(i => ({ ...i, c: CL.byT[i.t], sign: i.to > i.from ? 1 : i.to < i.from ? -1 : 0 })).filter(i => i.c) }; });
+    weeks.length = 0; (j.weeks || []).forEach(w => weeks.push({ ...w, days: (w.days || []).map(x => byDate[x.date] || x), next: (w.next || []).map(n => Array.isArray(n) ? n : [n.when, n.what]) }));
+    columns.length = 0; (j.columns || []).forEach(c => columns.push(c)); Object.keys(colById).forEach(k => delete colById[k]); columns.forEach(c => { colById[c.id] = c; });
+    ARCHIVE.source = 'json'; ARCHIVE.gen = j.gen || null; return true;
+  }
+  const ARCHIVE = { DATES, days, byDate, weeks, weekOf, rr, SEGS, peek, text, rrPage, weekPage, md, wd, addDays, dow, pct, pillK, tb, columns, colById, colsOn, colList, colPage, KIND, kindTag, load, source: 'generated' };
+  window.ARCHIVE = ARCHIVE;
+  // 站点（http）优先读 /data/archive.json；设计稿直接用 file:// 打开时用内置生成器。消费方等 ARCHIVE_READY 再初始化
+  window.ARCHIVE_READY = (async () => {
+    if (typeof location === 'undefined' || location.protocol === 'file:' || window.CX_NO_JSON) return ARCHIVE;   // Node 里（导出脚本）和设计稿 file:// 下都用生成器
+    try { const r = await fetch(window.CX_ARCHIVE_URL || '/data/archive.json', { cache: 'no-cache' }); if (r.ok) load(await r.json()); }
+    catch (e) { console.warn('archive.json 不可用，用内置示例数据', e); }
+    return ARCHIVE;
+  })();
 })();

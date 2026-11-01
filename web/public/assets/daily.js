@@ -1,5 +1,5 @@
 /* 潮信 · 日报归档页：日历选日期、时间轴回放、海报 / 文字版 / 研报 / 周报切换、高清图下载 */
-(function () {
+(window.ARCHIVE_READY || Promise.resolve()).then(() => { // 等 archive.json（站点）或内置示例（设计稿）就绪
   const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
   const A = ARCHIVE, P = POSTER, { mix } = ISO;
   const COLS = { eve: '期权日报', rr: '研报日报', week: '周报', col: '专栏报告', morn: '盘前汇总' };
@@ -153,4 +153,4 @@
   $$('#colSeg button').forEach(b => b.onclick = () => { switchCol(b.dataset.col); setDate(S.date); });
 
   renderBars(); buildHeat(); switchCol(S.col); setDate(S.date);
-})();
+});

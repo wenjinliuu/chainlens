@@ -3,7 +3,7 @@
  * 自动往导航右侧插一个"搜索 ⌘K"按钮；⌘K / Ctrl+K 或按 / 打开，↑↓ 选，Enter 打开，Esc 关。
  * 只依赖 data.js（CL）；没有后端，纯前端子串匹配。
  */
-(function () {
+(window.ARCHIVE_READY || Promise.resolve()).then(() => { // 等 archive.json（站点）或内置示例（设计稿）就绪
   const $ = s => document.querySelector(s);
   const { mix } = ISO;
   const deep = c => mix(c, '#000000', .18);
@@ -110,4 +110,4 @@
   const nr = $('.nav-right');
   if (nr) { const b = document.createElement('button'); b.type = 'button'; b.className = 'nav-search'; b.title = '搜索（⌘K）'; b.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><span>搜索</span><kbd>⌘K</kbd>'; b.onclick = open; nr.prepend(b); }
   window.CX_SEARCH = { open, close };
-})();
+});

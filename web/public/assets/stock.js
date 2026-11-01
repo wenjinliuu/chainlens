@@ -669,7 +669,7 @@
 
   if (!LC) { document.querySelector('#cw').innerHTML = '<div class="note" style="padding:40px;text-align:center">图表组件未加载，请检查网络（需要访问 cdn.jsdelivr.net）</div>'; }
   renderWatch(); bindToolbar();
-  select(fromURL(), false);
+  (window.ARCHIVE_READY || Promise.resolve()).then(() => select(fromURL(), false));
   // 网页字体加载完后让图表按新字体重排一次刻度
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (chart) { chart.applyOptions({ layout: { fontFamily: FONT } }); if (build.render) build.render(); } });
 })();

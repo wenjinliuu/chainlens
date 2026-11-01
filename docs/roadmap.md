@@ -21,7 +21,7 @@
 ## M1 · 静态骨架
 - [x] Astro 项目初始化（`web/`，设计稿资源原样托管 + `scripts/sync-web.mjs` 同步，9 页可构建）；token 仍用 `brand.css`
 - [x] `data/samples/` 示例 JSON（`node scripts/export-samples.mjs` 从设计稿数据导出，契约见 `docs/m1-plan.md` 第 4 节）
-- [ ] 驾驶舱、个股页用示例数据跑通（含 Lightweight Charts K 线 + 事件标记）
+- [x] 归档 / 专栏 / 公司档案 / 搜索用示例 JSON 跑通（`archive.json` 汇总包，`pipeline/build-archive.mjs`）；个股页 K 线仍是前端虚构数据，待 M2 行情源
 - [~] 部署到 Cloudflare（免费）：流水线与 wrangler 配置已写，等仓库 Secrets（`CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID`）
 
 ## M2 · 接入真实数据

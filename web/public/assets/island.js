@@ -21,6 +21,7 @@ const { M, box, cyl, sph, at } = T_;
 const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
 const { RoomEnvironment } = await import('three/addons/environments/RoomEnvironment.js');
 const { mergeGeometries } = await import('three/addons/utils/BufferGeometryUtils.js');
+if (window.ARCHIVE_READY) await window.ARCHIVE_READY;   // 飞艇横幅、巴士字幕要用周报数据
 const W = '#ffffff';
 const G = 24;                       // 岛面高度
 const RX = 1400, RZ = 820;          // 岛的半轴（超椭圆）

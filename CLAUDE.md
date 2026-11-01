@@ -28,4 +28,4 @@ ChainLens（仓库名）：AI 产业链情报台，**对外品牌叫"潮信"**�
 - 海报、设计稿类页面提供高清图下载按钮；使用 Lightweight Charts 时保留 TradingView 署名。
 
 ## 下一步
-M0 设计稿已完成（`design/v4/`）；M1 第 1 步已做（`web/` Astro 站可构建，`scripts/sync-web.mjs` 从设计稿同步，部署流水线待 Secrets）。下一步按 `docs/m1-plan.md` 第 3 节逐页拆组件、接 `web/public/data` 的 JSON；改设计稿后要跑 `cd web && pnpm sync`。
+M0 设计稿已完成（`design/v4/`）；M1 第 1 步已做（`web/` Astro 站可构建，`scripts/sync-web.mjs` 从设计稿同步，部署流水线待 Secrets）。下一步按 `docs/m1-plan.md` 第 3 节逐页拆组件、接 `web/public/data` 的 JSON；改设计稿后要跑 `cd web && pnpm sync`；改示例数据或 `archive.js` 的生成规则后要跑 `pnpm data && pnpm sync`。站点下页面数据来自 `web/public/data/archive.json`（`ARCHIVE_READY`），设计稿 file:// 下用 `archive.js` 内置生成器。

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /*
  * 把设计稿里的虚构归档数据（design/v4/assets/archive.js）导出成 M1 契约格式的示例 JSON，写到 data/samples/。
- * 契约见 docs/m1-plan.md 第 4 节。只导出几份代表性的文件，够前端开发和对照字段用。
+ * 契约见 docs/m1-plan.md 第 4 节。按文件导出全部交易日；汇总文件由 pipeline/build-archive.mjs 生成。
  * 用法：node scripts/export-samples.mjs
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -24,15 +24,15 @@ const strip = html => html.replace(/<li>/g, '\n- ').replace(/<br\s*\/?>/g, '\n')
 
 const last = A.DATES[A.DATES.length - 1], lastWeek = A.weeks[A.weeks.length - 1];
 write('meta.json', wrap({ latest: last, latestRR: last, latestWeek: lastWeek.mon, delay: '期权数据为收盘后汇总；行情为延迟数据', rulesVersion: 'sample' }));
-write('daily/index.json', wrap({ days: A.days.map(d => ({ date: d.date, wd: d.wd, mood: d.mood, h2: d.h2, hasRR: true, weekMon: A.weekOf(d.date).mon, dataOnly: false })) }));
-for (const date of [last, A.DATES[A.DATES.length - 2]]) {
+// 每个交易日：期权日报 + 研报日报（各一个文件；汇总 archive.json / daily/index.json 由 pipeline/build-archive.mjs 生成）
+for (const date of A.DATES) {
   const d = A.byDate[date];
   write(`daily/${date}.json`, wrap({ ...d, text: strip(A.text(date)), source: { savedAt: GEN, rulesVersion: 'sample', agent: 'sample' } }));
   const R = A.rr(date);
   write(`rr/${date}.json`, wrap({ date, total: R.total, up: R.up, down: R.down, keep: R.keep, items: R.items.map(i => ({ t: i.t, firm: i.firm, act: i.act, rating: i.rating, from: i.from, to: i.to, pts: i.pts.slice(0, 3), src: '机构公开报告（示例）', ai: true })) }));
 }
-const w = lastWeek;
-write(`weekly/${w.mon}.json`, wrap({ mon: w.mon, fri: w.fri, sun: w.sun, label: w.label, dir: w.dir, avg: w.avg, bullSeg: w.bullSeg, bearSeg: w.bearSeg, segs: w.segs, strongest: w.strongest, persist: w.persist, days: w.days.map(d => ({ date: d.date, mood: d.mood, dev: d.dev })), next: w.next.map(([when, what]) => ({ when, what })), headline: null, summary: null, themes: [] }));
+for (const w of A.weeks) write(`weekly/${w.mon}.json`, wrap({ mon: w.mon, fri: w.fri, sun: w.sun, label: w.label, range: w.range, dir: w.dir, avg: w.avg, bullSeg: w.bullSeg, bearSeg: w.bearSeg, segs: w.segs, strongest: w.strongest, persist: w.persist, days: w.days.map(d => ({ date: d.date, mood: d.mood, dev: d.dev })), next: w.next.map(([when, what]) => ({ when, what })), headline: null, summary: null, themes: [] }));
+for (const c of A.columns) write(`columns/${c.id}.json`, wrap({ ...c, ai: true }));
 // 镇上的自动更新数据（town-plan.md 第 4 节）：天气、环节热度、楼的信号、广告牌、巴士与飞艇文字
 const WXOF = { '偏乐观': 'sunny', '中性': 'cloudy', '偏谨慎': 'rain' };
 for (const date of [last]) {
@@ -47,8 +47,3 @@ for (const date of [last]) {
     unlisted: CL.unlisted.map(u => ({ t: u.t, name: u.name, layer: u.layer, seg: u.seg })) }));
 }
 write('companies.json', wrap({ layers: CL.layers.map(l => ({ id: l.id, name: l.name, color: l.color, segs: l.segs })), companies: CL.companies.map(c => ({ t: c.t, name: c.name, cap: c.cap, layer: c.layer, seg: c.seg })) }));
-write('search-index.json', wrap({ items: [
-  ...CL.companies.map(c => ({ g: '公司', t: c.t, sub: `${c.name} · ${CL.layers[c.li].name} / ${c.seg}`, href: `/company/${c.t}` })),
-  ...CL.layers.map((l, i) => ({ g: '产业镇', t: `${l.name}街区`, sub: `第 ${i + 1} 层`, href: `/#island?station=${l.id}` })),
-  ...A.days.map(d => ({ g: '期权日报归档', t: `${d.md} ${d.wd}`, sub: `大盘${d.mood} · ${d.h2}`, href: `/daily/${d.date}` })),
-] }));
