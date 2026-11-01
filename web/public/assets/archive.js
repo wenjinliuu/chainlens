@@ -230,7 +230,7 @@
       <div class="h">${cbadge(i.c, 40, col)}<div class="id"><b class="num">${i.t}</b><small>${i.c.name} · ${CL.layers[i.c.li].name} / ${i.c.seg}</small></div><span class="tag" style="--tc-deep:${deep(col)};--tc-bg:${mix(col, '#ffffff', .88)}">${i.act}</span><span class="pill ${i.to > i.from ? 'bull' : i.to < i.from ? 'bear' : 'flat'}">${i.from} → ${i.to}</span></div>
       <div class="rt">${i.firm} · ${i.rating}</div>
       <ul>${i.pts.map(x => `<li>${x}</li>`).join('')}</ul>
-      <a class="go" href="company.html?t=${i.t}">公司档案 →</a></div>`; }).join('')}
+      <a class="go" href="/company?t=${i.t}">公司档案 →</a></div>`; }).join('')}
     <div class="ar-f">摘要整理自机构公开报告，每篇不超过 3 条要点；评级与目标价为机构观点的转述 · 不构成投资建议</div></div>`; };
 
   const weekPage = mon => { const w = weeks.find(x => x.mon === mon) || weeks[weeks.length - 1]; const max = w.segs[0].heat; return `<div class="ar-week">
@@ -278,7 +278,7 @@
   const colById = Object.fromEntries(columns.map(c => [c.id, c]));
   const colsOn = date => columns.filter(c => c.date === date);
   const kindTag = k => `<span class="tag" style="--tc-deep:${deep(KIND[k].c)};--tc-bg:${mix(KIND[k].c, '#ffffff', .86)}">${k}</span>`;
-  const colCard = (c, big) => `<a class="colx${big ? ' big' : ''}" href="column.html?id=${c.id}" style="--c:${KIND[c.kind].c}"><div class="cx-k">${kindTag(c.kind)}<span class="num">${md(c.date)}</span><span>· 读 ${c.readMin} 分钟</span></div><b>${c.title}</b><p>${c.dek}</p><div class="cx-tags">${c.tags.slice(0, 4).map(t => `<span>${tb(t, 20)}${t}</span>`).join('')}</div></a>`;
+  const colCard = (c, big) => `<a class="colx${big ? ' big' : ''}" href="/column?id=${c.id}" style="--c:${KIND[c.kind].c}"><div class="cx-k">${kindTag(c.kind)}<span class="num">${md(c.date)}</span><span>· 读 ${c.readMin} 分钟</span></div><b>${c.title}</b><p>${c.dek}</p><div class="cx-tags">${c.tags.slice(0, 4).map(t => `<span>${tb(t, 20)}${t}</span>`).join('')}</div></a>`;
   peek.col = () => `<div class="pk-h"><span class="tag" style="--tc-deep:#c2410c;--tc-bg:#ffece3">专栏报告 · 样张</span><b>${ICON.svg('column', 20, 'pk-ic')}最近三篇</b><span class="pk-t">不定期 · 一件事讲透，带数据和图</span></div>
       <div class="pk-cols">${columns.slice(0, 3).map(c => colCard(c)).join('')}</div>
       <div class="pk-f">专栏是对财报、产业链或事件的专题整理，数字来自期权日报与研报日报的数据面 · 不构成投资建议</div>`;

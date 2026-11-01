@@ -1,7 +1,21 @@
-# 潮信 · Cloudflare Workers 静态资源（免费额度）：只托管 dist/，没有 Worker 代码
+# 潮信 · Cloudflare Workers（免费额度）：静态站（dist/）+ 订阅 API（worker/index.mjs）+ D1
+# 上线前要做：wrangler d1 create chaoxin → 把 database_id 填到下面；wrangler d1 migrations apply chaoxin --remote；
+# wrangler secret put RESEND_KEY / MAIL_FROM；SITE_URL 改成正式域名
 name = "chaoxin"
+main = "worker/index.mjs"
 compatibility_date = "2026-10-01"
 
 [assets]
 directory = "./dist"
+binding = "ASSETS"
 not_found_handling = "404-page"
+run_worker_first = ["/api/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "chaoxin"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+[vars]
+SITE_URL = "https://chaoxin.example"

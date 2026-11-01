@@ -106,7 +106,7 @@
     else { tag = '<span class="tag" style="--tc-deep:#b45309;--tc-bg:#fff4dc">盘前汇总</span>'; h2 = `即将上线`; sub = '上线后每个交易日美东 09:00 送达，这里会按日归档'; }
     const share = `<button class="btn ghost" type="button" id="shareBtn" title="复制这一天的链接">分享</button>${S.col === 'eve' ? '' : '<span class="ar-msg" id="msg"></span>'}`;
     $('#arHead').innerHTML = `<div class="t">${tag}<h2>${h2}</h2><div class="sub">${sub}</div></div><div class="act">${act}${share}${nav}</div>`;
-    $('#shareBtn').onclick = async () => { const url = location.protocol === 'file:' || S.col !== 'eve' ? location.href : `${location.origin}/daily/${S.date}.html`; try { await navigator.clipboard.writeText(url); flash('已复制链接'); } catch { flash('浏览器不允许复制，请手动复制地址栏'); } };   // 站点下期权日报分享每日静态页
+    $('#shareBtn').onclick = async () => { const url = location.protocol === 'file:' || S.col !== 'eve' ? location.href : `${location.origin}/daily/${S.date}`; try { await navigator.clipboard.writeText(url); flash('已复制链接'); } catch { flash('浏览器不允许复制，请手动复制地址栏'); } };   // 站点下期权日报分享每日静态页
     $('#prevD').onclick = () => step(-1); $('#nextD').onclick = () => step(1);
     $$('#viewSeg button').forEach(b => b.onclick = () => { S.view = b.dataset.v; renderHead(); renderBody(); pushURL(); });
     const copy = $('#copyBtn'); if (copy) copy.onclick = async () => { const el = document.createElement('div'); el.innerHTML = A.text(S.date); try { await navigator.clipboard.writeText(el.innerText.trim()); flash('已复制文字版'); } catch { flash('浏览器不允许复制，请手动选择'); } };

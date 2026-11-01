@@ -220,7 +220,12 @@ GitHub Actions（工作日）
 - 产物：`web/dist/`（Workers Static Assets）；`data/*.json` 同时提交回仓库的 `pipeline/out/`（公开仓库，内容只含公开信息与 AI 摘要，不含 key、不含上游地址）。
 - 免费额度核对：Workers 每天 10 万请求、静态资源不计费；Actions 每月 2,000 分钟（每天两次构建约 10 分钟，够）；R2 / D1 本阶段不用。
 
-## 8. 订阅 API（M4 实现，接口先定）
+## 8. 订阅 API（已实现：`web/worker/index.mjs`，本地 `wrangler dev --local` 用 curl 与 Playwright 走通）
+
+实现与下表一致，另有 `POST /api/resend`（10 分钟内只发一次）、`POST /api/unsubscribe {token, keep[]}`（只保留部分栏目）、`GET /api/health`。确认链接 24 小时有效；邮件由 Resend 发（缺 `RESEND_KEY` / `MAIL_FROM` 时只记日志）；蜜罐字段 `hp` 非空直接拒绝；邮箱只存 D1。前端：首页订阅框、`/subscribe?state=prefs&token=`、`/unsubscribe?token=` 在站点下走真实接口，设计稿 file:// 下仍是演示。
+
+**上线前要做**：`wrangler d1 create chaoxin` → 把 `database_id` 填进 `web/wrangler.toml` → `wrangler d1 migrations apply chaoxin --remote` → `wrangler secret put RESEND_KEY`、`MAIL_FROM`（自有域名，配好 SPF / DKIM）→ `SITE_URL` 改成正式域名。站点链接已统一去掉 `.html`（Workers 静态资源会把 `/daily` 映射到 `daily.html`）。
+
 
 | 接口 | 作用 |
 |---|---|

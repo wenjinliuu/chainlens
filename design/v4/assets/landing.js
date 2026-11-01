@@ -4,7 +4,21 @@
   const LP = window.LP = {};
 
   // ---------- 订阅（设计稿演示：只切换状态，不发送） ----------
-  LP.subscribe = form => { form.closest('.sub-wrap').classList.add('sub-done'); dispatchEvent(new Event('cl-subscribed')); return false; };
+  const COL_ID = { '期权日报': 'eve', '研报日报': 'rr', '盘前汇总': 'morn', '专栏报告': 'col', '周报': 'week' };
+  LP.subscribe = form => {
+    const wrap = form.closest('.sub-wrap'), ok = wrap.querySelector('.sub-ok'), email = form.querySelector('input[type=email]').value.trim();
+    const cols = [...wrap.querySelectorAll('.cp-chip.on b')].map(b => COL_ID[b.textContent.trim()]).filter(Boolean);
+    const done = msg => { if (msg) ok.textContent = msg; wrap.classList.add('sub-done'); dispatchEvent(new Event('cl-subscribed')); };
+    if (location.protocol === 'file:') { done(); return false; }   // 设计稿：只演示
+    const btn = form.querySelector('button'); btn.disabled = true; btn.textContent = '发送中…';
+    fetch('/api/subscribe', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email, cols, hp: '' }) })
+      .then(r => r.json()).then(j => {
+        if (!j.ok) throw new Error(j.error || '失败');
+        done(j.state === 'already' ? '✓ 这个邮箱已经订阅了，明天照常送达' : '✓ 已发送确认邮件，点击邮件里的链接完成订阅');
+      })
+      .catch(e => { btn.disabled = false; btn.textContent = '免费订阅'; ok.textContent = ''; alert('订阅没成功：' + e.message + '，请稍后再试'); });
+    return false;
+  };
   addEventListener('scroll', () => $('#nav').classList.toggle('scrolled', scrollY > 10), { passive: true });
   const { mix } = ISO;
   const deep = c => mix(c, '#000000', .18);

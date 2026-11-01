@@ -26,13 +26,31 @@
     const cols = ['#5b4cff', '#1296f0', '#f5a314', '#00a8c6', '#d23fd8', '#0fb57b'];
     for (let i = 0; i < 40; i++) { const e = document.createElement('i'); e.style.left = Math.random() * 100 + '%'; e.style.background = cols[i % cols.length]; e.style.animationDelay = Math.random() * .8 + 's'; e.style.transform = `rotate(${Math.random() * 360}deg)`; box.appendChild(e); }
   }
-  const rs = $('#resend'); if (rs) rs.onclick = () => { $('#resendMsg').textContent = ' 已重新发送（演示）'; rs.disabled = true; setTimeout(() => { rs.disabled = false; $('#resendMsg').textContent = ''; }, 4000); };
-  const save = $('#saveBtn'); if (save) save.onclick = () => { $('#saveMsg').textContent = '✓ 已保存（演示）'; setTimeout(() => $('#saveMsg').textContent = '', 2500); };
+  const LIVE = location.protocol !== 'file:', qs = new URLSearchParams(location.search), tokenQ = qs.get('token');
+  const COL_ID = { '期权日报': 'eve', '研报日报': 'rr', '盘前汇总': 'morn', '专栏报告': 'col', '周报': 'week' };
+  const api = (path, body) => fetch(path, { method: body ? 'POST' : 'GET', headers: { 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : undefined }).then(r => r.json());
+  const chipsOf = box => [...box.querySelectorAll('.cp-chip.on b')].map(b => COL_ID[b.textContent.trim()]).filter(Boolean);
+  const setChips = (box, cols) => box.querySelectorAll('.cp-chip').forEach(b => b.classList.toggle('on', cols.includes(COL_ID[b.querySelector('b').textContent.trim()])));
+  const rs = $('#resend'); if (rs) rs.onclick = () => { rs.disabled = true;
+    if (!LIVE) { $('#resendMsg').textContent = ' 已重新发送（演示）'; setTimeout(() => { rs.disabled = false; $('#resendMsg').textContent = ''; }, 4000); return; }
+    api('/api/resend', { email }).then(j => { $('#resendMsg').textContent = j.ok ? (j.throttled ? ' 刚发过了，请过几分钟再试' : ' 已重新发送') : ' ' + (j.error || '失败'); }).catch(() => { $('#resendMsg').textContent = ' 发送失败'; }).finally(() => setTimeout(() => { rs.disabled = false; }, 4000)); };
+  const save = $('#saveBtn'); if (save) save.onclick = () => {
+    if (!LIVE || !tokenQ) { $('#saveMsg').textContent = '✓ 已保存（演示）'; setTimeout(() => $('#saveMsg').textContent = '', 2500); return; }
+    const cols = chipsOf($('#pickC')); if ($('#pickC').parentElement.querySelector('.pf-row input:checked')) cols.push('week');
+    const body = { token: tokenQ, cols, watch: [...document.querySelectorAll('#watch .w b')].map(b => b.textContent), deliverAt: document.querySelector('input[name=tm]:checked') === document.querySelectorAll('input[name=tm]')[1] ? 'morning' : 'close', format: document.querySelector('input[name=fm]:checked') === document.querySelectorAll('input[name=fm]')[1] ? 'text' : 'poster' };
+    save.disabled = true; api('/api/prefs', body).then(j => { $('#saveMsg').textContent = j.ok ? '✓ 已保存' : (j.error || '失败'); }).catch(() => { $('#saveMsg').textContent = '保存失败'; }).finally(() => { save.disabled = false; setTimeout(() => $('#saveMsg').textContent = '', 2500); }); };
+  // 站点下带 token 打开：拉偏好填进表单
+  if (LIVE && tokenQ && $('#pickC')) api('/api/prefs?token=' + encodeURIComponent(tokenQ)).then(j => { if (!j.ok) return;
+    $$('#emailA, #emailB, #emailC').forEach(el => el.textContent = j.email); setChips($('#pickC'), j.cols); setChips($('#pickB'), j.cols);
+    const wk = $('#pickC').parentElement.querySelector('.pf-row input'); if (wk) wk.checked = j.cols.includes('week');
+    document.querySelectorAll('input[name=tm]')[j.deliverAt === 'morning' ? 1 : 0].checked = true; document.querySelectorAll('input[name=fm]')[j.format === 'text' ? 1 : 0].checked = true;
+    window.__watchList && window.__watchList(j.watch); }).catch(() => {});
 
   // 关注的公司
   const watchEl = $('#watch');
   if (watchEl) {
-    const list = ['NVDA', 'MU', 'LITE'];
+    const list = LIVE && tokenQ ? [] : ['NVDA', 'MU', 'LITE'];
+    window.__watchList = arr => { list.length = 0; arr.filter(t => CL.byT[t]).forEach(t => list.push(t)); render(); };
     const render = () => { watchEl.innerHTML = list.map(t => { const c = CL.byT[t]; return `<span class="w">${badge(c, 20, CL.layers[c.li].color)}<b>${t}</b><span style="color:var(--ink3)">${c.name}</span><button type="button" data-t="${t}" title="移除">✕</button></span>`; }).join('');
       watchEl.querySelectorAll('button').forEach(b => b.onclick = () => { list.splice(list.indexOf(b.dataset.t), 1); render(); }); };
     const add = () => { const q = $('#watchIn').value.trim().toUpperCase(); const hit = CL.companies.find(c => c.t === q || c.name.toUpperCase() === q || c.t.startsWith(q)); if (hit && !list.includes(hit.t)) list.push(hit.t); $('#watchIn').value = ''; render(); };
@@ -43,8 +61,16 @@
   // 退订页
   const un = $('#unsubBtn');
   if (un) {
-    un.onclick = () => { $('#ask').hidden = true; $('#done').hidden = false; dispatchEvent(new Event('resize')); dispatchEvent(new Event('cl-unsubscribed')); }; // 显示后触发一次 resize，让刚才 0×0 的画布拿到尺寸
-    $$('.un-alt .chip').forEach(b => b.onclick = () => { $$('.un-alt .chip').forEach(x => x.classList.toggle('on', x === b)); un.textContent = '确认：' + b.textContent; });
+    const showDone = () => { $('#ask').hidden = true; $('#done').hidden = false; dispatchEvent(new Event('resize')); dispatchEvent(new Event('cl-unsubscribed')); }; // 显示后触发一次 resize，让刚才 0×0 的画布拿到尺寸
+    const KEEP = { '只保留周报': ['week'], '只保留期权日报': ['eve'], '暂停 30 天': [] };
+    let keep = null;
+    un.onclick = () => {
+      if (!LIVE || !tokenQ) { showDone(); return; }
+      un.disabled = true; api('/api/unsubscribe', { token: tokenQ, keep: keep || [] }).then(j => { if (!j.ok) throw new Error(j.error); if (j.state === 'kept') { un.textContent = '✓ 已改为只保留：' + j.cols.map(c => ({ eve: '期权日报', rr: '研报日报', morn: '盘前汇总', week: '周报', col: '专栏报告' })[c]).join('、'); } else showDone(); }).catch(e => { un.disabled = false; alert('没成功：' + (e.message || '稍后再试')); });
+    };
+    if (qs.get('done') === '1') showDone();
+    const em = qs.get('email'); if (em) $$('#ask p b, #done p b').forEach(el => el.textContent = em);
+    $$('.un-alt .chip').forEach(b => b.onclick = () => { $$('.un-alt .chip').forEach(x => x.classList.toggle('on', x === b)); keep = KEEP[b.textContent.trim()] || null; un.textContent = '确认：' + b.textContent; });
   }
 
   // 小更：各个状态里的吉祥物场景（复用订阅区的小更 + 邮筒）

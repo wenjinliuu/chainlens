@@ -37,8 +37,8 @@
 - [ ] OG 分享图自动生成
 
 ## M4 · 订阅
-- [ ] D1 订阅表、double opt-in、退订
-- [ ] Resend 邮件模板，按自选股推送
+- [x] D1 订阅表、double opt-in、退订、偏好（`web/worker/index.mjs` + `migrations/0001_init.sql`，本地走通；上线要建 D1 并填 database_id）
+- [~] Resend 确认邮件已接（缺 key 只记日志）；日报推送与按自选股分组待做
 - [ ] 国内邮箱到达率测试
 
 ## M5 · 体验打磨

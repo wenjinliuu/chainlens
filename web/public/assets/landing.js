@@ -4,7 +4,21 @@
   const LP = window.LP = {};
 
   // ---------- 订阅（设计稿演示：只切换状态，不发送） ----------
-  LP.subscribe = form => { form.closest('.sub-wrap').classList.add('sub-done'); dispatchEvent(new Event('cl-subscribed')); return false; };
+  const COL_ID = { '期权日报': 'eve', '研报日报': 'rr', '盘前汇总': 'morn', '专栏报告': 'col', '周报': 'week' };
+  LP.subscribe = form => {
+    const wrap = form.closest('.sub-wrap'), ok = wrap.querySelector('.sub-ok'), email = form.querySelector('input[type=email]').value.trim();
+    const cols = [...wrap.querySelectorAll('.cp-chip.on b')].map(b => COL_ID[b.textContent.trim()]).filter(Boolean);
+    const done = msg => { if (msg) ok.textContent = msg; wrap.classList.add('sub-done'); dispatchEvent(new Event('cl-subscribed')); };
+    if (location.protocol === 'file:') { done(); return false; }   // 设计稿：只演示
+    const btn = form.querySelector('button'); btn.disabled = true; btn.textContent = '发送中…';
+    fetch('/api/subscribe', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email, cols, hp: '' }) })
+      .then(r => r.json()).then(j => {
+        if (!j.ok) throw new Error(j.error || '失败');
+        done(j.state === 'already' ? '✓ 这个邮箱已经订阅了，明天照常送达' : '✓ 已发送确认邮件，点击邮件里的链接完成订阅');
+      })
+      .catch(e => { btn.disabled = false; btn.textContent = '免费订阅'; ok.textContent = ''; alert('订阅没成功：' + e.message + '，请稍后再试'); });
+    return false;
+  };
   addEventListener('scroll', () => $('#nav').classList.toggle('scrolled', scrollY > 10), { passive: true });
   const { mix } = ISO;
   const deep = c => mix(c, '#000000', .18);
@@ -81,7 +95,7 @@
   document.querySelectorAll('.col-peek').forEach(b => b.onclick = () => {
     const id = b.dataset.peek, wrap = $('#peekWrap'), box = $('#peek');
     if (peekOpen === id) { wrap.classList.remove('open'); peekOpen = null; document.querySelectorAll('.col-peek').forEach(x => x.textContent = '看样张 ↓'); return; }
-    peekOpen = id; box.innerHTML = PEEK[id]() + `<a class="pk-more" href="daily.html?col=${id}">翻以前的 →</a><button type="button" class="pk-x">收起</button>`; wrap.classList.add('open');
+    peekOpen = id; box.innerHTML = PEEK[id]() + `<a class="pk-more" href="/daily?col=${id}">翻以前的 →</a><button type="button" class="pk-x">收起</button>`; wrap.classList.add('open');
     document.querySelectorAll('.col-peek').forEach(x => x.textContent = x.dataset.peek === id ? '收起样张 ↑' : '看样张 ↓');
     box.querySelector('.pk-x').onclick = () => { wrap.classList.remove('open'); peekOpen = null; document.querySelectorAll('.col-peek').forEach(x => x.textContent = '看样张 ↓'); };
     wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -117,7 +131,7 @@
         <div class="ip-row"><span class="ip-c" style="--k:#5b4cff">期权日报</span><div>期权热度 <b class="num">${l.heat[6].toFixed(1)}x</b> · 信号 ${tks(o)}</div></div>
         <div class="ip-row"><span class="ip-c" style="--k:#1296f0">研报日报</span><div>今日评级 / 目标价调整：${tks(r)}</div></div>
         <div class="ip-row"><span class="ip-c" style="--k:#f5a314">盘前汇总</span><div>盘前要闻：${tks(n)} <em>即将上线</em></div></div>
-        <div class="ip-logos">${l.members.slice().sort((a, b) => b.cap - a.cap).slice(0, 8).map(c => `<a href="company.html?t=${c.t}" title="${c.t} ${c.name} · 公司档案">${badge(c, 34, l.color)}</a>`).join('')}</div>
+        <div class="ip-logos">${l.members.slice().sort((a, b) => b.cap - a.cap).slice(0, 8).map(c => `<a href="/company?t=${c.t}" title="${c.t} ${c.name} · 公司档案">${badge(c, 34, l.color)}</a>`).join('')}</div>
         <div class="ip-more">点 logo 打开公司档案 →</div>`;
     }
     // 点镇里的东西：气泡跟着它走
@@ -127,7 +141,7 @@
       if (!info) { followed = null; bub.classList.remove('show'); return; }
       followed = th;
       bub.style.setProperty('--c', info.L ? info.L.color : '#5b4cff');
-      bub.innerHTML = `<span class="ib-ic">${ICON.svg(KIND_ICON[info.kind] || 'sparkle', 20)}</span><div><b>${info.title}</b><p>${info.sub}</p>${info.go ? `<a href="company.html?t=${info.go}">打开 ${info.go} 的公司档案 →</a>` : ''}</div><button class="ib-x" type="button">✕</button>`;
+      bub.innerHTML = `<span class="ib-ic">${ICON.svg(KIND_ICON[info.kind] || 'sparkle', 20)}</span><div><b>${info.title}</b><p>${info.sub}</p>${info.go ? `<a href="/company?t=${info.go}">打开 ${info.go} 的公司档案 →</a>` : ''}</div><button class="ib-x" type="button">✕</button>`;
       bub.querySelector('.ib-x').onclick = () => thing(null);
       bub.classList.add('show'); moveThing(x, y, true);
     };
@@ -200,7 +214,7 @@
           ${d == null ? '<span class="pill flat">首次覆盖</span>' : `<span class="pill ${d >= 0 ? 'bull' : 'bear'}">目标价 ${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(0)}%</span>`}</div>
         <div class="rs-m"><span>${r.firm} · ${r.date}</span><span>${r.r0 === r.r1 ? '维持 ' + r.r1 : r.r0 === '—' ? '首次覆盖 · ' + r.r1 : r.r0 + ' → ' + r.r1}</span><span class="num">${r.p0 == null ? '' : r.p0 + ' → '}<b>${r.p1}</b></span></div>
         <ul>${r.pts.map(p => `<li>${p}</li>`).join('')}</ul>
-        <a class="rs-link" href="company.html?t=${r.t}">看 ${r.t} 的公司档案 →</a>`;
+        <a class="rs-link" href="/company?t=${r.t}">看 ${r.t} 的公司档案 →</a>`;
     };
     blank();
     const rs = initResearch($('#rsCanvas'), { select: show });

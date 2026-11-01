@@ -9,11 +9,12 @@
   const deep = c => mix(c, '#000000', .18);
   const esc = s => s.replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
   const badge = c => `<span class="badge" style="--bs:32px;--c:${deep(CL.layers[c.li].color)};--ring:${mix(CL.layers[c.li].color, '#ffffff', .55)}"><i>${c.t[0]}</i>${c.logo ? `<img src="${c.logo}" alt="" onerror="this.remove()">` : ''}</span>`;
-  const here = location.pathname.split('/').pop() || 'index.html';
+  const norm = f => (f.split('/').pop() || 'index').replace(/\.html$/, '') || 'index';   // '/company'、'company.html'、'' 都归一
+  const here = norm(location.pathname);
   // 同一页内的锚点直接滚过去，不整页刷新
   const go = href => {
     const [file, rest] = href.split('#');
-    if (file === here && rest) { location.hash = rest; dispatchEvent(new Event('hashchange')); close(); return; }
+    if (norm(file) === here && rest) { location.hash = rest; dispatchEvent(new Event('hashchange')); close(); return; }
     location.href = href;
   };
 

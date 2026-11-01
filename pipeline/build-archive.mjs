@@ -46,10 +46,10 @@ write('archive.json', wrap({ days, rr, weeks, columns }));
 write('daily/index.json', wrap({ days: days.map(d => ({ date: d.date, wd: d.wd, mood: d.mood, h2: d.h2, hasRR: !!rr[d.date], weekMon: (weekOf(d.date) || {}).mon || null, dataOnly: !!d.dataOnly, hasColumn: columns.some(c => c.date === d.date) })) }));
 const layerName = Object.fromEntries((companies.layers || []).map(l => [l.id, l.name]));
 write('search-index.json', wrap({ items: [
-  ...(companies.companies || []).map(c => ({ g: '公司', t: c.t, sub: `${c.name} · ${layerName[c.layer] || c.layer} / ${c.seg}`, href: `/company.html?t=${c.t}` })),
-  ...(companies.layers || []).map((l, i) => ({ g: '产业镇', t: `${l.name}街区`, sub: `第 ${i + 1} 层`, href: `/index.html#island?station=${l.id}` })),
-  ...columns.map(c => ({ g: '专栏报告', t: c.title, sub: `${c.kind} · ${c.date}`, href: `/column.html?id=${c.id}` })),
-  ...days.slice().reverse().map(d => ({ g: '期权日报归档', t: `${d.md} ${d.wd}`, sub: `大盘${d.mood} · ${d.h2}`, href: `/daily.html?col=eve&d=${d.date}` })),
+  ...(companies.companies || []).map(c => ({ g: '公司', t: c.t, sub: `${c.name} · ${layerName[c.layer] || c.layer} / ${c.seg}`, href: `/company?t=${c.t}` })),
+  ...(companies.layers || []).map((l, i) => ({ g: '产业镇', t: `${l.name}街区`, sub: `第 ${i + 1} 层`, href: `/#island?station=${l.id}` })),
+  ...columns.map(c => ({ g: '专栏报告', t: c.title, sub: `${c.kind} · ${c.date}`, href: `/column?id=${c.id}` })),
+  ...days.slice().reverse().map(d => ({ g: '期权日报归档', t: `${d.md} ${d.wd}`, sub: `大盘${d.mood} · ${d.h2}`, href: `/daily/${d.date}` })),
 ] }));
 // 镇上数据：最新一份复制成 town/latest.json（前端固定读这个名字）
 const towns = readDir('town').filter(f => f !== 'latest.json');

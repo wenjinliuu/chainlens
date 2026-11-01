@@ -1,10 +1,10 @@
 
 <header class="nav scrolled" id="nav">
-  <a class="brand" href="index.html">
+  <a class="brand" href="/">
     <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="cxg" x1="0" x2="1"><stop offset="0" stop-color="#9fe0ff"/><stop offset="1" stop-color="#ffffff"/></linearGradient></defs><rect x="2.5" y="6.5" width="27" height="20" rx="6.5" fill="#5b4cff"/><path d="M2.5 13c3.5-4.2 7-4.2 10.5 0s7 4.2 10.5 0c2-2.4 4.2-3.3 6-2.8V13a6.5 6.5 0 0 0-6.5-6.5H9A6.5 6.5 0 0 0 2.5 13z" fill="#7d70ff"/><path d="M2.5 13.6c3.5-4.2 7-4.2 10.5 0s7 4.2 10.5 0c1.9-2.3 3.9-3.2 6-2.9" fill="none" stroke="url(#cxg)" stroke-width="2.4" stroke-linecap="round"/><circle cx="25.5" cy="22" r="2.1" fill="#f5a314"/></svg>
     潮信<span class="pro">AI 产业链情报</span>
   </a>
-  <nav class="nav-links"><a href="index.html">首页</a><a href="index.html#island">产业镇</a><a href="company.html">公司档案</a><a href="stock.html">看盘</a><a href="daily.html">日报归档</a></nav>
+  <nav class="nav-links"><a href="/">首页</a><a href="/#island">产业镇</a><a href="/company">公司档案</a><a href="/stock">看盘</a><a href="/daily">日报归档</a></nav>
   <div class="nav-right"><span class="disclaimer">设计稿 · 流程演示，不会真的发送邮件</span></div>
 </header>
 
@@ -23,7 +23,7 @@
       <p>我们给 <b id="emailA">you@example.com</b> 发了一封确认邮件。点邮件里的「确认订阅」，明天起就能收到。</p>
       <ul class="sb-steps"><li class="done">填写邮箱</li><li class="cur">点邮件里的确认链接</li><li>每天准时收到</li></ul>
       <div class="sb-tips"><b>没收到？</b>看看垃圾邮件 / 广告邮件文件夹；QQ 邮箱和 163 请把 <code>mail@chaoxin.example</code> 加入白名单。<button type="button" class="link" id="resend">重新发送</button><span class="disclaimer" id="resendMsg"></span></div>
-      <div class="sb-actions"><a class="btn ghost" href="index.html">回到首页</a></div>
+      <div class="sb-actions"><a class="btn ghost" href="/">回到首页</a></div>
     </div>
   </section>
 
@@ -36,7 +36,7 @@
       <p>下一期<b>期权日报</b>会在<b>明天 15:40</b> 送到 <b id="emailB">you@example.com</b>。想收哪些栏目，现在就能定：</p>
       <div class="col-pick" data-form="prefs" id="pickB"></div>
       <div class="sb-opt"><label><input type="checkbox" checked> 周日上午收周报</label><label><input type="checkbox"> 只在有 AI 链重点时才发（没有重点的日子不打扰）</label></div>
-      <div class="sb-actions"><a class="btn accent" href="index.html#island">去看看 AI 产业镇 →</a><a class="btn ghost" href="daily.html">翻翻以前的日报</a></div>
+      <div class="sb-actions"><a class="btn accent" href="/#island">去看看 AI 产业镇 →</a><a class="btn ghost" href="/daily">翻翻以前的日报</a></div>
     </div>
   </section>
 
@@ -51,7 +51,7 @@
         <div class="pf-box"><h3>关注的公司</h3><p class="disclaimer">关注的公司有期权信号、研报调整或新闻时，邮件里会单独列出来。</p><div class="watch" id="watch"></div><div class="watch-add"><input id="watchIn" placeholder="输入代码或公司名添加，如 NVDA"><button class="btn ghost" type="button" id="watchBtn">添加</button></div></div>
         <div class="pf-box"><h3>送达时间</h3><label class="pf-row"><input type="radio" name="tm" checked> 期权日报：收盘后立即（北京时间约 15:40）</label><label class="pf-row"><input type="radio" name="tm"> 合并到早上 8:00 一起发（含盘前汇总）</label><h3 style="margin-top:18px">格式</h3><label class="pf-row"><input type="radio" name="fm" checked> 海报缩略图 + 要点 + 链接</label><label class="pf-row"><input type="radio" name="fm"> 纯文字（适合邮箱客户端预览）</label></div>
       </div>
-      <div class="sb-actions"><button class="btn accent" type="button" id="saveBtn">保存偏好</button><a class="btn ghost" href="unsubscribe.html">退订</a><span class="disclaimer" id="saveMsg"></span></div>
+      <div class="sb-actions"><button class="btn accent" type="button" id="saveBtn">保存偏好</button><a class="btn ghost" href="/unsubscribe">退订</a><span class="disclaimer" id="saveMsg"></span></div>
     </div>
   </section>
 

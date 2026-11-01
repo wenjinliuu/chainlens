@@ -286,7 +286,7 @@
   // ---------------------------------------------------------------- 面包屑与报价区
   function renderCrumb() {
     const { co, L } = S;
-    $('#crumb').innerHTML = `<a class="c-far" href="index.html">潮信</a><span class="sep c-far">/</span><span class="c-far">看盘</span><span class="sep c-far">/</span><span>${L.name}</span><span class="sep">/</span><span>${co.seg}</span><span class="sep">/</span><b>${co.t}</b>
+    $('#crumb').innerHTML = `<a class="c-far" href="/">潮信</a><span class="sep c-far">/</span><span class="c-far">看盘</span><span class="sep c-far">/</span><span>${L.name}</span><span class="sep">/</span><span>${co.seg}</span><span class="sep">/</span><b>${co.t}</b>
       <span class="st"><i></i>已收盘 · 美东 10-30 16:00 · 示例数据（正式版行情延迟 15 分钟以上）</span>
       <button class="mini wl-open-btn no-shot" type="button" data-open-wl>☰ 切换股票</button>
       <button class="mini dl no-shot" type="button" id="dlBtn" title="把本页导出为 2 倍高清 PNG">↓ 高清图</button>`;
@@ -301,7 +301,7 @@
     el.innerHTML = `<div class="hs-h"><b>最热合约</b><span>近 60 日期权成交最大的 6 天 · 当天成交最多的那张合约 · 示例</span></div><div class="hs-row">` + days.map(({ i, v }) => {
       const h = S.hot[i], tier = h.dte <= 7 ? ['短线', 'flat'] : h.dte <= 30 ? [h.call ? 'Call' : 'Put', h.call ? 'bull' : 'bear'] : [(h.call ? 'Call' : 'Put') + ' · 远月', h.call ? 'bull' : 'bear'];
       const dt = S.daily[i].time, link = window.ARCHIVE && ARCHIVE.byDate[dt];
-      return `<${link ? `a href="daily.html?col=eve&d=${dt}" title="看 ${md(dt)} 的期权日报"` : 'div'} class="hs-c${link ? ' link' : ''}"><span class="d num">${md(dt)}${link ? ' ↗' : ''}</span><b class="num">${h.call ? 'Call' : 'Put'} ${h.k}</b><span class="x">${h.exp} 到期 · ${h.dte} 天</span><span class="pill ${tier[1]}">${tier[0]}</span><span class="s">成交 ${big(v)} 张 · 占 ${(h.share * 100).toFixed(0)}%</span></${link ? 'a' : 'div'}>`;
+      return `<${link ? `a href="/daily?col=eve&d=${dt}" title="看 ${md(dt)} 的期权日报"` : 'div'} class="hs-c${link ? ' link' : ''}"><span class="d num">${md(dt)}${link ? ' ↗' : ''}</span><b class="num">${h.call ? 'Call' : 'Put'} ${h.k}</b><span class="x">${h.exp} 到期 · ${h.dte} 天</span><span class="pill ${tier[1]}">${tier[0]}</span><span class="s">成交 ${big(v)} 张 · 占 ${(h.share * 100).toFixed(0)}%</span></${link ? 'a' : 'div'}>`;
     }).join('') + `</div>`;
   }
   function renderQuote() {
@@ -616,7 +616,7 @@
     const it = ([tk, rel]) => { const c = CL.byT[tk], q = quoteOf(tk); return `<a class="ch-it" href="?t=${tk}" data-go="${tk}">${badge(c, 26)}<span class="tx"><b>${tk}</b><small>${rel}</small></span><em class="${dirc(q.chg)}">${pct(q.chg, 1)}</em></a>`; };
     const peers = byCap(L.members.filter(c => c.seg === co.seg && c.t !== t)).concat(byCap(L.members.filter(c => c.seg !== co.seg))).slice(0, 6);
     $('#chain').innerHTML = `
-      <div class="c-head"><div><h3>产业链<em>上下游</em></h3><p>第 ${li + 1} 层 / 共 8 层 · 关系为示意</p></div><a class="lnk" href="index.html#island">产业镇 →</a></div>
+      <div class="c-head"><div><h3>产业链<em>上下游</em></h3><p>第 ${li + 1} 层 / 共 8 层 · 关系为示意</p></div><a class="lnk" href="/#island">产业镇 →</a></div>
       <div class="ch-strip">${CL.layers.map((x, i) => `<i class="${i === li ? 'on' : ''}" style="--c:${x.color}" title="${x.name}"></i>`).join('')}</div>
       <div class="ch-strip-l"><span>上游 · 原材料</span><span style="color:${deep(L.color)}">${L.name}</span><span>应用与端侧 · 下游</span></div>
       <div class="ch-flow">

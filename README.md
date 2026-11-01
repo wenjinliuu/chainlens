@@ -54,6 +54,17 @@ pnpm preview   # 本地预览
 
 部署：推送到 `main` 后由 GitHub Actions 构建并 `wrangler deploy` 到 Cloudflare Workers 静态资源（免费额度），需要仓库 Secrets `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`。
 
+### 订阅 API（`web/worker/index.mjs`）
+
+同一个 Worker 托管静态站并提供 `/api/subscribe`、`/api/resend`、`/api/confirm`、`/api/prefs`、`/api/unsubscribe`（D1 + Resend，double opt-in）。本地：
+
+```bash
+cd web && pnpm exec wrangler d1 migrations apply chaoxin --local
+pnpm exec wrangler dev --local --var DEBUG_TOKENS:1 --var SITE_URL:http://127.0.0.1:8787   # DEBUG_TOKENS 只在本地开
+```
+
+上线前：`wrangler d1 create chaoxin` 并把 `database_id` 填进 `web/wrangler.toml`，`wrangler d1 migrations apply chaoxin --remote`，`wrangler secret put RESEND_KEY` / `MAIL_FROM`。
+
 ### 数据流（`pipeline/`）
 
 ```bash

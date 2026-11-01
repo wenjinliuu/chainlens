@@ -113,7 +113,7 @@
       <div class="ch-id">${badge(c, 76, L.color)}<div><div class="ch-t"><b class="num">${c.t}</b><span class="tag seg-tag" style="--c:${L.color}">${L.name}</span><span class="tag" style="--tc-deep:${deep(L.color)};--tc-bg:${mix(L.color, W, .9)}">${c.seg}</span></div>
         <div class="ch-n">${c.name} · 市值约 ${c.cap >= 1000 ? (c.cap / 1000).toFixed(1) + ' 万亿' : c.cap + ' 十亿'} 美元（示意）</div></div></div>
       <div class="ch-px"><b class="num">${D.last.c.toFixed(2)}</b><span class="pill ${dirCls(D.chg)}">${pct(D.chg)}</span><small>USD · 10-30 收盘 · 延迟数据</small></div>
-      <div class="ch-act"><a class="btn ghost" href="stock.html?t=${c.t}">看盘工具 →</a><button class="btn accent" id="followBtn">关注这家公司</button></div></div>
+      <div class="ch-act"><a class="btn ghost" href="/stock?t=${c.t}">看盘工具 →</a><button class="btn accent" id="followBtn">关注这家公司</button></div></div>
       <div class="ch-kpi">
         <div><span>期权日报 · CP 偏离</span><b class="num ${D.dev[19] >= 0 ? 'up' : 'down'}">${D.dev[19] >= 0 ? '+' : '−'}${Math.round(Math.abs(D.dev[19]) * 100)}%</b><small>对比 20 日常态</small></div>
         <div><span>研报目标价</span><b class="num">${Math.round(D.tLo)}–${Math.round(D.tHi)}</b><small>${D.reports.length} 条 · 均值 ${Math.round(D.tAvg)}</small></div>
@@ -140,7 +140,7 @@
       ${D.news.map(n => `<div class="nw" data-di="${n.di}"><span class="nw-d num">${n.d}</span><div><b>${n.title}</b><small>${n.src}</small></div></div>`).join('')}`;
     // 产业链
     const rel = (arr, lab) => `<div class="rel-col"><div class="rel-h">${lab}</div>${arr.length ? arr.map(x => `<a class="rel" href="?t=${x.c.t}" data-t="${x.c.t}">${badge(x.c, 30, CL.layers[x.c.li].color)}<b class="num">${x.c.t}</b><small>${x.rel}</small><span class="pill ${dirCls(x.c.chg[6])}">${pct(x.c.chg[6])}</span></a>`).join('') : '<div class="rel-none">暂无（示意）</div>'}</div>`;
-    $('#pChain').innerHTML = `<div class="ph"><h3><span class="dot" style="background:${L.color}"></span>产业链位置</h3><a class="disclaimer" href="index.html#island">在产业镇上看 →</a></div>
+    $('#pChain').innerHTML = `<div class="ph"><h3><span class="dot" style="background:${L.color}"></span>产业链位置</h3><a class="disclaimer" href="/#island">在产业镇上看 →</a></div>
       <div class="rel-wrap">${rel(D.ups, '上游 · 供应方')}<div class="rel-me">${badge(c, 44, L.color)}<b class="num">${c.t}</b><small>${L.name}</small></div>${rel(D.downs, '下游 · 客户')}</div>`;
     document.querySelectorAll('#pChain .rel').forEach(a => a.onclick = e => { e.preventDefault(); go(a.dataset.t); });
     // 出现记录
@@ -149,8 +149,8 @@
     if (window.ARCHIVE) {
       const A = window.ARCHIVE, days = A.days.filter(d => d.picks.some(x => x.t === c.t)).slice(-5).reverse();
       const rrs = A.DATES.slice(-15).filter(dt => A.rr(dt).items.some(i => i.t === c.t)).slice(-4).reverse();
-      arch = `<div class="seen-arch"><div class="sa-h">期权日报重点 <a href="daily.html?col=eve">翻归档 →</a></div>${days.length ? days.map(d => { const p = d.picks.find(x => x.t === c.t); return `<a class="sa" href="daily.html?col=eve&d=${d.date}"><span class="num">${d.date.slice(5)}</span><span class="pill ${A.pillK(p.dir)}">${p.dir}</span><small>可信度${p.conf} · 量 ${p.vx}x</small></a>`; }).join('') : '<small class="sa-none">近 30 个交易日没进过重点</small>'}
-        <div class="sa-h">研报日报 <a href="daily.html?col=rr">翻归档 →</a></div>${rrs.length ? rrs.map(dt => { const i = A.rr(dt).items.find(x => x.t === c.t); return `<a class="sa" href="daily.html?col=rr&d=${dt}"><span class="num">${dt.slice(5)}</span><span class="pill ${i.to > i.from ? 'bull' : i.to < i.from ? 'bear' : 'flat'}">${i.from} → ${i.to}</span><small>${i.firm} · ${i.act}</small></a>`; }).join('') : '<small class="sa-none">近 15 个交易日没有研报摘录</small>'}</div>`;
+      arch = `<div class="seen-arch"><div class="sa-h">期权日报重点 <a href="/daily?col=eve">翻归档 →</a></div>${days.length ? days.map(d => { const p = d.picks.find(x => x.t === c.t); return `<a class="sa" href="/daily?col=eve&d=${d.date}"><span class="num">${d.date.slice(5)}</span><span class="pill ${A.pillK(p.dir)}">${p.dir}</span><small>可信度${p.conf} · 量 ${p.vx}x</small></a>`; }).join('') : '<small class="sa-none">近 30 个交易日没进过重点</small>'}
+        <div class="sa-h">研报日报 <a href="/daily?col=rr">翻归档 →</a></div>${rrs.length ? rrs.map(dt => { const i = A.rr(dt).items.find(x => x.t === c.t); return `<a class="sa" href="/daily?col=rr&d=${dt}"><span class="num">${dt.slice(5)}</span><span class="pill ${i.to > i.from ? 'bull' : i.to < i.from ? 'bear' : 'flat'}">${i.from} → ${i.to}</span><small>${i.firm} · ${i.act}</small></a>`; }).join('') : '<small class="sa-none">近 15 个交易日没有研报摘录</small>'}</div>`;
     }
     $('#pSeen').innerHTML = `<div class="ph"><h3>在潮信里出现过</h3></div>
       ${D.events.slice().reverse().slice(0, 8).map(e => `<div class="seen" data-di="${e.di}"><span class="seen-k" style="--k:${SIG[e.k][0]}">${SIG[e.k][1]}</span><span class="num">${e.d}</span><b>${e.title}</b><small>${e.sub}</small></div>`).join('')}${arch}`;

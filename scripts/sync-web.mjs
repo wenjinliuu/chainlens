@@ -15,9 +15,13 @@ import { fileURLToPath } from 'node:url';
 const R = resolve(dirname(fileURLToPath(import.meta.url)), '..'), W = join(R, 'web');
 for (const d of ['public/assets', 'public/data', 'src/layouts', 'src/pages', 'src/partials']) mkdirSync(join(W, d), { recursive: true });
 
+const PAGE_RE = /(?<![\w\/.-])(index|company|stock|daily|column|subscribe|unsubscribe|email|logo-lab)\.html(?=[?#"'`\s)]|$)/g;
+const dehtml = h => h.replace(PAGE_RE, (m, n) => n === 'index' ? '/' : '/' + n);   // company.html?t=X → /company?t=X；index.html#island → /#island
+const rewrite = h => dehtml(h.replace(/\.\.\/v3\/assets\//g, '/assets/').replace(/\.\.\/v2\/assets\//g, '/assets/').replace(/(href|src)="assets\//g, '$1="/assets/'));
+
 // 静态资源
 const v4 = join(R, 'design/v4/assets');
-for (const f of readdirSync(v4)) copyFileSync(join(v4, f), join(W, 'public/assets', f));
+for (const f of readdirSync(v4)) { if (f.endsWith('.js')) writeFileSync(join(W, 'public/assets', f), dehtml(readFileSync(join(v4, f), 'utf8'))); else copyFileSync(join(v4, f), join(W, 'public/assets', f)); }   // JS 里的页面链接也去 .html
 for (const f of ['iso.js', 'data.js', 'brand.css']) copyFileSync(join(R, 'design/v3/assets', f), join(W, 'public/assets', f));
 copyFileSync(join(R, 'design/v2/assets/indicators.js'), join(W, 'public/assets/indicators.js'));
 if (existsSync(join(W, 'public/data'))) rmSync(join(W, 'public/data'), { recursive: true });
@@ -29,7 +33,7 @@ try {
   const site = (process.env.SITE_URL || 'https://chaoxin.example').replace(/\/$/, '');
   const idx = JSON.parse(readFileSync(join(DATA, 'daily/index.json'), 'utf8')).days || [];
   const cols = existsSync(join(DATA, 'archive.json')) ? JSON.parse(readFileSync(join(DATA, 'archive.json'), 'utf8')).columns || [] : [];
-  const urls = ['/', '/daily.html', '/company.html', '/stock.html', '/subscribe.html', ...idx.map(d => `/daily/${d.date}.html`), ...cols.map(c => `/column.html?id=${c.id}`)];
+  const urls = ['/', '/daily', '/company', '/stock', '/subscribe', ...idx.map(d => `/daily/${d.date}`), ...cols.map(c => `/column?id=${c.id}`)];
   writeFileSync(join(W, 'public/sitemap.txt'), urls.map(u => site + u).join('\n') + '\n');
 } catch (e) { console.warn('sitemap 未生成：', e.message); }
 
@@ -41,7 +45,6 @@ const PAGES = {
   column: ['专栏报告 · 潮信', ''], subscribe: ['订阅潮信 · 确认与偏好', ''], unsubscribe: ['退订潮信', ''],
   email: ['邮件模板 · 潮信', ''], 'logo-lab': ['Logo 候选 · 潮信', ''],
 };
-const rewrite = h => h.replace(/\.\.\/v3\/assets\//g, '/assets/').replace(/\.\.\/v2\/assets\//g, '/assets/').replace(/(href|src)="assets\//g, '$1="/assets/');
 let n = 0;
 for (const [name, [title, desc]] of Object.entries(PAGES)) {
   const s = readFileSync(join(R, 'design/v4', name + '.html'), 'utf8');

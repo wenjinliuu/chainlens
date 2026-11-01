@@ -106,7 +106,7 @@
     else { tag = '<span class="tag" style="--tc-deep:#b45309;--tc-bg:#fff4dc">盘前汇总</span>'; h2 = `即将上线`; sub = '上线后每个交易日美东 09:00 送达，这里会按日归档'; }
     const share = `<button class="btn ghost" type="button" id="shareBtn" title="复制这一天的链接">分享</button>${S.col === 'eve' ? '' : '<span class="ar-msg" id="msg"></span>'}`;
     $('#arHead').innerHTML = `<div class="t">${tag}<h2>${h2}</h2><div class="sub">${sub}</div></div><div class="act">${act}${share}${nav}</div>`;
-    $('#shareBtn').onclick = async () => { const url = location.protocol === 'file:' || S.col !== 'eve' ? location.href : `${location.origin}/daily/${S.date}.html`; try { await navigator.clipboard.writeText(url); flash('已复制链接'); } catch { flash('浏览器不允许复制，请手动复制地址栏'); } };   // 站点下期权日报分享每日静态页
+    $('#shareBtn').onclick = async () => { const url = location.protocol === 'file:' || S.col !== 'eve' ? location.href : `${location.origin}/daily/${S.date}`; try { await navigator.clipboard.writeText(url); flash('已复制链接'); } catch { flash('浏览器不允许复制，请手动复制地址栏'); } };   // 站点下期权日报分享每日静态页
     $('#prevD').onclick = () => step(-1); $('#nextD').onclick = () => step(1);
     $$('#viewSeg button').forEach(b => b.onclick = () => { S.view = b.dataset.v; renderHead(); renderBody(); pushURL(); });
     const copy = $('#copyBtn'); if (copy) copy.onclick = async () => { const el = document.createElement('div'); el.innerHTML = A.text(S.date); try { await navigator.clipboard.writeText(el.innerText.trim()); flash('已复制文字版'); } catch { flash('浏览器不允许复制，请手动选择'); } };
@@ -120,7 +120,7 @@
     else if (S.col === 'rr') body.innerHTML = `<div class="card">${A.rrPage(S.date)}</div>`;
     else if (S.col === 'week') body.innerHTML = `<div class="card">${A.weekPage(wk.mon)}</div>`;
     else if (S.col === 'col') body.innerHTML = `<div class="card">${A.colList(S.date)}</div>`;
-    else body.innerHTML = `<div class="card ar-soon"><div class="lead"><div><h3>盘前汇总还在准备中</h3><p>隔夜要闻、盘前异动的 AI 链个股、当天财报与宏观日程，开盘前 5 分钟看完。先看一张样张：</p></div><a class="btn accent" href="index.html#subscribe">上线时第一个收到</a></div><div class="sheet">${A.peek.morn()}</div></div>`;
+    else body.innerHTML = `<div class="card ar-soon"><div class="lead"><div><h3>盘前汇总还在准备中</h3><p>隔夜要闻、盘前异动的 AI 链个股、当天财报与宏观日程，开盘前 5 分钟看完。先看一张样张：</p></div><a class="btn accent" href="/#subscribe">上线时第一个收到</a></div><div class="sheet">${A.peek.morn()}</div></div>`;
     fitPoster();
     $$('#arBody .ar-wk-days a').forEach(a => a.onclick = e => { e.preventDefault(); switchCol('eve'); setDate(a.getAttribute('href').split('d=')[1]); });
   }
