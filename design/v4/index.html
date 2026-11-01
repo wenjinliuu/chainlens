@@ -230,7 +230,7 @@
   });
   if (!window.__noMascot) initMascot(document.getElementById('mascot'));
   window.LP.island(isl.initIsland);
-  if (document.documentElement.dataset.theme === 'dark') { window.__nightNow = true; window.LP.setNight(true); window.__nightNow = false; } // 深色主题：小镇直接是夜晚
+  if (document.documentElement.dataset.theme === 'dark' || document.getElementById('hero').classList.contains('night')) { window.__nightNow = true; window.LP.setNight(true); window.__nightNow = false; } // 深色主题或镇还没建好时就点了夜晚：小镇建好后直接是夜晚
   const { initResearch } = await RESEARCH;
   window.LP.research(initResearch);
   const { initBoard } = await BOARD;
