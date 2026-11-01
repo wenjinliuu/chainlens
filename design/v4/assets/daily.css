@@ -6,7 +6,7 @@ body { background: linear-gradient(180deg, #fff, var(--bg-2) 600px); }
 
 /* 栏目切换 */
 .ar-cols { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
-.ar-cols button { position: relative; padding: 9px 4px; font-size: 13.5px; }
+.ar-cols button { position: relative; padding: 9px 0; font-size: 13px; white-space: nowrap; letter-spacing: -.01em; }
 .ar-cols button em { position: absolute; right: -2px; top: -8px; font-style: normal; font-size: 9.5px; font-weight: 800; color: #b45309; background: #fff4dc; border-radius: 999px; padding: 1px 6px; }
 
 /* 日历 */

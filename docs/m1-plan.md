@@ -142,6 +142,14 @@ chainlens/
 ```
 前半段由 pipeline 按固定规则汇总，后三个字段来自 kzg 的周报 JSON（AI 写的文字）。
 
+### 4.5b `data/columns/index.json` 与 `data/columns/{id}.json` —— 专栏报告
+```json
+{ "id": "800g-optics-chain", "date": "2026-10-22", "kind": "产业链", "title": "…", "dek": "…", "tags": ["LITE", "COHR"], "readMin": 8,
+  "sections": [{ "h": "…", "p": ["…"], "data": { "kind": "kv | bars", "rows": [["名称", "值", "上限（bars 用）"]] } }],
+  "related": { "daily": "2026-10-22", "rr": "2026-10-22" }, "ai": true }
+```
+`kind` 只有 财报 / 产业链 / 事件 三种；正文由 AI 整理但数字全部来自日报 JSON（pipeline 校验每个数字可追溯）；`index.json` 是按日期降序的摘要列表。
+
 ### 4.6 其它
 - `data/companies.json`：`{ layers:[{id, name, color, segs}], companies:[{t, name, cap, layer, seg}] }`（现 `data.js` 去掉虚构行情后的部分）。
 - `data/company/{T}.json`：`{ profile, px60:[[date, close]], events:[统一事件模型], targets:[{date, firm, lo, hi}], seen:{opt, rr, news}, upstream[], downstream[] }`。统一事件模型见 `docs/data-sources.md` 第 2 节。
