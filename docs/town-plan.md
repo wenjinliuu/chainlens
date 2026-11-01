@@ -66,6 +66,8 @@
 ```
 前端只读这份 JSON；没有当天数据时用上一份并在角落标"数据截至 …"。时间回放（归档页）可以把这份 JSON 按日期切换，让镇"回到那一天"。
 
+**已接（2026-11-01）**：`design/v4/assets/town-data.js` 在站点下读 `/data/town/latest.json`（`pipeline/build-archive.mjs` 把最新一份复制成 latest），把 `layerHeat`（8 层热度）、`companies[t].chg / vx / signals`、`towers[t].flag / target`、`mood` 原地写进 `CL`，再建镇；所以底座高度、楼顶旗、目标价牌、天气都由这份 JSON 决定。设计稿 file:// 下不读。验证：改 JSON 的天气为 rain、芯片热度为 2.9、给 TSM 加信号 → 镇上下雨、芯片标签 2.9x、旗帜多一面。
+
 ## 5. 分步实现
 
 | 步 | 内容 | 影响范围 |

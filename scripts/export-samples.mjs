@@ -41,7 +41,8 @@ for (const date of [last]) {
   d.picks.forEach(p => { towers[p.t] = { dir: p.dir, conf: p.conf, flag: true, lamp: p.conf === '高' }; });
   R.items.forEach(i => { towers[i.t] = Object.assign(towers[i.t] || {}, { target: i.to > i.from ? 'up' : i.to < i.from ? 'down' : 'flat' }); });
   write(`town/${date}.json`, wrap({ date, weather: WXOF[d.mood], mood: d.mood,
-    segHeat: Object.fromEntries(d.heat.map(h => [h[0], h[1]])), towers,
+    segHeat: Object.fromEntries(d.heat.map(h => [h[0], h[1]])), layerHeat: Object.fromEntries(CL.layers.map(l => [l.id, l.heat[6]])),
+    companies: Object.fromEntries(CL.companies.map(c => [c.t, { chg: c.chg[6], vx: c.vx[6], signals: c.signals }])), towers,
     boards: d.heat.map(h => ({ seg: h[0], t: h[2].split(' ')[0] })),
     bus: wk.segs.slice(0, 3).map(x => x.n), blimp: `本周${wk.dir} · 环节轮动 ${wk.segs.slice(0, 3).map(x => x.n).join(' → ')}`,
     unlisted: CL.unlisted.map(u => ({ t: u.t, name: u.name, layer: u.layer, seg: u.seg })) }));

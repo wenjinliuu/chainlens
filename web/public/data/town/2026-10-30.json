@@ -1,6 +1,6 @@
 {
   "v": 1,
-  "gen": "2026-11-01T02:06:38.719Z",
+  "gen": "2026-11-01T02:12:54.154Z",
   "disclaimer": "本站内容为公开信息整理，不构成任何投资建议。市场有风险，投资需谨慎。示例数据均为虚构。",
   "date": "2026-10-30",
   "weather": "sunny",
@@ -12,6 +12,338 @@
     "电力/散热": 1.6,
     "GPU/算力云": 1.5,
     "AI服务器": 1.3
+  },
+  "layerHeat": {
+    "raw": 0.9,
+    "energy": 1.4,
+    "chip": 1.8,
+    "net": 2.3,
+    "dc": 1.6,
+    "compute": 1.5,
+    "cloud": 1.1,
+    "app": 1.2
+  },
+  "companies": {
+    "FCX": {
+      "chg": -1.61,
+      "vx": 0.9,
+      "signals": []
+    },
+    "SCCO": {
+      "chg": -1.69,
+      "vx": 1,
+      "signals": []
+    },
+    "MP": {
+      "chg": 1.58,
+      "vx": 1.2,
+      "signals": [
+        "o"
+      ]
+    },
+    "VST": {
+      "chg": -1.03,
+      "vx": 2,
+      "signals": []
+    },
+    "CEG": {
+      "chg": -1.51,
+      "vx": 1.2,
+      "signals": [
+        "n"
+      ]
+    },
+    "TLN": {
+      "chg": 2.36,
+      "vx": 1.2,
+      "signals": []
+    },
+    "GEV": {
+      "chg": 0.54,
+      "vx": 1.8,
+      "signals": []
+    },
+    "OKLO": {
+      "chg": 1.8,
+      "vx": 2,
+      "signals": []
+    },
+    "CCJ": {
+      "chg": 1.14,
+      "vx": 2,
+      "signals": []
+    },
+    "BE": {
+      "chg": 1.44,
+      "vx": 0.9,
+      "signals": []
+    },
+    "NVDA": {
+      "chg": 1.88,
+      "vx": 1.3,
+      "signals": [
+        "o",
+        "r"
+      ]
+    },
+    "AMD": {
+      "chg": 2.65,
+      "vx": 1.9,
+      "signals": []
+    },
+    "AVGO": {
+      "chg": -0.32,
+      "vx": 1.9,
+      "signals": [
+        "r"
+      ]
+    },
+    "MRVL": {
+      "chg": 1.68,
+      "vx": 1.4,
+      "signals": []
+    },
+    "ARM": {
+      "chg": 2.45,
+      "vx": 1.1,
+      "signals": []
+    },
+    "INTC": {
+      "chg": -0.75,
+      "vx": 2,
+      "signals": []
+    },
+    "MU": {
+      "chg": -0.38,
+      "vx": 2.2,
+      "signals": [
+        "o",
+        "r"
+      ]
+    },
+    "SNDK": {
+      "chg": 1.33,
+      "vx": 2.5,
+      "signals": []
+    },
+    "WDC": {
+      "chg": 2.31,
+      "vx": 2.6,
+      "signals": []
+    },
+    "TSM": {
+      "chg": -1.52,
+      "vx": 2.6,
+      "signals": [
+        "n"
+      ]
+    },
+    "ASML": {
+      "chg": 0.28,
+      "vx": 1.8,
+      "signals": []
+    },
+    "AMAT": {
+      "chg": -0.43,
+      "vx": 2.5,
+      "signals": []
+    },
+    "LRCX": {
+      "chg": -1.16,
+      "vx": 1.6,
+      "signals": []
+    },
+    "KLAC": {
+      "chg": 0.63,
+      "vx": 1.8,
+      "signals": []
+    },
+    "COHR": {
+      "chg": 0.22,
+      "vx": 3.1,
+      "signals": [
+        "r"
+      ]
+    },
+    "LITE": {
+      "chg": 1.82,
+      "vx": 3.3,
+      "signals": [
+        "o"
+      ]
+    },
+    "CIEN": {
+      "chg": -0.69,
+      "vx": 2.6,
+      "signals": []
+    },
+    "ANET": {
+      "chg": 0.52,
+      "vx": 3.1,
+      "signals": [
+        "r"
+      ]
+    },
+    "CRDO": {
+      "chg": 2.29,
+      "vx": 3.1,
+      "signals": []
+    },
+    "ALAB": {
+      "chg": 1.96,
+      "vx": 3,
+      "signals": []
+    },
+    "CSCO": {
+      "chg": 4.18,
+      "vx": 2.5,
+      "signals": []
+    },
+    "SMCI": {
+      "chg": 0.71,
+      "vx": 2,
+      "signals": [
+        "o"
+      ]
+    },
+    "DELL": {
+      "chg": 0.19,
+      "vx": 2.1,
+      "signals": []
+    },
+    "HPE": {
+      "chg": -1.31,
+      "vx": 1.3,
+      "signals": []
+    },
+    "VRT": {
+      "chg": 2.54,
+      "vx": 1.9,
+      "signals": [
+        "r"
+      ]
+    },
+    "ETN": {
+      "chg": 1.03,
+      "vx": 1.2,
+      "signals": []
+    },
+    "EQIX": {
+      "chg": 2.93,
+      "vx": 1.5,
+      "signals": []
+    },
+    "DLR": {
+      "chg": 2.28,
+      "vx": 2.1,
+      "signals": []
+    },
+    "CRWV": {
+      "chg": 0.38,
+      "vx": 1.3,
+      "signals": [
+        "n"
+      ]
+    },
+    "NBIS": {
+      "chg": 1.67,
+      "vx": 0.9,
+      "signals": []
+    },
+    "IREN": {
+      "chg": 2.25,
+      "vx": 2.2,
+      "signals": [
+        "o"
+      ]
+    },
+    "CIFR": {
+      "chg": 1.73,
+      "vx": 1.4,
+      "signals": []
+    },
+    "WULF": {
+      "chg": 2.66,
+      "vx": 2,
+      "signals": []
+    },
+    "CORZ": {
+      "chg": -0.03,
+      "vx": 1.2,
+      "signals": []
+    },
+    "APLD": {
+      "chg": 1.58,
+      "vx": 1.4,
+      "signals": []
+    },
+    "MSFT": {
+      "chg": 0.33,
+      "vx": 1.3,
+      "signals": []
+    },
+    "GOOGL": {
+      "chg": -1.04,
+      "vx": 0.7,
+      "signals": []
+    },
+    "AMZN": {
+      "chg": 1.48,
+      "vx": 1.5,
+      "signals": []
+    },
+    "META": {
+      "chg": -2.57,
+      "vx": 1.4,
+      "signals": []
+    },
+    "ORCL": {
+      "chg": 0.08,
+      "vx": 0.9,
+      "signals": []
+    },
+    "BABA": {
+      "chg": -1.41,
+      "vx": 0.9,
+      "signals": []
+    },
+    "PLTR": {
+      "chg": -0.13,
+      "vx": 1.8,
+      "signals": [
+        "n"
+      ]
+    },
+    "SNOW": {
+      "chg": 2.22,
+      "vx": 1.4,
+      "signals": []
+    },
+    "CRWD": {
+      "chg": 0.33,
+      "vx": 1.5,
+      "signals": []
+    },
+    "NOW": {
+      "chg": 0.08,
+      "vx": 1,
+      "signals": []
+    },
+    "TSLA": {
+      "chg": 1.65,
+      "vx": 1.1,
+      "signals": []
+    },
+    "AAPL": {
+      "chg": -0.64,
+      "vx": 1.5,
+      "signals": []
+    },
+    "QCOM": {
+      "chg": -0.95,
+      "vx": 1.4,
+      "signals": []
+    }
   },
   "towers": {
     "LITE": {

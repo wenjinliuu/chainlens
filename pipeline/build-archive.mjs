@@ -51,6 +51,9 @@ write('search-index.json', wrap({ items: [
   ...columns.map(c => ({ g: '专栏报告', t: c.title, sub: `${c.kind} · ${c.date}`, href: `/column.html?id=${c.id}` })),
   ...days.slice().reverse().map(d => ({ g: '期权日报归档', t: `${d.md} ${d.wd}`, sub: `大盘${d.mood} · ${d.h2}`, href: `/daily.html?col=eve&d=${d.date}` })),
 ] }));
+// 镇上数据：最新一份复制成 town/latest.json（前端固定读这个名字）
+const towns = readDir('town').filter(f => f !== 'latest.json');
+if (towns.length) { const t = load('town', towns[towns.length - 1]); if (!['sunny', 'cloudy', 'rain'].includes(t.weather)) { console.error(`town weather=${t.weather} 不是 sunny / cloudy / rain`); process.exit(1); } write('town/latest.json', wrap(t)); }
 const last = days[days.length - 1];
 write('meta.json', wrap({ latest: last.date, latestRR: Object.keys(rr).sort().pop() || null, latestWeek: weeks.length ? weeks[weeks.length - 1].mon : null, latestColumn: columns[0] ? columns[0].date : null, delay: '期权数据为收盘后汇总；行情为延迟数据', rulesVersion: last.source ? last.source.rulesVersion : null }));
 const kb = f => (readFileSync(join(DIR, f)).length / 1024).toFixed(0);
