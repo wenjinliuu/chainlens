@@ -109,12 +109,16 @@ function offset(P, lane, closed) {
 // ---------- 布局 ----------
 const PER = { x0: -1180, x1: 1180, z0: -560, z1: 600, r: 150, w: 100 };
 const AVE = { z: 20, w: 110, x0: -3600, x1: 1760 };
-// 列宽不等（芯片那列最宽），列间 120 留给横街；最西边那条横街改成一条小河，车只走剩下两条横街
-const COLW = [370, 440, 650, 420], COLX = [-935, -410, 255, 910];
+// 路网：环岛路四角半径各不相同；最西边一条小河贯穿南北；前后两排各有两条横街，而且错位（不对齐），
+// 所以每排的列宽都不一样——街区由"小河 + 本排横街"切出来，芯片那列最宽
+const PER_R = [150, 230, 130, 210];                              // 环岛路四角半径：西北、东北、东南、西南
 const CANAL = { x: -690, w: 70 };
-const CROSS = [-130, 640], CW_ = 80;
-const COLS = COLX, ROWS = [-272, 312];
-const BLOCKS = [[0, 0], [1, 0], [2, 0], [3, 0], [3, 1], [2, 1], [1, 1], [0, 1]].map(([c, r]) => ({ cx: COLS[c], cz: ROWS[r], w: COLW[c], back: r === 0, side: c < 2 ? -1 : 1 }));
+const CW_ = 80;
+const CROSS_B = [-150, 620], CROSS_F = [-230, 480];               // 后排（北）/ 前排（南）的横街 x
+const CROSS = [...CROSS_B, ...CROSS_F];
+const colsOf = streets => { const e = [-1120, CANAL.x - 60, CANAL.x + 60, ...streets.flatMap(x => [x - 60, x + 60]), 1120]; const out = []; for (let i = 0; i < e.length; i += 2) out.push({ cx: (e[i] + e[i + 1]) / 2, w: e[i + 1] - e[i] }); return out; };
+const COLS_B = colsOf(CROSS_B), COLS_F = colsOf(CROSS_F), ROWS = [-272, 312];
+const BLOCKS = [[0, 0], [1, 0], [2, 0], [3, 0], [3, 1], [2, 1], [1, 1], [0, 1]].map(([c, r]) => { const col = (r === 0 ? COLS_B : COLS_F)[c]; return { cx: col.cx, cz: ROWS[r], w: col.w, back: r === 0, side: c < 2 ? -1 : 1 }; });
 const BW = 470, BD = 455, PAD = 240;   // BW 只是默认值，街区实际宽度用 B.w
 const BRIDGE0 = -1450;
 const roadY = x => x > BRIDGE0 ? G + .8 : G + .8 + 160 * Math.sin(Math.PI * Math.min((BRIDGE0 - x) / (BRIDGE0 - AVE.x0 - 150), 1));
@@ -178,24 +182,25 @@ function getTown() {
   // ---------- 道路 ----------
   const roadM = M('#dcdfeb', { roughness: .9 }), lineM = M('#ffffff', { roughness: .6 }), curbM = M('#cfd2e2');
   const flat = (w, d, m, x, z, y) => at(box(w, 1.2, d, m, 0), x, y == null ? G + .6 : y, z);
-  const { x0, x1, z0, z1, r, w } = PER;
-  S.add(flat(x1 - x0 - 2 * r, w, roadM, 0, z0)); S.add(flat(x1 - x0 - 2 * r, w, roadM, 0, z1));
-  S.add(flat(w, z1 - z0 - 2 * r, roadM, x0, (z0 + z1) / 2)); S.add(flat(w, z1 - z0 - 2 * r, roadM, x1, (z0 + z1) / 2));
-  [[x0 + r, z0 + r, Math.PI / 2], [x1 - r, z0 + r, 0], [x1 - r, z1 - r, -Math.PI / 2], [x0 + r, z1 - r, Math.PI]].forEach(([cx, cz, a]) => {
-    const g = new THREE.RingGeometry(r - w / 2, r + w / 2, 24, 1, a, Math.PI / 2); g.rotateX(-Math.PI / 2);
+  const { x0, x1, z0, z1, w } = PER, [r0, r1, r2, r3] = PER_R;
+  S.add(flat(x1 - x0 - r0 - r1, w, roadM, (x0 + r0 + x1 - r1) / 2, z0)); S.add(flat(x1 - x0 - r2 - r3, w, roadM, (x0 + r3 + x1 - r2) / 2, z1));
+  S.add(flat(w, z1 - z0 - r0 - r3, roadM, x0, (z0 + r0 + z1 - r3) / 2)); S.add(flat(w, z1 - z0 - r1 - r2, roadM, x1, (z0 + r1 + z1 - r2) / 2));
+  [[x0 + r0, z0 + r0, Math.PI / 2, r0], [x1 - r1, z0 + r1, 0, r1], [x1 - r2, z1 - r2, -Math.PI / 2, r2], [x0 + r3, z1 - r3, Math.PI, r3]].forEach(([cx, cz, a, rr]) => {
+    const g = new THREE.RingGeometry(rr - w / 2, rr + w / 2, 28, 1, a, Math.PI / 2); g.rotateX(-Math.PI / 2);
     const m = new THREE.Mesh(g, roadM); at(m, cx, G + 1.2, cz); S.add(m);
   });
   S.add(flat(x1 - x0 + w, AVE.w, roadM, 0, AVE.z));                                       // 中央大道（岛上部分）
   S.add(flat(x0 - 50 - BRIDGE0 + 40, AVE.w, roadM, (x0 - 50 + BRIDGE0) / 2 - 20, AVE.z));  // 环岛路到桥头
   S.add(flat(1420 - x1, AVE.w, roadM, (1420 + x1) / 2, AVE.z));                           // 环岛路到码头
-  CROSS.forEach(cx => S.add(flat(CW_, z1 - z0, roadM, cx, (z0 + z1) / 2)));
+  CROSS_B.forEach(cx => S.add(flat(CW_, AVE.z - z0 + 20, roadM, cx, (z0 + AVE.z) / 2 - 10)));   // 后排横街：北环岛路 → 大道
+  CROSS_F.forEach(cx => S.add(flat(CW_, z1 - AVE.z + 20, roadM, cx, (z1 + AVE.z) / 2 + 10)));   // 前排横街：大道 → 南环岛路
   // 车道虚线
   const dashes = (ax, az, bx, bz) => { const L = Math.hypot(bx - ax, bz - az), n = Math.floor(L / 55); for (let i = 0; i < n; i++) { const k = (i + .5) / n, h = Math.abs(bx - ax) > Math.abs(bz - az); S.add(flat(h ? 24 : 3, h ? 3 : 24, lineM, ax + (bx - ax) * k, az + (bz - az) * k, G + 1.4)); } };
-  dashes(x0 + r, z0, x1 - r, z0); dashes(x0 + r, z1, x1 - r, z1); dashes(x0, z0 + r, x0, z1 - r); dashes(x1, z0 + r, x1, z1 - r);
-  dashes(x0 + 60, AVE.z, x1 - 60, AVE.z); CROSS.forEach(cx => { dashes(cx, z0 + 60, cx, AVE.z - 70); dashes(cx, AVE.z + 70, cx, z1 - 60); });
+  dashes(x0 + r0, z0, x1 - r1, z0); dashes(x0 + r3, z1, x1 - r2, z1); dashes(x0, z0 + r0, x0, z1 - r3); dashes(x1, z0 + r1, x1, z1 - r2);
+  dashes(x0 + 60, AVE.z, x1 - 60, AVE.z); CROSS_B.forEach(cx => dashes(cx, z0 + 60, cx, AVE.z - 70)); CROSS_F.forEach(cx => dashes(cx, AVE.z + 70, cx, z1 - 60));
   // 斑马线
   const zebra = (cx, cz, alongX, n) => { for (let i = 0; i < n; i++) S.add(flat(alongX ? 5 : 30, alongX ? 30 : 5, lineM, cx + (alongX ? (i - n / 2) * 10 : 0), cz + (alongX ? 0 : (i - n / 2) * 10), G + 1.45)); };
-  CROSS.forEach(cx => { zebra(cx, AVE.z - 72, true, 8); zebra(cx, AVE.z + 72, true, 8); zebra(cx, z0 + 64, true, 8); zebra(cx, z1 - 64, true, 8); });
+  CROSS_B.forEach(cx => { zebra(cx, AVE.z - 72, true, 8); zebra(cx, z0 + 64, true, 8); }); CROSS_F.forEach(cx => { zebra(cx, AVE.z + 72, true, 8); zebra(cx, z1 - 64, true, 8); });
 
   // ---------- 小河：从北岸流到南岸，替代最西边的横街；三座桥让环岛路和大道跨过去 ----------
   {
@@ -306,6 +311,7 @@ function getTown() {
   scene.add(new THREE.Mesh(mergeGeometries(lampSpots.map(([x, z]) => new THREE.PlaneGeometry(120, 120).rotateX(-Math.PI / 2).translate(x, G + 5.4, z))), T_.NIGHT.pool));
 
   // ---------- 红绿灯（大道上的三个路口）：东西向与南北向轮流放行 ----------
+  // 路口表：后排两条横街和前排两条横街各自与大道交汇（T 字路口）；红绿灯仍按东西 / 南北轮流放行
   const SIGNALS = CROSS.map(ix => {
     const heads = [];
     // [角落 x, 角落 z, 朝向（弧度）, 管的是东西向还是南北向]
@@ -366,7 +372,7 @@ function getTown() {
   pickables.push({ obj: drone.group, info: () => ({ kind: 'drone', title: '送药无人机', sub: '从医院楼顶起飞，绕园区一圈再回来' }) });
 
   // ---------- 电力：电塔与电线 ----------
-  const pyl = [[-150, -130], [-150, 140], [170, 140], [760, 140]].map(([x, z]) => { const p = T_.buildPylon(); p.rotation.y = Math.PI / 2; at(p, x, G + 5, z); S.add(p); p.updateMatrixWorld(true); return p; });
+  const pyl = [[-330, -130], [-330, 140], [60, 140], [760, 140]].map(([x, z]) => { const p = T_.buildPylon(); p.rotation.y = Math.PI / 2; at(p, x, G + 5, z); S.add(p); p.updateMatrixWorld(true); return p; });
   const tipsOf = p => p.userData.tips.map(t => t.clone().applyMatrix4(p.matrixWorld));
   const wireM = M('#8e91a7'), spans = [];
   for (let k = 0; k < pyl.length - 1; k++) {
@@ -393,11 +399,12 @@ function getTown() {
   const PL = 33, IL = 13, AL = 36, Y = G + .8;
   const ave = (east) => { const pts = []; for (let x = AVE.x0; x <= AVE.x1; x += 20) pts.push(new THREE.Vector3(x, roadY(x), AVE.z)); if (!east) pts.reverse(); return new Path(offset(pts, AL, false), false); };
   const routes = [
-    { path: rectLoop(x0, x1, z0, z1, [150, 150, 150, 150], true, PL, Y), kinds: ['bus', 'truck', 'car', 'flat', 'car', 'van', 'truck'] },
-    { path: rectLoop(x0, x1, z0, z1, [150, 150, 150, 150], false, PL, Y), kinds: ['truck', 'car', 'flat', 'van', 'car', 'bus'] },
-    { path: rectLoop(CROSS[0], CROSS[1], z0, z1, [40, 40, 40, 40], true, IL, Y), kinds: ['flat', 'car', 'van', 'car'] },
-    { path: rectLoop(x0, CROSS[0], AVE.z, z1, [40, 40, 40, 150], false, IL, Y), kinds: ['car', 'flat', 'car'] },
-    { path: rectLoop(CROSS[0], x1, z0, AVE.z, [40, 150, 40, 40], true, IL, Y), kinds: ['van', 'car', 'flat'] },
+    { path: rectLoop(x0, x1, z0, z1, PER_R, true, PL, Y), kinds: ['bus', 'truck', 'car', 'flat', 'car', 'van', 'truck'] },
+    { path: rectLoop(x0, x1, z0, z1, PER_R, false, PL, Y), kinds: ['truck', 'car', 'flat', 'van', 'car', 'bus'] },
+    { path: rectLoop(CROSS_B[0], CROSS_B[1], z0, AVE.z, [40, 40, 40, 40], true, IL, Y), kinds: ['flat', 'car', 'van'] },
+    { path: rectLoop(CROSS_F[0], CROSS_F[1], AVE.z, z1, [40, 40, 40, 40], false, IL, Y), kinds: ['car', 'flat', 'van'] },
+    { path: rectLoop(x0, CROSS_F[0], AVE.z, z1, [40, 40, 40, PER_R[3]], false, IL, Y), kinds: ['car', 'flat', 'car'] },
+    { path: rectLoop(CROSS_B[1], x1, z0, AVE.z, [40, PER_R[1], 40, 40], true, IL, Y), kinds: ['van', 'car', 'flat'] },
     { path: ave(true), open: true, kinds: ['truck', 'car', 'truck', 'flat', 'van'] },
     { path: ave(false), open: true, kinds: ['truck', 'car', 'van', 'truck', 'car'] },
   ];
