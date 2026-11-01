@@ -10,7 +10,8 @@
 - **M2 桥接已写**：`pipeline/fetch-kzg.mjs` 把 kzg 的判断 JSON（`/report.json`，含海报数据快照）和数据面（`/brief.json`）映射成 `daily/{date}.json`，把 `/weekly.json` + `/weekly-report.json` 映射成 `weekly/{mon}.json`；不重算指标，规则固定（picks 取 group = ai、非 compact 的前 3，按可信度再按 max(量倍数, 权利金倍数)；没有判断 JSON 的日子标 `dataOnly`，情绪按 CP 偏离 ±7% 分档）。地址与密钥只从 `KZG_BASE` / `KZG_KEY` 环境变量读；`--from` 可用本地文件离线跑；`pipeline/test-fetch-kzg.mjs` 用按真实结构拼的样例做回归并过 build-archive 校验。**真实数据还没跑过**：第 11 节第 1 条（数据行字段名）要用一份真实 `report.json` 对一遍，`data/live/` 已加进 .gitignore，核对无误前不提交。
 - **小镇已读 `town/latest.json`**（`town-data.js`，见 `docs/town-plan.md` 第 4 节）；`town/{date}.json` 由 `scripts/export-samples.mjs` 生成（接真实数据后由 fetch-kzg 的数据面 + 日报 picks 生成，待补）。
 - **研报卡片转换已写**：`pipeline/build-rr.mjs` 按第 6 节规则把卡片（JSON / JSONL，字段按 ima-knowledge-mcp 的导出约定）转成 `rr/{date}.json`，英文评级有别名表，不在名单内的票丢弃，要点最多 3 条、40 字截断；导出格式定下来后只改 `norm()`。`fetch-kzg --date` 同时产出 `town/{date}.json`（层热度、公司量倍数与涨跌、楼的信号）。
-- 未做：真实数据跑通、邮件（M4）、Astro 组件化拆分。
+- **每日自动更新已写**：`.github/workflows/data.yml`（工作日 16:10 北京时间，或手动指定日期 / 周），拉最新期权日报 → 汇总 → 以机器人身份提交 `data/live` → 触发 deploy；deploy 构建时有 `data/live/archive.json` 就用它，否则用示例。站点另有 404 页、robots.txt、sitemap.txt（域名定下来后改 `astro.config.mjs` 的 `site` 和这两个文件）。
+- 未做：真实数据跑通（等 Secrets）、邮件（M4）、Astro 组件化拆分。
 
 ## 0. 目标与范围
 

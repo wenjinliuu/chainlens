@@ -21,7 +21,8 @@ for (const f of readdirSync(v4)) copyFileSync(join(v4, f), join(W, 'public/asset
 for (const f of ['iso.js', 'data.js', 'brand.css']) copyFileSync(join(R, 'design/v3/assets', f), join(W, 'public/assets', f));
 copyFileSync(join(R, 'design/v2/assets/indicators.js'), join(W, 'public/assets/indicators.js'));
 if (existsSync(join(W, 'public/data'))) rmSync(join(W, 'public/data'), { recursive: true });
-cpSync(join(R, 'data/samples'), join(W, 'public/data'), { recursive: true });
+const DATA = process.env.CX_DATA_DIR ? resolve(R, process.env.CX_DATA_DIR) : join(R, 'data/samples');   // 定时任务用 data/live
+cpSync(DATA, join(W, 'public/data'), { recursive: true });
 
 // 页面
 const PAGES = {
@@ -51,4 +52,4 @@ import html from '../partials/${name}.html?raw';
 `);
   n++;
 }
-console.log(`同步完成：${n} 个页面，资源 ${readdirSync(join(W, 'public/assets')).length} 个文件`);
+console.log(`同步完成：${n} 个页面，资源 ${readdirSync(join(W, 'public/assets')).length} 个文件，数据来自 ${DATA}`);

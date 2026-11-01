@@ -64,7 +64,7 @@ node pipeline/build-archive.mjs data/live     # 校验并汇总 archive.json / d
 node pipeline/test-fetch-kzg.mjs && node pipeline/test-build-rr.mjs   # 映射的离线回归
 ```
 
-地址与密钥只从环境变量读；`data/live/` 不进仓库。辅助脚本：`node scripts/compliance-scan.mjs`（文案合规扫描）、`node scripts/export-samples.mjs`（导出示例 JSON 到 `data/samples/`）。
+地址与密钥只从环境变量读。`.github/workflows/data.yml` 每个工作日北京时间 16:10 自动跑 `fetch-kzg --latest` → `build-archive`，把 `data/live` 提交回仓库并触发部署；需要 Secrets `KZG_BASE`、`KZG_KEY`，没配就整条跳过。本地跑出来的 `data/live` 不要手动提交（.gitignore 已排除，机器人用 `git add -f`）。辅助脚本：`node scripts/compliance-scan.mjs`（文案合规扫描）、`node scripts/export-samples.mjs`（导出示例 JSON 到 `data/samples/`）。
 
 ## 关联项目
 

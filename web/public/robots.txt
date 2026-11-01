@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /email.html
+Disallow: /logo-lab.html
+Sitemap: https://chaoxin.example/sitemap.txt

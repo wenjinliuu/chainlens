@@ -1,0 +1,18 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="找不到这一页 · 潮信" css={['/assets/brand.css', '/assets/landing.css', '/assets/search.css']}>
+  <header class="nav scrolled">
+    <a class="brand" href="/">潮信<span class="pro">AI 产业链情报</span></a>
+    <div class="nav-right"><a class="btn accent" href="/#subscribe">免费订阅</a></div>
+  </header>
+  <main class="wrap" style="padding:80px 32px 120px;max-width:720px">
+    <span class="tag">404</span>
+    <h1 style="font-family:var(--title);font-weight:900;font-size:40px;margin:14px 0 10px;letter-spacing:-.02em">小更没找到这一页</h1>
+    <p style="color:var(--ink2);font-size:16px;line-height:1.7">链接可能过期了，或者这一天还没有日报。试试从这里走：</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px">
+      <a class="btn accent" href="/">回首页</a><a class="btn ghost" href="/daily.html">日报归档</a><a class="btn ghost" href="/company.html">公司档案</a><a class="btn ghost" href="/daily.html?col=col">专栏报告</a>
+    </div>
+    <p class="disclaimer" style="margin-top:40px">本站内容为公开信息整理，不构成任何投资建议。市场有风险，投资需谨慎。</p>
+  </main>
+</Base>

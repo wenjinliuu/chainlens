@@ -11,6 +11,7 @@
  *
  * 用法：
  *   KZG_BASE=https://… KZG_KEY=… node pipeline/fetch-kzg.mjs --date 2026-10-30 [--out data/live]
+ *   KZG_BASE=… KZG_KEY=… node pipeline/fetch-kzg.mjs --latest [--out data/live]       最新交易日（定时任务用）
  *   KZG_BASE=… KZG_KEY=… node pipeline/fetch-kzg.mjs --week 2026-10-27 [--out data/live]
  *   node pipeline/fetch-kzg.mjs --from report.json brief.json [--out …]     离线：用本地文件
  * 地址与密钥只从环境变量读，不进仓库。
@@ -141,9 +142,10 @@ async function main() {
   const BASE = process.env.KZG_BASE, KEY = process.env.KZG_KEY;
   if (!BASE || !KEY) { console.error('需要环境变量 KZG_BASE、KZG_KEY（或用 --from 本地文件）'); process.exit(1); }
   const fetchJson = async (path, optional) => { const r = await fetch(`${BASE}${path}${path.includes('?') ? '&' : '?'}key=${encodeURIComponent(KEY)}`); if (!r.ok) { if (optional && r.status === 404) return null; throw new Error(`${path} → ${r.status}`); } return r.json(); };
-  if (get('--date')) {
-    const date = get('--date');
-    const report = await fetchJson(`/report.json?date=${date}`, true), brief = await fetchJson(`/brief.json?date=${date}`);
+  if (get('--date') || args.includes('--latest')) {
+    const brief = get('--date') ? await fetchJson(`/brief.json?date=${get('--date')}`) : await fetchJson('/brief.json');
+    const date = get('--date') || brief.date;
+    const report = await fetchJson(`/report.json?date=${date}`, true);
     const d = mapDaily(report, brief); write(`daily/${date}.json`, d);
     const px = await fetchJson(`/px.json?syms=${encodeURIComponent(d.picks.map(p => p.t).join(','))}&days=2`, true);
     write(`town/${date}.json`, mapTown(d, (report && report.data) || brief, px));

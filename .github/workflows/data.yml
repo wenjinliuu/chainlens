@@ -1,0 +1,47 @@
+# 潮信 · 每日数据更新：拉 kzg 的最新期权日报 → 汇总静态 JSON → 提交回仓库 → 触发 deploy 工作流重新构建
+# 需要 Secrets：KZG_BASE（期权日报 Worker 地址）、KZG_KEY（访问密钥）。没配时整条跳过，不报错。
+# 周一到周五北京时间 16:10（UTC 08:10）跑一次，比期权日报 15:40 送达晚半小时；也可手动触发并指定日期。
+name: data
+on:
+  schedule:
+    - cron: '10 8 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      date: { description: '交易日 YYYY-MM-DD（留空 = 最新）', required: false, default: '' }
+      week: { description: '周报：周一 YYYY-MM-DD（可选）', required: false, default: '' }
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: main }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: 检查密钥
+        id: cfg
+        env: { KZG_BASE: '${{ secrets.KZG_BASE }}', KZG_KEY: '${{ secrets.KZG_KEY }}' }
+        run: |
+          if [ -z "$KZG_BASE" ] || [ -z "$KZG_KEY" ]; then echo "skip=true" >> "$GITHUB_OUTPUT"; echo "未配置 KZG_BASE / KZG_KEY，跳过"; else echo "skip=false" >> "$GITHUB_OUTPUT"; fi
+      - name: 拉取并映射
+        if: steps.cfg.outputs.skip == 'false'
+        env: { KZG_BASE: '${{ secrets.KZG_BASE }}', KZG_KEY: '${{ secrets.KZG_KEY }}' }
+        run: |
+          mkdir -p data/live
+          cp -n data/samples/companies.json data/live/ 2>/dev/null || true
+          if [ -n "${{ github.event.inputs.date }}" ]; then node pipeline/fetch-kzg.mjs --date "${{ github.event.inputs.date }}" --out data/live; else node pipeline/fetch-kzg.mjs --latest --out data/live; fi
+          if [ -n "${{ github.event.inputs.week }}" ]; then node pipeline/fetch-kzg.mjs --week "${{ github.event.inputs.week }}" --out data/live; fi
+          node pipeline/build-archive.mjs data/live
+      - name: 提交数据
+        if: steps.cfg.outputs.skip == 'false'
+        run: |
+          git config user.name "chaoxin-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add -f data/live
+          git diff --cached --quiet && echo "没有变化" || git commit -m "data: 更新 $(date -u +%F) 的期权日报数据 [skip ci]"
+          git push
+      - name: 触发部署
+        if: steps.cfg.outputs.skip == 'false'
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: gh workflow run deploy.yml --ref main || echo "deploy 工作流未就绪"
