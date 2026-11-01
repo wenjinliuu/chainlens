@@ -19,10 +19,10 @@
 - [ ] 上线前：取得数据授权、确认订阅免费与合规文案
 
 ## M1 · 静态骨架
-- [ ] Astro 项目初始化，设计 token（颜色 / 圆角 / 阴影 / 字体）
+- [x] Astro 项目初始化（`web/`，设计稿资源原样托管 + `scripts/sync-web.mjs` 同步，9 页可构建）；token 仍用 `brand.css`
 - [x] `data/samples/` 示例 JSON（`node scripts/export-samples.mjs` 从设计稿数据导出，契约见 `docs/m1-plan.md` 第 4 节）
 - [ ] 驾驶舱、个股页用示例数据跑通（含 Lightweight Charts K 线 + 事件标记）
-- [ ] 部署到 Cloudflare（免费）
+- [~] 部署到 Cloudflare（免费）：流水线与 wrangler 配置已写，等仓库 Secrets（`CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID`）
 
 ## M2 · 接入真实数据
 - [ ] pipeline：读取 kzg-option-brief 期权结果 → 事件

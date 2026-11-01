@@ -1,0 +1,78 @@
+
+<header class="nav scrolled" id="nav">
+  <a class="brand" href="index.html">
+    <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="cxg" x1="0" x2="1"><stop offset="0" stop-color="#9fe0ff"/><stop offset="1" stop-color="#ffffff"/></linearGradient></defs><rect x="2.5" y="6.5" width="27" height="20" rx="6.5" fill="#5b4cff"/><path d="M2.5 13c3.5-4.2 7-4.2 10.5 0s7 4.2 10.5 0c2-2.4 4.2-3.3 6-2.8V13a6.5 6.5 0 0 0-6.5-6.5H9A6.5 6.5 0 0 0 2.5 13z" fill="#7d70ff"/><path d="M2.5 13.6c3.5-4.2 7-4.2 10.5 0s7 4.2 10.5 0c1.9-2.3 3.9-3.2 6-2.9" fill="none" stroke="url(#cxg)" stroke-width="2.4" stroke-linecap="round"/><circle cx="25.5" cy="22" r="2.1" fill="#f5a314"/></svg>
+    潮信<span class="pro">AI 产业链情报</span>
+  </a>
+  <nav class="nav-links"><a href="index.html">首页</a><a href="index.html#island">产业镇</a><a href="company.html">公司档案</a><a href="stock.html">看盘</a><a href="daily.html">日报归档</a></nav>
+  <div class="nav-right"><span class="disclaimer">设计稿 · 流程演示，不会真的发送邮件</span></div>
+</header>
+
+<main class="sb">
+  <!-- 设计稿里用顶部的小开关切换流程的几个状态；正式版由 URL 参数 / 后端状态决定 -->
+  <div class="sb-demo card"><b>演示状态</b>
+    <div class="seg-ctl" id="stateSeg"><button data-s="sent" class="on">1 已发确认邮件</button><button data-s="confirmed">2 确认成功</button><button data-s="prefs">3 管理偏好</button><button data-s="expired">链接失效</button></div>
+  </div>
+
+  <!-- ① 已发送确认邮件 -->
+  <section class="sb-card card" data-state="sent">
+    <div class="sb-art"><canvas id="mascotA"></canvas></div>
+    <div class="sb-body">
+      <span class="tag">第 1 步 · 共 2 步</span>
+      <h1>去邮箱点一下确认</h1>
+      <p>我们给 <b id="emailA">you@example.com</b> 发了一封确认邮件。点邮件里的「确认订阅」，明天起就能收到。</p>
+      <ul class="sb-steps"><li class="done">填写邮箱</li><li class="cur">点邮件里的确认链接</li><li>每天准时收到</li></ul>
+      <div class="sb-tips"><b>没收到？</b>看看垃圾邮件 / 广告邮件文件夹；QQ 邮箱和 163 请把 <code>mail@chaoxin.example</code> 加入白名单。<button type="button" class="link" id="resend">重新发送</button><span class="disclaimer" id="resendMsg"></span></div>
+      <div class="sb-actions"><a class="btn ghost" href="index.html">回到首页</a></div>
+    </div>
+  </section>
+
+  <!-- ② 确认成功 + 选栏目 -->
+  <section class="sb-card card" data-state="confirmed" hidden>
+    <div class="sb-art"><canvas id="mascotB"></canvas><div class="confetti" id="confetti"></div></div>
+    <div class="sb-body">
+      <span class="tag" style="--tc-deep:#0c9465;--tc-bg:#e2f6ef">订阅成功</span>
+      <h1>小更已经出发了</h1>
+      <p>下一期<b>期权日报</b>会在<b>明天 15:40</b> 送到 <b id="emailB">you@example.com</b>。想收哪些栏目，现在就能定：</p>
+      <div class="col-pick" data-form="prefs" id="pickB"></div>
+      <div class="sb-opt"><label><input type="checkbox" checked> 周日上午收周报</label><label><input type="checkbox"> 只在有 AI 链重点时才发（没有重点的日子不打扰）</label></div>
+      <div class="sb-actions"><a class="btn accent" href="index.html#island">去看看 AI 产业镇 →</a><a class="btn ghost" href="daily.html">翻翻以前的日报</a></div>
+    </div>
+  </section>
+
+  <!-- ③ 管理偏好 -->
+  <section class="sb-card card wide" data-state="prefs" hidden>
+    <div class="sb-body full">
+      <span class="tag">订阅偏好</span>
+      <h1>管理你的潮信</h1>
+      <p><b id="emailC">you@example.com</b> · 2026-10-31 订阅 · 已收到 <b class="num">12</b> 期</p>
+      <div class="pf-grid">
+        <div class="pf-box"><h3>栏目</h3><div class="col-pick" data-form="prefs2" id="pickC"></div><label class="pf-row"><input type="checkbox" checked> 周报（周日上午）</label></div>
+        <div class="pf-box"><h3>关注的公司</h3><p class="disclaimer">关注的公司有期权信号、研报调整或新闻时，邮件里会单独列出来。</p><div class="watch" id="watch"></div><div class="watch-add"><input id="watchIn" placeholder="输入代码或公司名添加，如 NVDA"><button class="btn ghost" type="button" id="watchBtn">添加</button></div></div>
+        <div class="pf-box"><h3>送达时间</h3><label class="pf-row"><input type="radio" name="tm" checked> 期权日报：收盘后立即（北京时间约 15:40）</label><label class="pf-row"><input type="radio" name="tm"> 合并到早上 8:00 一起发（含盘前汇总）</label><h3 style="margin-top:18px">格式</h3><label class="pf-row"><input type="radio" name="fm" checked> 海报缩略图 + 要点 + 链接</label><label class="pf-row"><input type="radio" name="fm"> 纯文字（适合邮箱客户端预览）</label></div>
+      </div>
+      <div class="sb-actions"><button class="btn accent" type="button" id="saveBtn">保存偏好</button><a class="btn ghost" href="unsubscribe.html">退订</a><span class="disclaimer" id="saveMsg"></span></div>
+    </div>
+  </section>
+
+  <!-- 链接失效 -->
+  <section class="sb-card card" data-state="expired" hidden>
+    <div class="sb-art"><div class="sb-ico"><svg width="84" height="84" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div></div>
+    <div class="sb-body">
+      <span class="tag" style="--tc-deep:#b45309;--tc-bg:#fff4dc">链接已失效</span>
+      <h1>这封确认邮件过期了</h1>
+      <p>确认链接 24 小时内有效。没关系，再填一次邮箱，我们马上重发。</p>
+      <form class="sub-form" onsubmit="return false"><input type="email" required placeholder="你的邮箱"><button class="btn accent" type="submit">重新发送确认邮件</button></form>
+    </div>
+  </section>
+
+  <footer class="footer"><div><div class="warn">本站内容为公开信息整理，不构成任何投资建议。市场有风险，投资需谨慎。</div>我们只发日报和周报，不发广告；每封邮件底部都有一键退订。</div></footer>
+</main>
+
+<script src="/assets/iso.js"></script>
+<script src="/assets/data.js"></script>
+<script src="/assets/quality.js"></script>
+<script src="/assets/clay.js"></script>
+<script src="/assets/scene.js"></script>
+<script src="/assets/subscribe.js"></script>
+<script src="/assets/search.js"></script>

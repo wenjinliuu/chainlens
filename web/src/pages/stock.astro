@@ -1,0 +1,8 @@
+---
+// 自动从 design/v4/stock.html 生成（scripts/sync-web.mjs）：正文原样注入，头部由 Base 统一管理
+import Base from '../layouts/Base.astro';
+import html from '../partials/stock.html?raw';
+---
+<Base title="看盘 · 潮信" description="" css={["/assets/brand.css","assets/stock.css","assets/search.css"]} importmap={false}>
+  <Fragment set:html={html} />
+</Base>

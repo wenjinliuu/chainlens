@@ -40,7 +40,18 @@ M0 设计稿已完成（`design/v4/`，浏览器直接打开 HTML 即可看，�
 | `design/v4/column.html` | 专栏报告阅读页（财报 / 产业链 / 事件专题） |
 | `design/v4/logo-lab.html` | Logo 候选对比 |
 
-所有页面支持 ⌘K 全局搜索；数据全部为虚构示例。辅助脚本：`node scripts/compliance-scan.mjs`（文案合规扫描）、`node scripts/export-samples.mjs`（导出示例 JSON 到 `data/samples/`）。
+所有页面支持 ⌘K 全局搜索；数据全部为虚构示例。
+
+### 站点（M1，`web/`）
+
+```bash
+cd web && pnpm install
+pnpm sync      # 把 design/v4 同步成站点输入（改了设计稿后跑）
+pnpm build     # 输出到 web/dist，9 个页面
+pnpm preview   # 本地预览
+```
+
+部署：推送到 `main` 后由 GitHub Actions 构建并 `wrangler deploy` 到 Cloudflare Workers 静态资源（免费额度），需要仓库 Secrets `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`。辅助脚本：`node scripts/compliance-scan.mjs`（文案合规扫描）、`node scripts/export-samples.mjs`（导出示例 JSON 到 `data/samples/`）。
 
 ## 关联项目
 

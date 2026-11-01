@@ -1,0 +1,8 @@
+---
+// 自动从 design/v4/index.html 生成（scripts/sync-web.mjs）：正文原样注入，头部由 Base 统一管理
+import Base from '../layouts/Base.astro';
+import html from '../partials/index.html?raw';
+---
+<Base title="潮信 · AI 产业链情报 · 免费订阅" description="潮信：盘前汇总、期权日报、研报日报、专栏报告，按 8 层 AI 产业链整理，每天准时送达。" css={["/assets/brand.css","assets/landing.css","assets/search.css","assets/column.css"]} importmap={true}>
+  <Fragment set:html={html} />
+</Base>

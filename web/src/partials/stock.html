@@ -1,0 +1,97 @@
+
+<div class="page">
+  <div class="page-bg"></div>
+
+  <!-- 导航：与落地页一致，"看盘"高亮 -->
+  <header class="nav" id="nav">
+    <a class="brand" href="index.html">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="cxg" x1="0" x2="1"><stop offset="0" stop-color="#9fe0ff"/><stop offset="1" stop-color="#ffffff"/></linearGradient></defs><rect x="2.5" y="6.5" width="27" height="20" rx="6.5" fill="#5b4cff"/><path d="M2.5 13c3.5-4.2 7-4.2 10.5 0s7 4.2 10.5 0c2-2.4 4.2-3.3 6-2.8V13a6.5 6.5 0 0 0-6.5-6.5H9A6.5 6.5 0 0 0 2.5 13z" fill="#7d70ff"/><path d="M2.5 13.6c3.5-4.2 7-4.2 10.5 0s7 4.2 10.5 0c1.9-2.3 3.9-3.2 6-2.9" fill="none" stroke="url(#cxg)" stroke-width="2.4" stroke-linecap="round"/><circle cx="25.5" cy="22" r="2.1" fill="#f5a314"/></svg>
+      潮信<span class="pro">AI 产业链情报</span>
+    </a>
+    <nav class="nav-links"><a href="index.html">首页</a><a class="on" href="stock.html" aria-current="page">看盘</a><a href="index.html#island">产业镇</a><a href="company.html">公司档案</a><a href="index.html#samples">样张</a><a href="index.html#faq">常见问题</a><a href="daily.html">日报归档</a></nav>
+    <div class="nav-right">
+      <button class="icon-btn wl-btn" type="button" data-open-wl title="切换股票" aria-label="切换股票"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button>
+      <a class="btn accent" href="index.html#subscribe">免费订阅</a>
+    </div>
+  </header>
+
+  <div class="sk">
+    <!-- 左侧：AI 链公司快速切换（按 8 层分组）；窄屏变为抽屉 -->
+    <aside class="card wl" id="wl" aria-label="AI 链公司">
+      <div class="wl-h">
+        <div class="c-head"><div><h3>AI 链<em>公司</em></h3><p>8 层 · <span id="wlCount">52</span> 家 · 点击切换</p></div>
+          <button class="icon-btn wl-close" type="button" data-close-wl aria-label="关闭">✕</button></div>
+        <label class="wl-q"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="wlSearch" type="search" placeholder="代码或公司名" autocomplete="off"></label>
+      </div>
+      <div class="wl-list" id="wlList"></div>
+    </aside>
+    <div class="wl-mask" data-close-wl></div>
+
+    <main class="sk-main" id="shot">
+      <div class="crumb" id="crumb"></div>
+
+      <!-- 报价区 -->
+      <section class="card quote" id="quote"></section>
+
+      <!-- 期权日报 / 研报日报：四个数字 -->
+      <section class="kpis" id="kpis"></section>
+
+      <div class="sk-row">
+        <!-- K 线 + 多窗格指标 -->
+        <section class="card chart-card">
+          <div class="tb" id="toolbar">
+            <div class="seg-ctl" id="period"><button data-p="D" class="on">日 K</button><button data-p="W">周 K</button><button data-p="M">月 K</button></div>
+            <div class="tb-g"><span class="tb-l">主图</span>
+              <button class="tg on" data-main="MA">MA</button><button class="tg" data-main="BOLL">BOLL</button><button class="tg on" data-main="TGT" style="--d:#1296f0"><i></i><span class="cn">研报目标价</span></button><button class="tg on" data-main="EARN" style="--d:#f5a314"><i></i><span class="cn">财报日</span></button></div>
+            <div class="tb-g"><span class="tb-l">副图</span>
+              <button class="tg on" data-sub="VOL">VOL</button><button class="tg on" data-sub="MACD">MACD</button><button class="tg" data-sub="KDJ">KDJ</button><button class="tg" data-sub="RSI">RSI</button><button class="tg on" data-sub="CP" style="--d:#5b4cff"><i></i><span class="cn">CP 偏离</span></button></div>
+            <div class="tb-g"><span class="tb-l">事件</span>
+              <button class="tg ev on" data-ev="o" style="--d:#5b4cff"><i></i><span class="cn">期权</span></button><button class="tg ev on" data-ev="r" style="--d:#1296f0"><i></i><span class="cn">研报</span></button><button class="tg ev on" data-ev="n" style="--d:#ff6b2c"><i></i><span class="cn">新闻</span></button><button class="tg ev on" data-ev="e" style="--d:#f5a314"><i></i><span class="cn">财报</span></button></div>
+          </div>
+          <div class="lg-top" id="lgTop"></div>
+          <div class="cw" id="cw"><div id="chart"></div><div class="lgs" id="legends"></div></div>
+          <div class="hot-strip" id="hotStrip"></div>
+          <div class="c-foot">
+            <span>绿涨红跌 · 拖动平移、滚轮或双指缩放 · 拖动窗格分隔线调整高度</span>
+            <span class="dot" style="--d:#5b4cff"><i></i>期权异动</span><span class="dot" style="--d:#1296f0"><i></i>研报</span><span class="dot" style="--d:#ff6b2c"><i></i>新闻</span><span class="dot" style="--d:#f5a314"><i></i>财报日</span>
+            <span class="r">图表：<a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView Lightweight Charts™</a></span>
+          </div>
+        </section>
+
+        <aside class="rail">
+          <section class="card ta-card">
+            <div class="c-head"><div><h3>技术指标<em>状态</em></h3><p>按日 K 规则计算 · 只描述数值所处位置</p></div><span class="tag">规则计算</span></div>
+            <div id="ta"></div>
+            <p class="note">仅描述指标数值所处的位置与区间，不代表任何走势判断。</p>
+          </section>
+        </aside>
+      </div>
+
+      <div class="sk-bottom">
+        <section class="card eve-card" id="eve"></section>
+        <section class="card rp-card" id="reports"></section>
+        <section class="card ch-card" id="chain"></section>
+        <section class="card nw-card" id="news"></section>
+      </div>
+
+      <footer class="footer">
+        <div>
+          <div class="warn">本站内容为公开信息整理，不构成任何投资建议。市场有风险，投资需谨慎。</div>
+          行情：正式版为延迟行情（延迟 15 分钟以上），收盘后更新 · 期权：期权日报（每日成交前 100，对比前 20 个交易日）· 研报：机构公开报告的评级、目标价与要点摘要（AI 整理，不转载原文）· 消息：公司公告与主流媒体，标注来源 · 徽标仅用于识别
+        </div>
+        <div class="r">本页所有行情、期权、研报与新闻均为<b>虚构示例</b><br>图表由 <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView Lightweight Charts™</a> 提供</div>
+      </footer>
+    </main>
+  </div>
+</div>
+<div class="toast-tip" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@5.2.1/dist/lightweight-charts.standalone.production.js"></script>
+<script src="/assets/lw-prims.js"></script>
+<script src="/assets/iso.js"></script>
+<script src="/assets/data.js"></script>
+<script src="/assets/poster.js"></script>
+<script src="/assets/archive.js"></script>
+<script src="/assets/indicators.js"></script>
+<script src="/assets/stock.js"></script>
+<script src="/assets/search.js"></script>

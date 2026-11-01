@@ -1,0 +1,498 @@
+{
+  "v": 1,
+  "gen": "2026-11-01T01:06:12.556Z",
+  "disclaimer": "本站内容为公开信息整理，不构成任何投资建议。市场有风险，投资需谨慎。示例数据均为虚构。",
+  "layers": [
+    {
+      "id": "raw",
+      "name": "原材料",
+      "color": "#f5a314",
+      "segs": {
+        "铜/稀土": "FCX SCCO MP",
+        "硅片/材料": ""
+      }
+    },
+    {
+      "id": "energy",
+      "name": "能源",
+      "color": "#ff6b2c",
+      "segs": {
+        "发电": "VST CEG TLN",
+        "电网设备": "GEV",
+        "核能/铀": "OKLO CCJ",
+        "燃料电池": "BE"
+      }
+    },
+    {
+      "id": "chip",
+      "name": "芯片",
+      "color": "#5b4cff",
+      "segs": {
+        "GPU/加速器": "NVDA AMD",
+        "定制ASIC": "AVGO MRVL",
+        "CPU": "ARM INTC",
+        "存储": "MU SNDK WDC",
+        "晶圆代工": "TSM",
+        "设备/材料": "ASML AMAT LRCX KLAC",
+        "EDA/IP": ""
+      }
+    },
+    {
+      "id": "net",
+      "name": "网络与光",
+      "color": "#00a8c6",
+      "segs": {
+        "光模块": "COHR LITE CIEN",
+        "交换/连接": "ANET CRDO ALAB CSCO"
+      }
+    },
+    {
+      "id": "dc",
+      "name": "服务器与数据中心",
+      "color": "#2b6cf2",
+      "segs": {
+        "AI服务器": "SMCI DELL HPE",
+        "电力/散热": "VRT ETN",
+        "数据中心REIT": "EQIX DLR"
+      }
+    },
+    {
+      "id": "compute",
+      "name": "算力租赁",
+      "color": "#d23fd8",
+      "segs": {
+        "GPU/算力云": "CRWV NBIS",
+        "矿企转型": "IREN CIFR WULF CORZ APLD"
+      }
+    },
+    {
+      "id": "cloud",
+      "name": "模型与云",
+      "color": "#1296f0",
+      "segs": {
+        "大模型/云": "MSFT GOOGL AMZN META ORCL",
+        "中概云": "BABA",
+        "未上市实验室": ""
+      }
+    },
+    {
+      "id": "app",
+      "name": "应用与端侧",
+      "color": "#a04cf5",
+      "segs": {
+        "AI软件": "PLTR SNOW CRWD NOW",
+        "端侧/机器人": "TSLA AAPL QCOM",
+        "AI医疗": "",
+        "太空": ""
+      }
+    }
+  ],
+  "companies": [
+    {
+      "t": "FCX",
+      "name": "自由港",
+      "cap": 65,
+      "layer": "raw",
+      "seg": "铜/稀土"
+    },
+    {
+      "t": "SCCO",
+      "name": "南方铜业",
+      "cap": 90,
+      "layer": "raw",
+      "seg": "铜/稀土"
+    },
+    {
+      "t": "MP",
+      "name": "MP Materials",
+      "cap": 10,
+      "layer": "raw",
+      "seg": "铜/稀土"
+    },
+    {
+      "t": "VST",
+      "name": "Vistra",
+      "cap": 65,
+      "layer": "energy",
+      "seg": "发电"
+    },
+    {
+      "t": "CEG",
+      "name": "Constellation",
+      "cap": 110,
+      "layer": "energy",
+      "seg": "发电"
+    },
+    {
+      "t": "TLN",
+      "name": "Talen",
+      "cap": 18,
+      "layer": "energy",
+      "seg": "发电"
+    },
+    {
+      "t": "GEV",
+      "name": "GE Vernova",
+      "cap": 170,
+      "layer": "energy",
+      "seg": "电网设备"
+    },
+    {
+      "t": "OKLO",
+      "name": "Oklo",
+      "cap": 15,
+      "layer": "energy",
+      "seg": "核能/铀"
+    },
+    {
+      "t": "CCJ",
+      "name": "Cameco",
+      "cap": 35,
+      "layer": "energy",
+      "seg": "核能/铀"
+    },
+    {
+      "t": "BE",
+      "name": "Bloom Energy",
+      "cap": 25,
+      "layer": "energy",
+      "seg": "燃料电池"
+    },
+    {
+      "t": "NVDA",
+      "name": "英伟达",
+      "cap": 4500,
+      "layer": "chip",
+      "seg": "GPU/加速器"
+    },
+    {
+      "t": "AMD",
+      "name": "AMD",
+      "cap": 400,
+      "layer": "chip",
+      "seg": "GPU/加速器"
+    },
+    {
+      "t": "AVGO",
+      "name": "博通",
+      "cap": 1600,
+      "layer": "chip",
+      "seg": "定制ASIC"
+    },
+    {
+      "t": "MRVL",
+      "name": "Marvell",
+      "cap": 70,
+      "layer": "chip",
+      "seg": "定制ASIC"
+    },
+    {
+      "t": "ARM",
+      "name": "Arm",
+      "cap": 160,
+      "layer": "chip",
+      "seg": "CPU"
+    },
+    {
+      "t": "INTC",
+      "name": "英特尔",
+      "cap": 180,
+      "layer": "chip",
+      "seg": "CPU"
+    },
+    {
+      "t": "MU",
+      "name": "美光",
+      "cap": 220,
+      "layer": "chip",
+      "seg": "存储"
+    },
+    {
+      "t": "SNDK",
+      "name": "闪迪",
+      "cap": 20,
+      "layer": "chip",
+      "seg": "存储"
+    },
+    {
+      "t": "WDC",
+      "name": "西部数据",
+      "cap": 35,
+      "layer": "chip",
+      "seg": "存储"
+    },
+    {
+      "t": "TSM",
+      "name": "台积电",
+      "cap": 1400,
+      "layer": "chip",
+      "seg": "晶圆代工"
+    },
+    {
+      "t": "ASML",
+      "name": "阿斯麦",
+      "cap": 350,
+      "layer": "chip",
+      "seg": "设备/材料"
+    },
+    {
+      "t": "AMAT",
+      "name": "应用材料",
+      "cap": 180,
+      "layer": "chip",
+      "seg": "设备/材料"
+    },
+    {
+      "t": "LRCX",
+      "name": "泛林",
+      "cap": 150,
+      "layer": "chip",
+      "seg": "设备/材料"
+    },
+    {
+      "t": "KLAC",
+      "name": "科磊",
+      "cap": 120,
+      "layer": "chip",
+      "seg": "设备/材料"
+    },
+    {
+      "t": "COHR",
+      "name": "Coherent",
+      "cap": 25,
+      "layer": "net",
+      "seg": "光模块"
+    },
+    {
+      "t": "LITE",
+      "name": "Lumentum",
+      "cap": 15,
+      "layer": "net",
+      "seg": "光模块"
+    },
+    {
+      "t": "CIEN",
+      "name": "Ciena",
+      "cap": 20,
+      "layer": "net",
+      "seg": "光模块"
+    },
+    {
+      "t": "ANET",
+      "name": "Arista",
+      "cap": 180,
+      "layer": "net",
+      "seg": "交换/连接"
+    },
+    {
+      "t": "CRDO",
+      "name": "Credo",
+      "cap": 25,
+      "layer": "net",
+      "seg": "交换/连接"
+    },
+    {
+      "t": "ALAB",
+      "name": "Astera Labs",
+      "cap": 30,
+      "layer": "net",
+      "seg": "交换/连接"
+    },
+    {
+      "t": "CSCO",
+      "name": "思科",
+      "cap": 270,
+      "layer": "net",
+      "seg": "交换/连接"
+    },
+    {
+      "t": "SMCI",
+      "name": "超微电脑",
+      "cap": 30,
+      "layer": "dc",
+      "seg": "AI服务器"
+    },
+    {
+      "t": "DELL",
+      "name": "戴尔",
+      "cap": 90,
+      "layer": "dc",
+      "seg": "AI服务器"
+    },
+    {
+      "t": "HPE",
+      "name": "慧与",
+      "cap": 30,
+      "layer": "dc",
+      "seg": "AI服务器"
+    },
+    {
+      "t": "VRT",
+      "name": "Vertiv",
+      "cap": 50,
+      "layer": "dc",
+      "seg": "电力/散热"
+    },
+    {
+      "t": "ETN",
+      "name": "伊顿",
+      "cap": 140,
+      "layer": "dc",
+      "seg": "电力/散热"
+    },
+    {
+      "t": "EQIX",
+      "name": "Equinix",
+      "cap": 80,
+      "layer": "dc",
+      "seg": "数据中心REIT"
+    },
+    {
+      "t": "DLR",
+      "name": "Digital Realty",
+      "cap": 55,
+      "layer": "dc",
+      "seg": "数据中心REIT"
+    },
+    {
+      "t": "CRWV",
+      "name": "CoreWeave",
+      "cap": 60,
+      "layer": "compute",
+      "seg": "GPU/算力云"
+    },
+    {
+      "t": "NBIS",
+      "name": "Nebius",
+      "cap": 25,
+      "layer": "compute",
+      "seg": "GPU/算力云"
+    },
+    {
+      "t": "IREN",
+      "name": "IREN",
+      "cap": 12,
+      "layer": "compute",
+      "seg": "矿企转型"
+    },
+    {
+      "t": "CIFR",
+      "name": "Cipher",
+      "cap": 6,
+      "layer": "compute",
+      "seg": "矿企转型"
+    },
+    {
+      "t": "WULF",
+      "name": "TeraWulf",
+      "cap": 5,
+      "layer": "compute",
+      "seg": "矿企转型"
+    },
+    {
+      "t": "CORZ",
+      "name": "Core Scientific",
+      "cap": 6,
+      "layer": "compute",
+      "seg": "矿企转型"
+    },
+    {
+      "t": "APLD",
+      "name": "Applied Digital",
+      "cap": 5,
+      "layer": "compute",
+      "seg": "矿企转型"
+    },
+    {
+      "t": "MSFT",
+      "name": "微软",
+      "cap": 3800,
+      "layer": "cloud",
+      "seg": "大模型/云"
+    },
+    {
+      "t": "GOOGL",
+      "name": "谷歌",
+      "cap": 3000,
+      "layer": "cloud",
+      "seg": "大模型/云"
+    },
+    {
+      "t": "AMZN",
+      "name": "亚马逊",
+      "cap": 2400,
+      "layer": "cloud",
+      "seg": "大模型/云"
+    },
+    {
+      "t": "META",
+      "name": "Meta",
+      "cap": 1800,
+      "layer": "cloud",
+      "seg": "大模型/云"
+    },
+    {
+      "t": "ORCL",
+      "name": "甲骨文",
+      "cap": 800,
+      "layer": "cloud",
+      "seg": "大模型/云"
+    },
+    {
+      "t": "BABA",
+      "name": "阿里巴巴",
+      "cap": 300,
+      "layer": "cloud",
+      "seg": "中概云"
+    },
+    {
+      "t": "PLTR",
+      "name": "Palantir",
+      "cap": 400,
+      "layer": "app",
+      "seg": "AI软件"
+    },
+    {
+      "t": "SNOW",
+      "name": "Snowflake",
+      "cap": 70,
+      "layer": "app",
+      "seg": "AI软件"
+    },
+    {
+      "t": "CRWD",
+      "name": "CrowdStrike",
+      "cap": 110,
+      "layer": "app",
+      "seg": "AI软件"
+    },
+    {
+      "t": "NOW",
+      "name": "ServiceNow",
+      "cap": 200,
+      "layer": "app",
+      "seg": "AI软件"
+    },
+    {
+      "t": "TSLA",
+      "name": "特斯拉",
+      "cap": 1300,
+      "layer": "app",
+      "seg": "端侧/机器人"
+    },
+    {
+      "t": "AAPL",
+      "name": "苹果",
+      "cap": 3600,
+      "layer": "app",
+      "seg": "端侧/机器人"
+    },
+    {
+      "t": "QCOM",
+      "name": "高通",
+      "cap": 180,
+      "layer": "app",
+      "seg": "端侧/机器人"
+    }
+  ]
+}

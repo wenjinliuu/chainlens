@@ -1,0 +1,8 @@
+---
+// 自动从 design/v4/logo-lab.html 生成（scripts/sync-web.mjs）：正文原样注入，头部由 Base 统一管理
+import Base from '../layouts/Base.astro';
+import html from '../partials/logo-lab.html?raw';
+---
+<Base title="Logo 候选 · 潮信" description="" css={["/assets/brand.css"]} importmap={false}>
+  <Fragment set:html={html} />
+</Base>

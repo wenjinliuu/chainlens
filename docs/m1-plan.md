@@ -2,6 +2,12 @@
 
 写于 2026-10-31，M0 设计稿（`design/v4/`）收尾时。这份文档只定方案和契约，不写代码；进入 M1 时按这里动手，有出入就改这里。
 
+## 进度（2026-11-01）
+
+- **第 1 步已做**：`web/` Astro 7 静态站可构建（`pnpm install && pnpm build`，9 个页面）；`scripts/sync-web.mjs` 把设计稿同步成站点输入——设计稿资源原样托管在 `web/public/assets`，每页正文抽成 `src/partials/*.html` 由 `Base.astro` 统一加头（meta / OG / favicon / 字体预连接 / 主题与图标脚本 / three importmap）注入；示例 JSON 在 `web/public/data`。**过渡做法**：设计稿仍是唯一的源，改了设计稿跑 `pnpm sync` 再构建；下面第 3 节的"拆成组件 + TS 模块"按页逐个替换，替换掉的页面不再由 sync 生成。
+- **部署流水线已写**：`.github/workflows/deploy.yml`（pnpm 安装 → 合规扫描 → 构建 → 产物上传；main 分支且配置了 Secrets 时 `wrangler deploy`），`web/wrangler.toml` 用 Workers 静态资源托管 `dist/`。**需要你做的**：在 Cloudflare 建一个 API Token（Workers Scripts:Edit），把 `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID` 加到仓库 Secrets；合并到 main 即上线。
+- 未做：真实数据、邮件、Astro 组件化拆分。
+
 ## 0. 目标与范围
 
 - 把 `design/v4/` 的设计稿变成**可部署的静态站**：首页、日报归档、公司档案、看盘、订阅流程、⌘K 搜索。

@@ -12,7 +12,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');   // 从任
 const WORDS = /推荐|买入|卖出|看涨|看跌|机会|抄底|稳赚|翻倍|目标位|超买|超卖|建议|荐股|必涨|必跌|牛股|躺赚/g;
 const ALLOW = /投资建议|买卖建议|不荐股|不会推荐|不构成.{0,6}建议|不做.{0,4}建议|推荐买入|不给出买入|推荐 \/ 买入|买入 \/ 卖出|买入 \/ 持有 \/ 卖出|买入\s*\/\s*持有|买入\/卖出|不是投资建议/;
 const EXT = new Set(['.html', '.js', '.mjs', '.ts', '.astro', '.json', '.md', '.txt', '.css']);
-const SKIP = /node_modules|\/\.git\/|design\/v[12]\/|preview\/|compliance-scan\.mjs$|compliance\.md$/;
+const SKIP = /node_modules|\/\.git\/|design\/v[12]\/|preview\/|web\/dist|compliance-scan\.mjs$|compliance\.md$/;
 
 function* files(p) {
   const st = statSync(p);
@@ -20,7 +20,7 @@ function* files(p) {
   else if (EXT.has(extname(p)) && !SKIP.test(p)) yield p;
 }
 // 默认只扫面向用户的内容（设计稿页面、示例数据）；内部文档可以手动传 docs 扫
-const targets = (process.argv.slice(2).length ? process.argv.slice(2) : ['design/v4', 'data/samples']).map(t => resolve(ROOT, t));
+const targets = (process.argv.slice(2).length ? process.argv.slice(2) : ['design/v4', 'data/samples', 'web/src']).map(t => resolve(ROOT, t));
 let hits = 0, n = 0;
 for (const t of targets) for (const f of files(t)) {
   n++;

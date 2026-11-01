@@ -1,0 +1,29 @@
+{
+  "name": "chaoxin-web",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "潮信 · AI 产业链情报台（Astro 静态站）",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "sync": "node ../scripts/sync-web.mjs",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "astro": "^7.4.4"
+  },
+  "devDependencies": {
+    "wrangler": "^4.156.0"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd"
+    ]
+  }
+}

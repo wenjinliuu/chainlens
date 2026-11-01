@@ -1,0 +1,29 @@
+---
+// 潮信 · 页面骨架：<head> 由这里统一管理（meta、favicon、字体、品牌 token、主题与图标脚本、three importmap）
+// 正文由各页注入；M1 第 1 步先原样托管设计稿的资源（public/assets），后续逐个模块迁到 src/lib
+interface Props { title: string; description?: string; css?: string[]; importmap?: boolean }
+const { title, description = '潮信：AI 产业链情报，盘前汇总、期权日报、研报日报、专栏报告，每天准时送达。', css = [], importmap = false } = Astro.props;
+const site = (import.meta.env.SITE || '').replace(/\/$/, '');
+---
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{title}</title>
+<meta name="description" content={description} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:type" content="website" />
+{site && <meta property="og:url" content={site + Astro.url.pathname} />}
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+<script is:inline src="/assets/icons.js"></script>
+<script is:inline src="/assets/theme.js"></script>
+{css.map((h) => <link rel="stylesheet" href={h} />)}
+{importmap && <script is:inline type="importmap" set:html={'{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }'} />}
+</head>
+<body>
+<slot />
+</body>
+</html>

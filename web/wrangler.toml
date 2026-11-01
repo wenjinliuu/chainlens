@@ -1,0 +1,7 @@
+# 潮信 · Cloudflare Workers 静态资源（免费额度）：只托管 dist/，没有 Worker 代码
+name = "chaoxin"
+compatibility_date = "2026-10-01"
+
+[assets]
+directory = "./dist"
+not_found_handling = "404-page"
