@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="assets/icons.js"></script>
 <script src="assets/theme.js"></script>
 <title>订阅潮信 · 确认与偏好</title>
 <link rel="stylesheet" href="../v3/assets/brand.css">
@@ -45,7 +46,7 @@
     <div class="sb-art"><canvas id="mascotB"></canvas><div class="confetti" id="confetti"></div></div>
     <div class="sb-body">
       <span class="tag" style="--tc-deep:#0c9465;--tc-bg:#e2f6ef">订阅成功</span>
-      <h1>小更已经出发了 🎉</h1>
+      <h1>小更已经出发了</h1>
       <p>下一期<b>期权日报</b>会在<b>明天 15:40</b> 送到 <b id="emailB">you@example.com</b>。想收哪些栏目，现在就能定：</p>
       <div class="col-pick" data-form="prefs" id="pickB"></div>
       <div class="sb-opt"><label><input type="checkbox" checked> 周日上午收周报</label><label><input type="checkbox"> 只在有 AI 链重点时才发（没有重点的日子不打扰）</label></div>
@@ -70,7 +71,7 @@
 
   <!-- 链接失效 -->
   <section class="sb-card card" data-state="expired" hidden>
-    <div class="sb-art"><div class="sb-ico">⏰</div></div>
+    <div class="sb-art"><div class="sb-ico"><svg width="84" height="84" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div></div>
     <div class="sb-body">
       <span class="tag" style="--tc-deep:#b45309;--tc-bg:#fff4dc">链接已失效</span>
       <h1>这封确认邮件过期了</h1>

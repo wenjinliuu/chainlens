@@ -38,3 +38,6 @@
 [data-theme="dark"] .ck-it .alt:hover { background: var(--card-2); }
 /* 手机端：导航右侧多了主题和搜索两个圆钮，品牌名不能换行；隐藏"AI 产业链情报"小标 */
 @media (max-width: 640px) { .brand { white-space: nowrap; flex: none; } .brand .pro { display: none; } .nav { gap: 12px; } .nav-right { gap: 6px; } .nav-right .btn { padding: 0 14px; } }
+
+.ck-dot { width: 12px; height: 12px; border-radius: 50%; display: block; } .ck-dot.bull { background: var(--bull-c); } .ck-dot.bear { background: var(--bear-c); } .ck-dot.flat { background: #b8bdc8; }
+.ck-it .ic svg { color: var(--ink2); }

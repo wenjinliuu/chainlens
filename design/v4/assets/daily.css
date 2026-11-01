@@ -84,7 +84,7 @@ i.bull { background: var(--bull-c); } i.bear { background: var(--bear-c); } i.fl
 .ar-body { position: relative; animation: arIn .45s var(--ease); }
 .ar-body.swap { animation: arIn .45s var(--ease); }
 @keyframes arIn { from { opacity: .3; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-.pz { position: relative; width: 100%; overflow: hidden; border-radius: 30px; border: 1.5px solid var(--line); background: #fff; box-shadow: 0 40px 80px -40px rgba(60,50,160,.3); }
+.pz { position: relative; width: 100%; overflow: hidden; border-radius: var(--r-big); border: 1.5px solid var(--line); background: #fff; box-shadow: 0 40px 80px -40px rgba(60,50,160,.3); }
 .pz .kp { transform-origin: 0 0; }
 .ar-text { padding: 28px 32px; font-size: 15px; line-height: 1.9; color: var(--ink2); max-width: 720px; }
 .ar-text .t { display: block; font-size: 19px; color: var(--ink); margin-bottom: 8px; }

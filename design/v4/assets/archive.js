@@ -184,26 +184,26 @@
   const pillK = dir => /偏多|偏乐观/.test(dir) ? 'bull' : /偏空|偏谨慎/.test(dir) ? 'bear' : 'flat';
   const layerColor = seg => { const s = SEGS.find(x => x.n === seg); const l = s && CL.layers.find(l => l.name === s.layer); return l ? l.color : '#5b4cff'; };
   const peek = {
-    morn: () => `<div class="pk-h"><span class="tag" style="--tc-deep:#b45309;--tc-bg:#fff4dc">盘前汇总 · 样张</span><b>🌅 盘前汇总 · 11月2日 周一</b><span class="pk-t">美东 09:00 送达 · 即将上线</span></div>
+    morn: () => `<div class="pk-h"><span class="tag" style="--tc-deep:#b45309;--tc-bg:#fff4dc">盘前汇总 · 样张</span><b>${ICON.svg('sunrise', 20, 'pk-ic')}盘前汇总 · 11月2日 周一</b><span class="pk-t">美东 09:00 送达 · 即将上线</span></div>
       <div class="pk-cols">
         <div><h4>隔夜要闻</h4><ol><li><b>台积电</b>公布 10 月营收，同比增长，先进制程占比提升 <span class="src">公司公告</span></li><li><b>美光</b>HBM 产能扩建项目获地方审批 <span class="src">示例媒体</span></li><li>美联储官员讲话：对通胀回落的信心增强 <span class="src">示例媒体</span></li></ol></div>
         <div><h4>盘前异动 · AI 链</h4><div class="pk-list">${[['LITE', 4.2], ['MU', 2.1], ['COHR', 1.8], ['SMCI', -3.4], ['ANET', -1.2]].map(([t, v]) => { const c = CL.byT[t]; return `<div class="pk-row">${tb(t, 26)}<b class="num">${t}</b><small>${c.name}</small><span class="pill ${v >= 0 ? 'bull' : 'bear'}">${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(1)}%</span></div>`; }).join('')}</div></div>
         <div><h4>今日日程</h4><ul class="pk-cal"><li><b>08:30</b> 美国 10 月 ISM 制造业</li><li><b>盘前</b> 财报：AMD、SMCI</li><li><b>盘后</b> 财报：AAPL、AMZN</li><li><b>全天</b> 韩国 10 月出口（含芯片）</li></ul></div>
       </div>
       <div class="pk-f">隔夜要闻来自公司公告与主流媒体，盘前涨跌为延迟数据 · 不构成投资建议</div>`,
-    eve: date => { const d = byDate[date] || P.base; return `<div class="pk-h"><span class="tag">期权日报 · 样张</span><b>📊 期权概览 · ${d.md}</b><span class="pk-t">北京时间 15:40 送达 · 海报署名 KZG 期权 Pro</span></div>
+    eve: date => { const d = byDate[date] || P.base; return `<div class="pk-h"><span class="tag">期权日报 · 样张</span><b>${ICON.svg('bars', 20, 'pk-ic')}期权概览 · ${d.md}</b><span class="pk-t">北京时间 15:40 送达 · 海报署名 KZG 期权 Pro</span></div>
       <div class="pk-cols">
         <div><h4>大盘情绪</h4><div class="pk-big"><b class="num">${d.cp.toFixed(2)}</b><span class="pill ${pillK(d.mood)}">${d.mood}</span></div><p>全市场 CP 对比 20 日常态 ${d.base.toFixed(2)}，<b class="${d.dev >= 0 ? 'up' : 'down'}">${pct(d.dev)}</b>。${d.t3.split('；')[0].replace(/^全市场[^，]*，/, '')}。</p></div>
         <div><h4>AI 链重点</h4><div class="pk-list">${d.picks.map(p => `<div class="pk-row">${tb(p.t, 26)}<b class="num">${p.t}</b><small>可信度${p.conf}</small><span class="pill ${pillK(p.dir)}">${p.dir}</span></div>`).join('')}</div></div>
         <div><h4>最热环节</h4><div class="pk-big"><b class="num" style="color:${deep(layerColor(d.hot.seg))}">${d.hot.heat}x</b><span class="pk-sub">${d.hot.seg}</span></div><p>在榜 ${d.hot.ts.length} 只：${d.hot.ts.join('、')}。热度 = 成员量倍数中位数。</p></div>
       </div>
       <div class="pk-f">"偏多 / 偏空"是期权成交结构的数据面倾向 · 不构成投资建议</div>`; },
-    rr: date => { const R = rr(date || '2026-10-30'); return `<div class="pk-h"><span class="tag" style="--tc-deep:#0b77c0;--tc-bg:#e7f4fe">研报日报 · 样张</span><b>📑 研报日报 · ${md(R.date)}</b><span class="pk-t">每个交易日 · 只放摘要，不放原文</span></div>
+    rr: date => { const R = rr(date || '2026-10-30'); return `<div class="pk-h"><span class="tag" style="--tc-deep:#0b77c0;--tc-bg:#e7f4fe">研报日报 · 样张</span><b>${ICON.svg('doc', 20, 'pk-ic')}研报日报 · ${md(R.date)}</b><span class="pk-t">每个交易日 · 只放摘要，不放原文</span></div>
       <div class="pk-cols">
         ${R.items.slice(0, 3).map(i => `<div><div class="pk-row">${tb(i.t, 26)}<b class="num">${i.t}</b><small>${i.firm}</small><span class="pill ${i.to >= i.from ? 'bull' : 'bear'}">${i.from} → ${i.to}</span></div><div class="pk-rt">${i.rating}</div><ul>${i.pts.slice(0, 2).map(x => `<li>${x}</li>`).join('')}</ul></div>`).join('')}
       </div>
       <div class="pk-f">摘要整理自机构公开报告，每篇不超过 3 条要点 · 不构成投资建议</div>`; },
-    week: mon => { const w = (mon && weeks.find(x => x.mon === mon)) || weeks[weeks.length - 1]; const max = w.segs[0].heat; return `<div class="pk-h"><span class="tag" style="--tc-deep:#7a3ec9;--tc-bg:#f3e8ff">周报 · 样张</span><b>📆 ${w.label} · 期权周报</b><span class="pk-t">周日上午送达</span></div>
+    week: mon => { const w = (mon && weeks.find(x => x.mon === mon)) || weeks[weeks.length - 1]; const max = w.segs[0].heat; return `<div class="pk-h"><span class="tag" style="--tc-deep:#7a3ec9;--tc-bg:#f3e8ff">周报 · 样张</span><b>${ICON.svg('week', 20, 'pk-ic')}${w.label} · 期权周报</b><span class="pk-t">周日上午送达</span></div>
       <div class="pk-cols">
         <div><h4>本周方向</h4><div class="pk-kv"><span>全市场</span><span class="pill ${pillK(w.dir)}">${w.dir}</span></div><div class="pk-kv"><span>最偏多环节</span><b>${w.bullSeg}</b></div><div class="pk-kv"><span>最偏空环节</span><b>${w.bearSeg}</b></div><div class="pk-kv"><span>方向最强个股</span><b class="num">${w.strongest ? w.strongest.t : '—'}</b></div></div>
         <div><h4>环节轮动</h4><div class="pk-bars">${w.segs.slice(0, 5).map(s => `<div><span>${s.n}</span><i style="width:${s.heat / max * 100}%;background:${P.SEG[s.n]}"></i><b class="num">${s.heat.toFixed(1)}x</b></div>`).join('')}</div></div>
@@ -215,7 +215,7 @@
   // ---------- 归档页整页渲染 ----------
   // 期权日报文字版（和海报同一份数据）
   const text = date => { const d = byDate[date] || P.base; return `<div class="ar-text">
-    <b class="t">📊 期权概览 · ${d.md}</b>
+    <b class="t">期权概览 · ${d.md}</b>
     <p>大盘：<b class="${pillK(d.mood) === 'bull' ? 'up' : pillK(d.mood) === 'bear' ? 'down' : ''}">${d.mood}</b>（全市场 CP ${d.cp.toFixed(2)}，常态 ${d.base.toFixed(2)}，${pct(d.dev)}）<br>最热环节：${d.hot.seg} ${d.hot.heat}x（${d.hot.ts.join('、')}）</p>
     <b>AI 链重点</b>
     <ol>${d.picks.map(p => `<li><b>${p.t}</b> ${p.dir} · 可信度${p.conf} — 量 ${p.vx}x，CP ${pct(p.cp)}；${p.why.replace(/。$/, '')}</li>`).join('')}</ol>

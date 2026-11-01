@@ -10,7 +10,7 @@
   const set = (t, save = true) => {
     if (t === 'dark') document.documentElement.dataset.theme = 'dark'; else delete document.documentElement.dataset.theme;
     if (save) try { localStorage.setItem(KEY, t); } catch {}
-    document.querySelectorAll('.nav-theme').forEach(b => { b.textContent = t === 'dark' ? '☀️' : '🌙'; b.title = t === 'dark' ? '切回浅色' : '试试深色（实验性）'; });
+    document.querySelectorAll('.nav-theme').forEach(b => { b.innerHTML = window.ICON ? ICON.svg(t === 'dark' ? 'sun' : 'moon', 17) : (t === 'dark' ? '☀' : '☾'); b.title = t === 'dark' ? '切回浅色' : '试试深色（实验性）'; });
     if (window.LP && LP.setNight) LP.setNight(t === 'dark');
   };
   try { if (localStorage.getItem(KEY) === 'dark') set('dark', false); } catch {}

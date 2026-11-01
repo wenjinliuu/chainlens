@@ -32,8 +32,8 @@
   LP.setNight = on => {
     night = !!on;
     $('#hero').classList.toggle('night', night); const isle = $('.isle'); isle && isle.classList.toggle('night', night); const tf = $('.town-full'); tf && tf.classList.toggle('night', night);
-    const b1 = $('#nightBtn'); if (b1) b1.innerHTML = night ? '<i>☀️</i><b>白天模式</b>' : '<i>🌙</i><b>夜晚模式</b>';
-    const b2 = $('#nightBtn2'); if (b2) b2.textContent = night ? '☀️ 白天' : '🌙 夜晚';
+    const b1 = $('#nightBtn'); if (b1) b1.innerHTML = night ? `<i>${ICON.svg('sun', 17)}</i><b>白天模式</b>` : `<i>${ICON.svg('moon', 17)}</i><b>夜晚模式</b>`;
+    const b2 = $('#nightBtn2'); if (b2) b2.innerHTML = night ? `${ICON.svg('sun', 15)} 白天` : `${ICON.svg('moon', 15)} 夜晚`;
     LP.town && LP.town.setNight(night ? 1 : 0, !!window.__nightNow);
   };
   document.querySelectorAll('#nightBtn, #nightBtn2').forEach(b => b.addEventListener('click', () => LP.setNight(!night)));
@@ -116,12 +116,12 @@
     }
     // 点镇里的东西：气泡跟着它走
     const bub = $('#isleBubble'); let followed = null;
-    const KIND_ICON = { tower: '🏢', truck: '🚚', flat: '🛻', bus: '🚌', car: '🚗', fork: '🏗️', worker: '👷', arm: '🦾', person: '🚶', bot: '🤖', board: '📢', port: '⚓', light: '🗼', robin: '🐦', blimp: '🎈' };
+    const KIND_ICON = { tower: 'building', truck: 'truck', flat: 'flat', bus: 'bus', car: 'car', fork: 'forklift', worker: 'worker', arm: 'arm', person: 'walker', bot: 'robot', board: 'billboard', port: 'anchor', light: 'lighthouse', robin: 'bird', blimp: 'blimp' };
     const thing = (info, x, y, th) => {
       if (!info) { followed = null; bub.classList.remove('show'); return; }
       followed = th;
       bub.style.setProperty('--c', info.L ? info.L.color : '#5b4cff');
-      bub.innerHTML = `<span class="ib-ic">${KIND_ICON[info.kind] || '✨'}</span><div><b>${info.title}</b><p>${info.sub}</p>${info.go ? `<a href="company.html?t=${info.go}">打开 ${info.go} 的公司档案 →</a>` : ''}</div><button class="ib-x" type="button">✕</button>`;
+      bub.innerHTML = `<span class="ib-ic">${ICON.svg(KIND_ICON[info.kind] || 'sparkle', 20)}</span><div><b>${info.title}</b><p>${info.sub}</p>${info.go ? `<a href="company.html?t=${info.go}">打开 ${info.go} 的公司档案 →</a>` : ''}</div><button class="ib-x" type="button">✕</button>`;
       bub.querySelector('.ib-x').onclick = () => thing(null);
       bub.classList.add('show'); moveThing(x, y, true);
     };
@@ -249,7 +249,7 @@
   // ---------- 样张 ----------
   $('#sampleA').insertAdjacentHTML('afterbegin', renderPoster());
   $('#sampleB').insertAdjacentHTML('afterbegin', `<div style="position:absolute;left:50%;top:40px;transform:translateX(-50%);width:420px;padding:24px 26px;border-radius:26px;background:var(--card);border:1.5px solid var(--line);font-size:14.5px;line-height:1.85;color:var(--ink2)">
-    <b style="font-size:17px;color:var(--ink)">📊 期权概览 · 10月30日</b><br>
+    <b style="font-size:17px;color:var(--ink)">期权概览 · 10月30日</b><br>
     大盘：<b style="color:var(--bull)">偏乐观</b>（全市场 CP 0.90，常态 0.78）<br>
     最热环节：光模块 2.3x（LITE、COHR、CIEN）<br><br>
     <b style="color:var(--ink)">AI 链重点</b><br>
@@ -261,7 +261,7 @@
 
   const RR = [['NVDA', '机构 A', '中性 → 增持', 145, 165, ['数据中心收入占比继续提升', '新平台量产节奏早于此前披露', '毛利率假设上调 1 个百分点']],
     ['MU', '机构 B', '维持 增持', 135, 160, ['HBM 产能扩建进度加快', '存储价格环比回升']], ['ANET', '机构 C', '增持 → 中性', 140, 128, ['估值已反映多数预期']]];
-  $('#sampleC').insertAdjacentHTML('afterbegin', `<div class="rr-sheet"><b class="rr-t">📑 研报日报 · 10月30日</b><div class="rr-s">今日 9 条评级 / 目标价调整，摘录 3 条</div>
+  $('#sampleC').insertAdjacentHTML('afterbegin', `<div class="rr-sheet"><b class="rr-t">研报日报 · 10月30日</b><div class="rr-s">今日 9 条评级 / 目标价调整，摘录 3 条</div>
     ${RR.map(([t, f, rt, a, b, pts]) => { const c = CL.byT[t], col = CL.layers[c.li].color, up = b >= a; return `<div class="rr-item"><div class="rr-h">${badge(c, 30, col)}<b class="num">${t}</b><span>${f} · ${rt}</span><span class="pill ${up ? 'bull' : 'bear'}">${a} → ${b}</span></div><ul>${pts.map(x => `<li>${x}</li>`).join('')}</ul></div>`; }).join('')}
     <div class="rr-f">摘要整理自机构公开报告，不构成投资建议</div></div>`);
 
