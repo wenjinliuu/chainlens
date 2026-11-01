@@ -55,6 +55,10 @@ function initHeroScene(canvas, opts) {
     obj.rotation.set(rx, ry, 0); holder.scale.setScalar(.001);
     root.add(holder); items.push(holder); return holder;
   };
+  if (opts.minimal) { // 首屏背景是产业镇时，只留三个小物件在手机旁边慢慢飘：两枚今天上榜的公司硬币 + 一枚信封硬币
+    [['LITE', -335, 150, 160, '#00a8c6'], ['NVDA', 330, -40, 130, '#5b4cff']].forEach(([t, x, y, z, col], i) => { const h = add(buildCoin(CL.byT[t], col), x, y, z, .62, 0, 0, 700 + i * 160); h.userData.drift = 1; });
+    const env = add(buildCoin({ t: '潮', name: '潮信', li: 0, logo: '' }, '#f5a314'), -300, -250, 90, .5, 0, 0, 1000); env.userData.drift = 1; // 没有 logo 的硬币会露出首字
+  }
   if (!opts.minimal) { // 首屏背景改为产业镇后，不再需要这些漂浮物件
   add(buildObject('chip', '#5b4cff'), -250, -210, 60, .95, -.78, .62, 0);
   add(buildObject('gpu', '#a04cf5'), 245, 250, -40, .78, -.9, .55, 120);
@@ -119,7 +123,8 @@ function initHeroScene(canvas, opts) {
     items.forEach(it => {
       const u = it.userData, k = Math.min(Math.max((now - t0 - 500 - u.delay) / 900, 0), 1);
       it.scale.setScalar(Math.max(easeBack(k), .001) * u.s);
-      it.position.y = u.base.y - Math.sin(t * .9 + u.phase) * 9;
+      it.position.y = u.base.y - Math.sin(t * .9 + u.phase) * (u.drift ? 16 : 9);
+      if (u.drift) { it.position.x = u.base.x + Math.sin(t * .35 + u.phase * 1.7) * 18; it.position.z = u.base.z + Math.cos(t * .3 + u.phase) * 14; }
       it.children[0].rotation.y = u.ry + Math.sin(t * .4 + u.phase) * .12 + drag.spin * .02;
       if (u.flip) { u.flip = Math.max(u.flip - dt * 1.4, 0); it.children[0].rotation.y = u.ry + (1 - u.flip) * Math.PI * 2; }
     });

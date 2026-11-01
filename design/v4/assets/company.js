@@ -163,7 +163,39 @@
     star && star.load(D); line && line.load(D); block && block.load(D);
     scrollTo({ top: 0, behavior: 'smooth' });
   }
-  window.CO.start = async (initStar, initLine, initBlock) => {
+  // ---------- 平面 K 线（Lightweight Charts）：K 线 + 研报目标价区间 / 均值 + 事件标记 + CP 偏离副图 ----------
+  function initLine2D(box, ui) {
+    const LC = window.LightweightCharts, { Band } = window.LWP;
+    const UP = '#0fb57b', DN = '#e8364a', SKY = '#1296f0';
+    const css = getComputedStyle(document.documentElement);
+    const chart = LC.createChart(box, { layout: { background: { color: 'transparent' }, textColor: css.getPropertyValue('--ink3').trim() || '#8e91a7', fontFamily: css.getPropertyValue('--num').trim(), fontSize: 11, panes: { separatorColor: css.getPropertyValue('--line').trim() } },
+      grid: { vertLines: { visible: false }, horzLines: { color: css.getPropertyValue('--line').trim() || '#eceef5' } }, rightPriceScale: { borderVisible: false }, timeScale: { borderVisible: false, rightOffset: 2 },
+      crosshair: { mode: LC.CrosshairMode.Normal }, handleScale: { axisPressedMouseMove: false }, autoSize: true });
+    const candle = chart.addSeries(LC.CandlestickSeries, { upColor: UP, downColor: DN, wickUpColor: UP, wickDownColor: DN, borderVisible: false, priceLineStyle: LC.LineStyle.Dashed }, 0);
+    const mean = chart.addSeries(LC.LineSeries, { color: SKY, lineWidth: 1.5, lineStyle: LC.LineStyle.Dashed, priceLineVisible: false, lastValueVisible: true, crosshairMarkerVisible: false, title: '研报目标价均值' }, 0);
+    const cp = chart.addSeries(LC.HistogramSeries, { priceLineVisible: false, lastValueVisible: false, priceFormat: { type: 'custom', formatter: v => `${v >= 0 ? '+' : ''}${Math.round(v * 100)}%` } }, 1);
+    let band = null, timeIdx = {}, markers = null;
+    function load(D) {
+      const T = D.days.map(d => '2026-' + d); timeIdx = Object.fromEntries(T.map((t, i) => [t, i]));
+      candle.setData(D.K.map((k, i) => ({ time: T[i], open: k.o, high: k.h, low: k.l, close: k.c })));
+      // 目标价：每条研报之后区间阶梯变化
+      const tg = D.K.map((k, i) => { const rp = D.reports.filter(x => x.di <= i); if (!rp.length) return null; const ps = rp.map(x => x.p1); return { lo: Math.min(...ps), hi: Math.max(...ps), avg: ps.reduce((a, b) => a + b, 0) / ps.length }; });
+      if (band) candle.detachPrimitive(band);
+      band = new Band(tg.map(x => x && { lo: x.lo, hi: x.hi }), { fill: 'rgba(18,150,240,.08)', edge: 'rgba(18,150,240,.55)', dash: [4, 3], step: true, autoscale: true }); candle.attachPrimitive(band);
+      mean.setData(tg.map((x, i) => x ? { time: T[i], value: +x.avg.toFixed(1) } : null).filter(Boolean));
+      // CP 偏离副图：最近 20 日
+      cp.setData(D.K.map((k, i) => ({ time: T[i], value: i >= 40 ? D.dev[i - 40] : (D.cp[i] / 1.1 - 1) * .5, color: (i >= 40 ? D.dev[i - 40] : D.cp[i] - 1.1) >= 0 ? 'rgba(15,181,123,.7)' : 'rgba(232,54,74,.7)' })));
+      // 事件标记：期 / 研 / 闻
+      const MC = { o: '#a04cf5', r: '#1296f0', n: '#f5a314' }, MT = { o: '期', r: '研', n: '闻' }; // canvas 里不能用 CSS 变量，写死色值
+      const marks = D.events.map(e => ({ time: T[e.di], position: e.k === 'o' ? 'belowBar' : 'aboveBar', color: MC[e.k], shape: e.k === 'r' ? 'square' : 'circle', text: MT[e.k], size: .9 }));
+      if (markers) markers.setMarkers(marks); else markers = LC.createSeriesMarkers(candle, marks);
+      const ps = chart.panes(); ps[0] && ps[0].setStretchFactor(3); ps[1] && ps[1].setStretchFactor(1);
+      chart.timeScale().fitContent();
+    }
+    chart.subscribeCrosshairMove(p => { if (p.time != null && timeIdx[p.time] != null) ui.focusDay(timeIdx[p.time]); });
+    return { load };
+  }
+  window.CO.start = async (initStar, initBlock) => {
     const tip = $('#coTip');
     const ui = {
       tip(html, x, y) { if (!html) { tip.classList.remove('show'); return; } tip.innerHTML = html; tip.style.left = x + 14 + 'px'; tip.style.top = y - 12 + 'px'; tip.classList.add('show'); },
@@ -171,7 +203,7 @@
       focusDay(di) { document.querySelectorAll('[data-di]').forEach(el => el.classList.toggle('hl', +el.dataset.di === di)); },
     };
     star = initStar($('#starCanvas'), ui, $('#starLabels'));
-    line = initLine($('#lineCanvas'), ui);
+    line = initLine2D($('#lineBox'), ui);
     block = initBlock ? await initBlock($('#blockCanvas'), Object.assign({ caption: t => { $('#blockCap').textContent = t; } }, ui)) : null;
     go(cur);
   };

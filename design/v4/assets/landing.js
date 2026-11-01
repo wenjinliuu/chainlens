@@ -142,6 +142,14 @@
   // ---------- 手机里自动滚动的日报 ----------
   const feed = $('#feed');
   feed.innerHTML = `<div class="feed-z">${renderPoster()}</div>`;
+  feed.querySelectorAll('.kp-intra > div').forEach((d, i) => d.style.setProperty('--i', i));
+  // 每隔一会儿让海报里的条和柱重新长一次，像数据刷新；数字也从旧值跳到新值
+  const kpNums = [...feed.querySelectorAll('.kp .kpi .v')].slice(0, 1);
+  setInterval(() => {
+    feed.classList.add('refresh'); void feed.offsetWidth; feed.classList.remove('refresh');
+    kpNums.forEach(el => { const b = el.childNodes[0]; if (!b || b.nodeType !== 3) return; const to = parseFloat(b.textContent); if (isNaN(to)) return; let k = 0; const from = to - .12, t0 = performance.now();
+      (function step(now) { k = Math.min((now - t0) / 900, 1); const e = 1 - Math.pow(1 - k, 3); b.textContent = (from + (to - from) * e).toFixed(2) + ' '; if (k < 1) requestAnimationFrame(step); })(t0); });
+  }, 14000);
   // 手机里的海报：在容器里来回慢慢滚动（停 2 秒 → 13 秒滚到底 → 停 2 秒 → 滚回），鼠标放上去暂停
   let fT = 0, fLast = performance.now(), fHover = false;
   feed.parentElement.addEventListener('pointerenter', () => fHover = true);

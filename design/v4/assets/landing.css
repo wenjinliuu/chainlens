@@ -94,6 +94,10 @@
 .stage { position: relative; height: min(820px, calc(100vh - 90px)); margin-right: -70px; perspective: 1600px; }
 .explode { overflow-x: clip; }
 #scene { position: absolute; inset: -40px -40px -40px -120px; width: calc(100% + 160px); height: calc(100% + 80px); }
+/* 手机悬浮：用 translate / rotate 独立属性做慢慢上下浮和轻微摇摆，和 transform 里鼠标驱动的倾斜互不干扰 */
+@keyframes phoneFloat { 0%, 100% { translate: 0 0; rotate: -1.2deg; } 50% { translate: 0 -14px; rotate: 1.2deg; } }
+.phone-rig { animation: phoneFloat 7s ease-in-out infinite; }
+.phone-rig:hover { animation-play-state: paused; }
 .phone-rig { position: absolute; left: 50%; top: 50%; width: 330px; height: 690px; margin: -345px 0 0 -165px; transform-style: preserve-3d;
   transform: rotateY(var(--ry, -18deg)) rotateX(var(--rx, 7deg)) rotateZ(2deg); transition: transform .9s var(--ease); will-change: transform; }
 .phone { position: absolute; inset: 0; border-radius: 52px; background: #f4f5fa; padding: 11px;
@@ -106,6 +110,17 @@
 .phone .feed { position: absolute; inset: 0; overflow: hidden; scrollbar-width: none; } /* 用 JS 改 scrollTop 自动滚动，比在 3D 变换里做平移动画更稳 */
 .phone .feed::-webkit-scrollbar { display: none; }
 .phone .feed-z { zoom: .287; }
+/* 手机里的海报：数字条、分时柱像"刚算出来"一样长出来，然后每隔一会儿轻轻刷新一次 */
+@keyframes kpGrowX { from { transform: scaleX(0); } } @keyframes kpGrowY { from { transform: scaleY(0); } }
+@keyframes kpPulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+.feed .kp-track .fill { transform-origin: left; animation: kpGrowX 1.1s var(--ease) both; }
+.feed .kp-track .fill[style*="left:5"] { transform-origin: left; } .feed .kp-track .fill:not([style*="left:50%"]) { transform-origin: right; }
+.feed .kp-intra i { transform-origin: bottom; animation: kpGrowY .9s var(--spring) both; }
+.feed .kp-intra div:nth-child(n) i { animation-delay: calc(var(--i, 0) * 60ms); }
+.feed .kp-rk .bar i { transform-origin: left; animation: kpGrowX 1.2s var(--ease) both; }
+.feed .kp-pill.bull, .feed .kp-pill.bear { animation: kpPulse 3.2s ease-in-out infinite; }
+.feed.refresh .kp-track .fill, .feed.refresh .kp-intra i, .feed.refresh .kp-rk .bar i { animation: none; }
+
 @keyframes feed { 0%, 8% { translate: 0 0; } 92%, 100% { translate: 0 calc(-1 * var(--travel, 2400px)); } }
 .toast { position: absolute; left: -150px; top: 64px; width: 330px; padding: 12px 14px; border-radius: 22px; display: flex; gap: 11px; align-items: center;
   background: rgba(255, 255, 255, .9); border: 1.5px solid var(--line); box-shadow: 0 24px 50px -16px rgba(60, 50, 160, .3); backdrop-filter: blur(14px);

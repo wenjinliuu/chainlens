@@ -1,8 +1,8 @@
 /*
  * 潮信 · 公司档案 3D（Three.js）
- * initStar：信息星图——中央 logo 硬币立在台座上；内圈 = 近 20 日 CP 偏离环形柱；中圈 = 研报卡片环绕；
- *           外圈 = 新闻气泡；左边上游、右边下游公司硬币，用管线连到中央，光点按供货方向流动，点击可跳转
- * initLine：3D 时间轴——近 60 日 K 线、悬空的 CP 比曲线、研报目标价半透明带，事件小旗插在当天 K 线上
+ * initStar：信息星图——中央 logo 硬币立在台座上；内圈 = 近 20 日 CP 偏离环形柱；外圈 = 新闻气泡；
+ *           （研报不绕圈：目标价画在下方的平面 K 线上）左边上游、右边下游公司硬币，用管线连到中央，光点按供货方向流动，点击可跳转
+ * initLine：3D 时间轴（已被公司页的平面 K 线取代，保留代码备用）
  * 全部为虚构示例数据
  */
 window.COMPANY3D = (async () => {
@@ -71,16 +71,7 @@ function initStar(canvas, ui, labelsEl) {
       m.userData.tip = `<b>${D.days[40 + i]}</b> · 期权日报 CP 偏离 <b class="${v >= 0 ? 'up' : 'down'}">${v >= 0 ? '+' : '−'}${Math.round(Math.abs(v) * 100)}%</b>`; m.userData.di = 40 + i; hits.push(m);
     });
     const ring = new THREE.Mesh(new THREE.TorusGeometry(205, 2.5, 8, 120), mat('#e3e1fb')); ring.rotation.x = Math.PI / 2; root.add(ring);
-    // 中圈：研报卡片
-    orbitR = new THREE.Group(); root.add(orbitR);
-    D.reports.forEach((x, i, arr) => {
-      const up = x.p1 >= x.p0, c2 = up ? BULL : BEAR;
-      const tex = textTex([[x.firm + ' · ' + x.d, `700 17px ${CN}`, '#8e91a7', 22, 34], [x.r0 === x.r1 ? '维持 ' + x.r1 : x.r0 + ' → ' + x.r1, `800 22px ${CN}`, '#16172a', 22, 68], [`${x.p0} → ${x.p1}`, `800 30px ${NUM}`, mix(c2, '#000', .18), 22, 112]], 220, 136, { strip: c2 });
-      const card = new THREE.Mesh(new THREE.PlaneGeometry(200, 124), new THREE.MeshBasicMaterial({ map: tex, transparent: true, toneMapped: false, side: THREE.DoubleSide }));
-      const a = i / arr.length * Math.PI * 2;
-      card.position.set(Math.cos(a) * 340, 260 + (i % 2) * 70, Math.sin(a) * 340); orbitR.add(card);
-      card.userData = { tip: `<b>研报</b> · ${x.firm} ${x.d}<br>${x.r0 === x.r1 ? '维持 ' + x.r1 : x.r0 + ' → ' + x.r1} · 目标价 ${x.p0} → <b>${x.p1}</b>`, di: x.di, face: true }; hits.push(card);
-    });
+    // （研报不再绕中圈：改在平面 K 线上画目标价区间，详情看下方列表）
     // 外圈：新闻
     orbitN = new THREE.Group(); root.add(orbitN);
     D.news.forEach((n, i, arr) => {
@@ -106,7 +97,6 @@ function initStar(canvas, ui, labelsEl) {
     const mk = (txt, pos, cls) => { const el = document.createElement('div'); el.className = 'st-lab ' + (cls || ''); el.innerHTML = txt; labelsEl.appendChild(el); labels.push({ el, pos }); };
     labels = labels.filter(l => l.el);
     mk('期权日报 · 近 20 日 CP 偏离', new THREE.Vector3(0, 30, 250), 'k-o');
-    mk('研报 · 绕中圈', new THREE.Vector3(0, 440, 0), 'k-r');
     if (D.ups.length) mk('← 上游 · 供应方', new THREE.Vector3(-700, 330, 0), 'k-u');
     if (D.downs.length) mk('下游 · 客户 →', new THREE.Vector3(700, 330, 0), 'k-u');
   }
@@ -126,7 +116,6 @@ function initStar(canvas, ui, labelsEl) {
   visLoop(canvas, (T, dt) => {
     if (!D) return;
     center.rotation.y = T * .6; center.position.y = 130 + Math.sin(T * 1.4) * 8;
-    if (orbitR) orbitR.rotation.y = T * .12;
     if (orbitN) { orbitN.rotation.y = -T * .06; orbitN.children.forEach(ch => ch.position.y += Math.sin(T * 1.2 + ch.userData.ph) * .15); }
     // 卡片、新闻、上下游硬币始终正对镜头（抵消父级的旋转）
     hits.forEach(o => { if (!o.userData.face) return; o.parent.getWorldQuaternion(pq); o.quaternion.copy(pq.invert().multiply(camera.quaternion)); });

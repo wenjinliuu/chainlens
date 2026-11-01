@@ -40,7 +40,8 @@ body { background: linear-gradient(180deg, #fff, var(--bg-2) 600px); }
 .c3-cap b { color: var(--ink); margin-right: 8px; }
 
 .line-wrap { padding: 18px 22px 10px; }
-.line { position: relative; height: 420px; }
+.line { position: relative; height: 400px; }
+.lw-foot { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 11.5px; color: var(--ink3); padding: 6px 2px 2px; } .lw-foot a { color: var(--ink2); font-weight: 700; }
 .ph { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
 .ph h3 { margin: 0; font-family: var(--title); font-weight: 900; font-size: 20px; display: flex; align-items: center; gap: 8px; }
 .ph .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }

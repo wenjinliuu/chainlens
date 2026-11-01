@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>潮信 · Logo 候选</title>
+<link rel="stylesheet" href="../v3/assets/brand.css">
+<style>
+body { padding: 40px; background: var(--bg-2); }
+h1 { font-family: var(--title); font-weight: 900; font-size: 28px; margin: 0 0 6px; } .lead { color: var(--ink3); margin: 0 0 26px; }
+.grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+.cand { background: var(--card); border: 1.5px solid var(--line); border-radius: 24px; padding: 22px 24px; }
+.cand h3 { margin: 0 0 4px; font-size: 16px; } .cand p { margin: 0 0 14px; font-size: 13px; color: var(--ink2); }
+.row { display: flex; align-items: center; gap: 22px; padding: 14px 16px; border-radius: 16px; }
+.row.dark { background: #0d0f1c; color: #fff; margin-top: 8px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; font-family: var(--title); font-weight: 900; font-size: 22px; }
+.brand.big { font-size: 40px; gap: 14px; } .brand.sm { font-size: 15px; gap: 7px; }
+.mark { display: block; } .tag2 { font-family: var(--num); font-weight: 800; font-size: 11px; color: #fff; background: #5b4cff; border-radius: 999px; padding: 2px 8px; }
+.sizes { display: flex; align-items: center; gap: 14px; margin-left: auto; } .sizes span { font-size: 11px; color: var(--ink3); }
+.fav { width: 16px; height: 16px; } .fav32 { width: 32px; height: 32px; }
+</style>
+</head>
+<body>
+<h1>潮信 · Logo 候选</h1>
+<p class="lead">要求：16px 还能认出、浅色深色都行、和"雾彩·清透"同一套颜色（靛紫 #5b4cff / 天蓝 #1296f0 / 琥珀 #f5a314）、意思是"潮水 + 信"。</p>
+<div class="grid" id="grid"></div>
+<script>
+const CANDS = [
+  ['A · 信封的封口是一道浪', '信（信封）+ 潮（浪形封口），最直白；小尺寸靠白色浪线识别',
+   `<rect x="2.5" y="6.5" width="27" height="20" rx="6.5" fill="#5b4cff"/><path d="M2.5 13c3.5-4.2 7-4.2 10.5 0s7 4.2 10.5 0c2-2.4 4.2-3.3 6-2.8V13a6.5 6.5 0 0 0-6.5-6.5H9A6.5 6.5 0 0 0 2.5 13z" fill="#8f84ff"/><path d="M2.5 13.6c3.5-4.2 7-4.2 10.5 0s7 4.2 10.5 0c1.9-2.3 3.9-3.2 6-2.9" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"/>`],
+  ['B · 信封 + 浪，带一点天蓝', 'A 的变体：浪线用天蓝渐变到白，封口上方浅紫，右上一粒琥珀（小更 / 日出）',
+   `<defs><linearGradient id="gw" x1="0" x2="1"><stop offset="0" stop-color="#9fe0ff"/><stop offset="1" stop-color="#ffffff"/></linearGradient></defs><rect x="2.5" y="6.5" width="27" height="20" rx="6.5" fill="#5b4cff"/><path d="M2.5 13c3.5-4.2 7-4.2 10.5 0s7 4.2 10.5 0c2-2.4 4.2-3.3 6-2.8V13a6.5 6.5 0 0 0-6.5-6.5H9A6.5 6.5 0 0 0 2.5 13z" fill="#7d70ff"/><path d="M2.5 13.6c3.5-4.2 7-4.2 10.5 0s7 4.2 10.5 0c1.9-2.3 3.9-3.2 6-2.9" fill="none" stroke="url(#gw)" stroke-width="2.4" stroke-linecap="round"/><circle cx="25.5" cy="22" r="2.1" fill="#f5a314"/>`],
+  ['C · 三道潮纹的印章', '圆角方印里三道浪，由白到浅紫渐弱，像潮水一层层推上来；右上一粒琥珀当日出',
+   `<rect x="2" y="2" width="28" height="28" rx="9" fill="#5b4cff"/><path d="M7 12.2c3-3.6 6-3.6 9 0s6 3.6 9 0" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round"/><path d="M7 18.6c3-3.6 6-3.6 9 0s6 3.6 9 0" fill="none" stroke="#c9c3ff" stroke-width="2.6" stroke-linecap="round"/><path d="M7 25c3-3.6 6-3.6 9 0s6 3.6 9 0" fill="none" stroke="#8f84ff" stroke-width="2.6" stroke-linecap="round"/><circle cx="24.5" cy="7.5" r="2.3" fill="#f5a314"/>`],
+  ['D · 浪卷成的 C', 'Chaoxin 的 C 由一道卷起的浪形成，浪尖是天蓝；最"标志"但 16px 时细节会糊',
+   `<path d="M25.5 9.5A11 11 0 1 0 25.5 22.5" fill="none" stroke="#5b4cff" stroke-width="5" stroke-linecap="round"/><path d="M25.5 9.5c-1.2-3.2-4.2-4.6-7.2-3.4" fill="none" stroke="#1296f0" stroke-width="4.2" stroke-linecap="round"/><circle cx="20.5" cy="14.8" r="2.6" fill="#1296f0"/>`],
+];
+document.getElementById('grid').innerHTML = CANDS.map(([n, d, svg]) => {
+  const mk = (s, cls = '') => `<svg class="mark ${cls}" width="${s}" height="${s}" viewBox="0 0 32 32">${svg}</svg>`;
+  return `<div class="cand"><h3>${n}</h3><p>${d}</p>
+    <div class="row"><span class="brand big">${mk(56)}潮信</span><span class="brand">${mk(30)}潮信<span class="tag2">AI 产业链情报</span></span><div class="sizes">${mk(32)}${mk(16)}<span>32 / 16</span></div></div>
+    <div class="row dark"><span class="brand big">${mk(56)}潮信</span><span class="brand sm">${mk(20)}潮信</span><div class="sizes">${mk(32)}${mk(16)}<span>深色</span></div></div></div>`;
+}).join('');
+</script>
+</body>
+</html>
