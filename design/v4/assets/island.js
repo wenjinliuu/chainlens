@@ -663,7 +663,7 @@ function getTown() {
     applyWeather();
   }
   // 雨：线段粒子，只在"偏谨慎"的日子下
-  const RAIN_N = Math.round(900 * Q.density), rainGeo = new THREE.BufferGeometry(), rp = new Float32Array(RAIN_N * 6);
+  const RAIN_N = Q.density < .5 ? 60 : Math.round(900 * Q.density), /* 低档只留一点雨丝 */ rainGeo = new THREE.BufferGeometry(), rp = new Float32Array(RAIN_N * 6);
   for (let i = 0; i < RAIN_N; i++) { const x = (Math.random() - .5) * 4200, z = (Math.random() - .5) * 3000, y = G + Math.random() * 900; rp.set([x, y, z, x, y - 16, z], i * 6); }
   rainGeo.setAttribute('position', new THREE.BufferAttribute(rp, 3));
   const rain = new THREE.LineSegments(rainGeo, new THREE.LineBasicMaterial({ color: '#9fb6d8', transparent: true, opacity: .55 })); rain.visible = false; rain.frustumCulled = false; scene.add(rain);

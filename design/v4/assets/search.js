@@ -22,7 +22,11 @@
   CL.companies.forEach(c => { const L = CL.layers[c.li]; items.push({ g: '公司', t: c.t, sub: `${c.name} · ${L.name} / ${c.seg}`, ic: badge(c), href: `company.html?t=${c.t}`, alt: ['看盘', `stock.html?t=${c.t}`], k: `${c.t} ${c.name} ${L.name} ${c.seg}`.toLowerCase(), pri: c.cap }); });
   CL.layers.forEach((l, i) => Object.entries(l.segs).forEach(([seg, list]) => { const n = list.split(' ').filter(Boolean).length; items.push({ g: '产业镇 · 子链', t: seg, sub: `${l.name}街区的地块 · ${n ? n + ' 家：' + list : '还没有上市公司'}`, ic: `<span class="ic dot" style="--c:${l.color}">${i + 1}</span>`, href: `index.html#island?station=${l.id}`, k: `${seg} ${l.name} ${list} 子链 地块 环节`.toLowerCase(), pri: 45 }); }));
   CL.layers.forEach((l, i) => items.push({ g: '产业镇', t: `${l.name}街区`, sub: `第 ${i + 1} 层 · ${Object.keys(l.segs).join(' / ')}`, ic: `<span class="ic dot" style="--c:${l.color}">${i + 1}</span>`, href: `index.html#island?station=${l.id}`, k: `${l.name} ${Object.keys(l.segs).join(' ')} 产业镇 街区 ${l.id}`.toLowerCase(), pri: 50 }));
-  [['期权日报', '收盘后 · 海报 + 文字版，可翻以前的', 'bars', 'daily.html?col=eve', '期权 日报 海报 归档 晚'],
+  [['发射场 · 太空', 'SpaceX 未上市 · 火箭定时试射', 'rocket', 'index.html#island?spot=pad', '发射场 火箭 spacex 太空 远景'],
+    ['AI 医疗园区 · 机器人试验场', '应用与端侧的延伸 · 名单待补', 'med', 'index.html#island?spot=campus', '医疗 医院 机器人 试验场 远景'],
+    ['港口广场 · 潮信钟楼', '表针停在 15:40，期权日报送达的时刻', 'clock', 'index.html#island?spot=plaza', '广场 钟楼 喷泉 港口'],
+    ['未上市实验室 · 在建', 'Anthropic / OpenAI / xAI 的工地', 'crane', 'index.html#island?station=cloud', '未上市 anthropic openai xai 工地 塔吊'],
+    ['期权日报', '收盘后 · 海报 + 文字版，可翻以前的', 'bars', 'daily.html?col=eve', '期权 日报 海报 归档 晚'],
     ['研报日报', '每个交易日 · 只放摘要，不放原文', 'doc', 'daily.html?col=rr', '研报 评级 目标价 归档'],
     ['周报', '周日上午 · 本周方向与环节轮动', 'week', 'daily.html?col=week', '周报 每周'],
     ['盘前汇总', '开盘前 · 即将上线', 'sunrise', 'daily.html?col=morn', '盘前 早 汇总 隔夜'],

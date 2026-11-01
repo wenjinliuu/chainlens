@@ -101,10 +101,11 @@
           <p>从矿石、电力，到芯片、光模块、服务器，再到云和机器人。潮信每天沿着这条链，看哪里在放量、谁被调评级、发生了什么。</p>
           <div class="ip-leg"><span><i class="lg-pod"></i>底座越高 = 当天期权成交越热</span><span><i class="lg-cube"></i>方块 = 产业链流向</span><span><i class="lg-coin"></i>硬币 = 成员公司</span></div>
           <button class="btn accent" id="ipStart">从「原材料」开始导览 →</button>
-          <div class="ip-spots"><span>远景区：</span><button type="button" class="chip" id="ipPad">${ICON.svg('rocket', 13)} 发射场</button><button type="button" class="chip" id="ipCamp">${ICON.svg('med', 13)} 医疗园区 · 试验场</button></div>`;
+          <div class="ip-spots"><span>远景区：</span><button type="button" class="chip" id="ipPad">${ICON.svg('rocket', 13)} 发射场</button><button type="button" class="chip" id="ipCamp">${ICON.svg('med', 13)} 医疗园区 · 试验场</button><button type="button" class="chip" id="ipPlaza">${ICON.svg('clock', 13)} 港口广场</button></div>`;
         $('#ipStart').onclick = () => isl.go(0);
         $('#ipPad').onclick = () => isl.look(1560, 560, 1980, 1000, 40, 1230);
         $('#ipCamp').onclick = () => isl.look(-1560, 560, 1980, -1000, 40, 1230);
+        $('#ipPlaza').onclick = () => isl.look(1500, 330, 620, 1310, 20, 240);
         return;
       }
       const l = L[i], o = sigTk(l, 'o'), r = sigTk(l, 'r'), n = sigTk(l, 'n');
@@ -156,7 +157,11 @@
     render(-1);
     LP.isl = isl;
     // 深链接：#island?station=chip → 滚到产业镇并聚焦那个街区（⌘K 搜索和分享链接都用它）
-    const fromHash = first => { const m = location.hash.match(/^#island\?station=([a-z]+)/); if (!m) return; const i = L.findIndex(l => l.id === m[1]); if (i >= 0) { isl.go(i); $('#island').scrollIntoView({ behavior: first === true ? 'instant' : 'smooth', block: 'start' }); } };
+    const SPOTS = { pad: [1560, 560, 1980, 1000, 40, 1230], campus: [-1560, 560, 1980, -1000, 40, 1230], plaza: [1500, 330, 620, 1310, 20, 240], mound: [400, 520, -120, 150, 30, -720] };
+    const fromHash = first => {
+      const sp = location.hash.match(/^#island\?spot=([a-z]+)/);
+      if (sp && SPOTS[sp[1]]) { isl.look(...SPOTS[sp[1]]); $('#island').scrollIntoView({ behavior: first === true ? 'instant' : 'smooth', block: 'start' }); return; }
+      const m = location.hash.match(/^#island\?station=([a-z]+)/); if (!m) return; const i = L.findIndex(l => l.id === m[1]); if (i >= 0) { isl.go(i); $('#island').scrollIntoView({ behavior: first === true ? 'instant' : 'smooth', block: 'start' }); } };
     addEventListener('hashchange', () => fromHash(false)); fromHash(true);
   };
 

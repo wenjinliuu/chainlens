@@ -37,6 +37,8 @@ M0 设计稿已完成（`design/v4/`，浏览器直接打开 HTML 即可看，�
 | `design/v4/company.html` | 公司档案：3D 信息星图、近 60 日行情 + 事件、街区 3D、期权 / 研报 / 新闻、出现记录 |
 | `design/v4/stock.html` | 看盘：Lightweight Charts 多窗格指标 + 财报日、最热合约、研报目标价区间 |
 | `design/v4/subscribe.html` `unsubscribe.html` `email.html` | 订阅确认 / 偏好 / 退订流程，邮件模板 |
+| `design/v4/column.html` | 专栏报告阅读页（财报 / 产业链 / 事件专题） |
+| `design/v4/logo-lab.html` | Logo 候选对比 |
 
 所有页面支持 ⌘K 全局搜索；数据全部为虚构示例。辅助脚本：`node scripts/compliance-scan.mjs`（文案合规扫描）、`node scripts/export-samples.mjs`（导出示例 JSON 到 `data/samples/`）。
 
