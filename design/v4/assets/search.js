@@ -20,6 +20,7 @@
   // ---------- 索引 ----------
   const items = [];
   CL.companies.forEach(c => { const L = CL.layers[c.li]; items.push({ g: '公司', t: c.t, sub: `${c.name} · ${L.name} / ${c.seg}`, ic: badge(c), href: `company.html?t=${c.t}`, alt: ['看盘', `stock.html?t=${c.t}`], k: `${c.t} ${c.name} ${L.name} ${c.seg}`.toLowerCase(), pri: c.cap }); });
+  CL.layers.forEach((l, i) => Object.entries(l.segs).forEach(([seg, list]) => { const n = list.split(' ').filter(Boolean).length; items.push({ g: '产业镇 · 子链', t: seg, sub: `${l.name}街区的地块 · ${n ? n + ' 家：' + list : '还没有上市公司'}`, ic: `<span class="ic dot" style="--c:${l.color}">${i + 1}</span>`, href: `index.html#island?station=${l.id}`, k: `${seg} ${l.name} ${list} 子链 地块 环节`.toLowerCase(), pri: 45 }); }));
   CL.layers.forEach((l, i) => items.push({ g: '产业镇', t: `${l.name}街区`, sub: `第 ${i + 1} 层 · ${Object.keys(l.segs).join(' / ')}`, ic: `<span class="ic dot" style="--c:${l.color}">${i + 1}</span>`, href: `index.html#island?station=${l.id}`, k: `${l.name} ${Object.keys(l.segs).join(' ')} 产业镇 街区 ${l.id}`.toLowerCase(), pri: 50 }));
   [['期权日报', '收盘后 · 海报 + 文字版，可翻以前的', 'bars', 'daily.html?col=eve', '期权 日报 海报 归档 晚'],
     ['研报日报', '每个交易日 · 只放摘要，不放原文', 'doc', 'daily.html?col=rr', '研报 评级 目标价 归档'],

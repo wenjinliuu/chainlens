@@ -150,6 +150,9 @@ chainlens/
 ```
 `kind` 只有 财报 / 产业链 / 事件 三种；正文由 AI 整理但数字全部来自日报 JSON（pipeline 校验每个数字可追溯）；`index.json` 是按日期降序的摘要列表。
 
+### 4.5c `data/town/{date}.json` —— 产业镇每日数据
+见 `docs/town-plan.md` 第 4 节；示例 `data/samples/town/2026-10-30.json`。前端只读这份文件决定天气、底座高度、楼顶旗 / 射灯、目标价牌、广告牌、巴士与飞艇文字；归档页回放时按日期切换。
+
 ### 4.6 其它
 - `data/companies.json`：`{ layers:[{id, name, color, segs}], companies:[{t, name, cap, layer, seg}] }`（现 `data.js` 去掉虚构行情后的部分）。
 - `data/company/{T}.json`：`{ profile, px60:[[date, close]], events:[统一事件模型], targets:[{date, firm, lo, hi}], seen:{opt, rr, news}, upstream[], downstream[] }`。统一事件模型见 `docs/data-sources.md` 第 2 节。

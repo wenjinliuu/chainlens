@@ -33,6 +33,19 @@ for (const date of [last, A.DATES[A.DATES.length - 2]]) {
 }
 const w = lastWeek;
 write(`weekly/${w.mon}.json`, wrap({ mon: w.mon, fri: w.fri, sun: w.sun, label: w.label, dir: w.dir, avg: w.avg, bullSeg: w.bullSeg, bearSeg: w.bearSeg, segs: w.segs, strongest: w.strongest, persist: w.persist, days: w.days.map(d => ({ date: d.date, mood: d.mood, dev: d.dev })), next: w.next.map(([when, what]) => ({ when, what })), headline: null, summary: null, themes: [] }));
+// 镇上的自动更新数据（town-plan.md 第 4 节）：天气、环节热度、楼的信号、广告牌、巴士与飞艇文字
+const WXOF = { '偏乐观': 'sunny', '中性': 'cloudy', '偏谨慎': 'rain' };
+for (const date of [last]) {
+  const d = A.byDate[date], wk = A.weekOf(date), R = A.rr(date);
+  const towers = {};
+  d.picks.forEach(p => { towers[p.t] = { dir: p.dir, conf: p.conf, flag: true, lamp: p.conf === '高' }; });
+  R.items.forEach(i => { towers[i.t] = Object.assign(towers[i.t] || {}, { target: i.to > i.from ? 'up' : i.to < i.from ? 'down' : 'flat' }); });
+  write(`town/${date}.json`, wrap({ date, weather: WXOF[d.mood], mood: d.mood,
+    segHeat: Object.fromEntries(d.heat.map(h => [h[0], h[1]])), towers,
+    boards: d.heat.map(h => ({ seg: h[0], t: h[2].split(' ')[0] })),
+    bus: wk.segs.slice(0, 3).map(x => x.n), blimp: `本周${wk.dir} · 环节轮动 ${wk.segs.slice(0, 3).map(x => x.n).join(' → ')}`,
+    unlisted: CL.unlisted.map(u => ({ t: u.t, name: u.name, layer: u.layer, seg: u.seg })) }));
+}
 write('companies.json', wrap({ layers: CL.layers.map(l => ({ id: l.id, name: l.name, color: l.color, segs: l.segs })), companies: CL.companies.map(c => ({ t: c.t, name: c.name, cap: c.cap, layer: c.layer, seg: c.seg })) }));
 write('search-index.json', wrap({ items: [
   ...CL.companies.map(c => ({ g: '公司', t: c.t, sub: `${c.name} · ${CL.layers[c.li].name} / ${c.seg}`, href: `/company/${c.t}` })),
