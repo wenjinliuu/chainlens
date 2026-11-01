@@ -133,6 +133,17 @@
     const moveThing = (x, y, vis) => { bub.style.left = x + 'px'; bub.style.top = y + 'px'; bub.style.opacity = vis ? 1 : 0; };
     const isl = initIsland($('#isleCanvas'), { labels: [...document.querySelectorAll('.isle-label')], select: i => { thing(null); render(i); if (location.hash.startsWith('#island')) history.replaceState(null, '', i >= 0 ? `#island?station=${L[i].id}` : '#island'); }, thing, followThing: () => followed, moveThing });
     LP.town = isl.town;
+    // 近 7 日回放：底座高度、天气、标签热度都切到那天
+    const daysEl = $('#isleDays');
+    if (daysEl) {
+      let cur = 6;
+      daysEl.insertAdjacentHTML('beforeend', CL.days.map((d, i) => `<button type="button" data-d="${i}" class="${i === 6 ? 'on' : ''}">${d}</button>`).join(''));
+      daysEl.querySelectorAll('button').forEach(b => b.onclick = () => {
+        cur = +b.dataset.d; daysEl.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+        isl.setDay(cur);
+        document.querySelectorAll('.isle-label').forEach((el, i) => { const bb = el.querySelector('b'); if (bb) bb.textContent = `${L[i].heat[cur].toFixed(1)}x`; });
+      });
+    }
     // 天气标签：跟着当天的大盘情绪
     const WXI = { sunny: ['sun', '晴'], cloudy: ['cloud', '多云'], rain: ['rain', '阴雨'] };
     const wxEl = $('#isleWx');
